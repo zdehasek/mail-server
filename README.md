@@ -18,13 +18,14 @@ Default stack:
 
 ```bash
 make init
-editor mail.env
+editor .env
 make doctor
 make dry-run
 sudo make install
 sudo make add-user USER=user@example.com
 sudo make print-dns
 sudo make verify
+sudo make install-backup-cron
 ```
 
 Deploy to a remote host:
@@ -32,6 +33,8 @@ Deploy to a remote host:
 ```bash
 make deploy HOST=app@46.224.197.110 REMOTE_DIR=/tmp/mail-server
 ```
+
+The Makefile loads `./.env` automatically, so `HOST`, `REMOTE_DIR`, and installer settings can live there. `deploy` uses `rsync` and syncs the project directory to `REMOTE_DIR`, excluding only `.git/` by default. Override `RSYNC_EXCLUDES` if you want different exclusions.
 
 Do not run this on an existing mail server without reading `docs/prerequisites.md` and taking backups. The installer backs up managed files before overwriting them, but it is designed for a fresh Ubuntu 26.04 host.
 
@@ -59,5 +62,8 @@ See `docs/webmail-options.md` for the comparison.
 - `doctor.sh` is read-only.
 - `install.sh --dry-run` prints intended changes without applying them.
 - Managed files are backed up under `/var/backups/mailserver/<timestamp>/`.
+- `sudo make backup` creates a mail server data backup.
+- `sudo make install-backup-cron` installs a recurring backup job.
 - Mailboxes are never deleted by these scripts.
-- UFW is not enabled unless SSH safety checks pass.
+- UFW defaults to deny incoming and only allows SSH, SMTP, HTTP/HTTPS, submission, and IMAPS.
+- SSH hardening is skipped unless a key-enabled allowed user is known.

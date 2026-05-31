@@ -49,7 +49,19 @@ load_config() {
   [[ -f "$CONFIG_FILE" ]] || die "Config file not found: $CONFIG_FILE"
   # shellcheck source=/dev/null
   source "$CONFIG_FILE"
+  set_config_defaults
   validate_config
+}
+
+set_config_defaults() {
+  : "${ENABLE_SSH_HARDENING:=true}"
+  : "${UFW_RESET_RULES:=true}"
+  : "${SSH_PORT:=22}"
+  : "${SSH_ALLOW_USERS:=}"
+  : "${BACKUP_DIR:=/var/backups/mailserver-data}"
+  : "${BACKUP_RETENTION_DAYS:=14}"
+  : "${BACKUP_CRON_SCHEDULE:=17 3 * * *}"
+  : "${SSH_ALLOW_USERS_DIRECTIVE:=}"
 }
 
 require_var() {
@@ -126,7 +138,8 @@ replace_tokens() {
   local vars=(
     MAIL_HOSTNAME PRIMARY_DOMAIN ADMIN_EMAIL WEBMAIL_HOSTNAME DAV_HOSTNAME SERVER_PUBLIC_IPV4 SERVER_PUBLIC_IPV6
     VMAIL_UID VMAIL_GID VMAIL_ROOT MAIL_DB_PATH ROUNDCUBE_VERSION ROUNDCUBE_URL ROUNDCUBE_SHA256 ROUNDCUBE_DES_KEY DKIM_SELECTOR
-    POSTMASTER_ADDRESS ABUSE_ADDRESS TIMEZONE
+    POSTMASTER_ADDRESS ABUSE_ADDRESS TIMEZONE UFW_RESET_RULES SSH_PORT SSH_ALLOW_USERS SSH_ALLOW_USERS_DIRECTIVE
+    BACKUP_DIR BACKUP_RETENTION_DAYS BACKUP_CRON_SCHEDULE
   )
   local name value token
   for name in "${vars[@]}"; do

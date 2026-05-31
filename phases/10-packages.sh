@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 packages=(
-  ca-certificates curl gnupg lsb-release dnsutils netcat-openbsd openssl sqlite3 tar
+  ca-certificates curl gnupg lsb-release dnsutils netcat-openbsd openssl sqlite3 tar cron
   postfix postfix-sqlite postfix-policyd-spf-python
   dovecot-core dovecot-imapd dovecot-lmtpd dovecot-sieve dovecot-managesieved dovecot-sqlite
   nginx certbot apache2-utils radicale

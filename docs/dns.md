@@ -1,6 +1,6 @@
 # DNS Records
 
-Replace example values with `mail.env` values.
+Replace example values with `.env` values.
 
 ```text
 example.com.          MX   10 mail.example.com.
@@ -21,7 +21,7 @@ webmail.example.com.  AAAA 2001:db8::10
 DKIM is generated during install. Print it with:
 
 ```bash
-sudo ./scripts/print-dns.sh --config ./mail.env
+sudo make print-dns
 ```
 
 Initial DMARC policy:

@@ -1,0 +1,42 @@
+myhostname = __MAIL_HOSTNAME__
+myorigin = __PRIMARY_DOMAIN__
+mydestination = localhost
+relay_domains =
+inet_interfaces = all
+inet_protocols = all
+
+virtual_mailbox_domains = sqlite:/etc/postfix/sqlite-domains.cf
+virtual_mailbox_maps = sqlite:/etc/postfix/sqlite-users.cf
+virtual_alias_maps = sqlite:/etc/postfix/sqlite-aliases.cf
+virtual_transport = lmtp:unix:private/dovecot-lmtp
+
+smtpd_tls_cert_file = /etc/letsencrypt/live/__MAIL_HOSTNAME__/fullchain.pem
+smtpd_tls_key_file = /etc/letsencrypt/live/__MAIL_HOSTNAME__/privkey.pem
+smtpd_tls_security_level = may
+smtpd_tls_auth_only = yes
+smtp_tls_security_level = may
+smtp_tls_loglevel = 1
+smtpd_tls_loglevel = 1
+
+smtpd_sasl_type = dovecot
+smtpd_sasl_path = private/auth
+smtpd_sasl_auth_enable = yes
+smtpd_sasl_security_options = noanonymous
+smtpd_sasl_local_domain = $myhostname
+
+smtpd_recipient_restrictions =
+  permit_mynetworks,
+  permit_sasl_authenticated,
+  reject_unauth_destination,
+  check_policy_service unix:private/policyd-spf
+
+milter_protocol = 6
+milter_default_action = accept
+smtpd_milters = inet:127.0.0.1:8891, inet:127.0.0.1:8893, inet:127.0.0.1:11332
+non_smtpd_milters = $smtpd_milters
+
+mailbox_size_limit = 0
+recipient_delimiter = +
+biff = no
+append_dot_mydomain = no
+compatibility_level = 3.6

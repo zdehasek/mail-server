@@ -1,0 +1,5 @@
+driver = sqlite
+connect = __MAIL_DB_PATH__
+default_pass_scheme = SHA512-CRYPT
+password_query = SELECT email AS user, password_hash AS password FROM users WHERE email='%u' AND active=1
+user_query = SELECT home, maildir, __VMAIL_UID__ AS uid, __VMAIL_GID__ AS gid FROM users WHERE email='%u' AND active=1

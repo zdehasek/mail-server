@@ -1,0 +1,11 @@
+Syslog yes
+UMask 002
+Mode sv
+Canonicalization relaxed/simple
+Socket inet:8891@127.0.0.1
+PidFile /run/opendkim/opendkim.pid
+UserID opendkim:opendkim
+KeyTable /etc/opendkim/key.table
+SigningTable refile:/etc/opendkim/signing.table
+ExternalIgnoreList /etc/opendkim/trusted.hosts
+InternalHosts /etc/opendkim/trusted.hosts

@@ -1,0 +1,17 @@
+<?php
+
+$config['db_dsnw'] = 'sqlite:////var/lib/roundcube/roundcube.sqlite';
+$config['imap_host'] = 'ssl://__MAIL_HOSTNAME__:993';
+$config['smtp_host'] = 'tls://__MAIL_HOSTNAME__:587';
+$config['smtp_user'] = '%u';
+$config['smtp_pass'] = '%p';
+$config['support_url'] = '';
+$config['product_name'] = '__PRIMARY_DOMAIN__ Mail';
+$config['des_key'] = '__ROUNDCUBE_DES_KEY__';
+$config['plugins'] = ['archive', 'zipdownload', 'managesieve'];
+$config['skin'] = 'elastic';
+$config['enable_installer'] = false;
+$config['default_host'] = 'ssl://__MAIL_HOSTNAME__:993';
+$config['default_port'] = 993;
+$config['managesieve_host'] = 'localhost';
+$config['managesieve_port'] = 4190;

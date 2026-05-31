@@ -1,0 +1,13 @@
+server {
+  listen 80;
+  listen [::]:80;
+  server_name __MAIL_HOSTNAME__ __WEBMAIL_HOSTNAME__ __DAV_HOSTNAME__;
+
+  location /.well-known/acme-challenge/ {
+    root /var/www/letsencrypt;
+  }
+
+  location / {
+    return 301 https://$host$request_uri;
+  }
+}

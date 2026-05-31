@@ -1,0 +1,70 @@
+dovecot_config_version = 2.4.0
+dovecot_storage_version = 2.4.0
+protocols = imap lmtp sieve
+listen = *, ::
+
+mail_home = __VMAIL_ROOT__/%{user | domain}/%{user | username}
+mail_driver = maildir
+mail_path = ~/Maildir
+mail_uid = __VMAIL_UID__
+mail_gid = __VMAIL_GID__
+first_valid_uid = __VMAIL_UID__
+last_valid_uid = __VMAIL_UID__
+
+ssl = required
+ssl_server_cert_file = /etc/letsencrypt/live/__MAIL_HOSTNAME__/fullchain.pem
+ssl_server_key_file = /etc/letsencrypt/live/__MAIL_HOSTNAME__/privkey.pem
+
+auth_allow_cleartext = no
+auth_mechanisms = plain login
+sql_driver = sqlite
+sqlite_path = __MAIL_DB_PATH__
+
+passdb sql {
+  query = SELECT email AS user, password_hash AS password FROM users WHERE email = '%{user}' AND active = 1
+}
+
+userdb sql {
+  query = SELECT home, __VMAIL_UID__ AS uid, __VMAIL_GID__ AS gid FROM users WHERE email = '%{user}' AND active = 1
+}
+
+service auth {
+  unix_listener /var/spool/postfix/private/auth {
+    mode = 0660
+    user = postfix
+    group = postfix
+  }
+}
+
+service lmtp {
+  unix_listener /var/spool/postfix/private/dovecot-lmtp {
+    mode = 0600
+    user = postfix
+    group = postfix
+  }
+}
+
+protocol lmtp {
+  postmaster_address = __POSTMASTER_ADDRESS__
+  mail_plugins = sieve
+}
+
+protocol imap {
+  mail_plugins =
+}
+
+namespace inbox {
+  inbox = yes
+  mailbox Drafts {
+    special_use = \Drafts
+  }
+  mailbox Junk {
+    special_use = \Junk
+  }
+  mailbox Sent {
+    special_use = \Sent
+  }
+  mailbox Trash {
+    special_use = \Trash
+  }
+}

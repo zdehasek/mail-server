@@ -72,9 +72,13 @@ Roundcube stores its application data in `/var/lib/roundcube` and uses SQLite by
 
 Radicale stores calendars and contacts as flat files under `/var/lib/radicale/collections`.
 
+Roundcube's calendar UI is provided by the `texxasrulez/calendar` plugin. The
+plugin stores small support tables in `/var/lib/roundcube/roundcube.sqlite`, but
+the calendar objects themselves stay in Radicale through CalDAV.
+
 Roundcube is installed from a pinned upstream release because the Ubuntu 26.04 package is not currently compatible with PHP 8.5. The pinned version, source URL, and SHA-256 checksum are configured in `.env`.
 
-Calendar and contact sync are provided by Radicale. Use native clients such as iPhone Calendar, macOS Calendar, Thunderbird Calendar, or DAVx5 with an Android calendar app. A browser calendar UI is intentionally not installed by default.
+Calendar and contact sync are provided by Radicale. Use native clients such as iPhone Calendar, macOS Calendar, Thunderbird Calendar, or DAVx5 with an Android calendar app. Browser calendar access is available in Roundcube through the Calendar task, backed by the same Radicale CalDAV endpoint.
 
 ## Backups
 

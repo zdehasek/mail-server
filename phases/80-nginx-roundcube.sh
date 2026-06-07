@@ -52,6 +52,15 @@ else
     cp -a /opt/roundcube/current/vendor/texxasrulez/calendar /opt/roundcube/current/plugins/calendar
     cp -a /opt/roundcube/current/vendor/texxasrulez/libcalendaring /opt/roundcube/current/plugins/libcalendaring
     cp -a /opt/roundcube/current/vendor/texxasrulez/libkolab /opt/roundcube/current/plugins/libkolab
+    install -d -m 0755 /opt/roundcube/current/plugins/libcalendaring/skins/elastic
+    install -m 0644 /opt/roundcube/current/plugins/calendar/skins/elastic/elastic.min.css \
+      /opt/roundcube/current/plugins/calendar/skins/elastic/calendar.css
+    install -m 0644 /opt/roundcube/current/plugins/calendar/skins/elastic/elastic.min.css \
+      /opt/roundcube/current/plugins/calendar/skins/elastic/fullcalendar.css
+    install -m 0644 /opt/roundcube/current/plugins/calendar/skins/elastic/elastic.min.css \
+      /opt/roundcube/current/plugins/libkolab/skins/elastic/libkolab.css
+    install -m 0644 /opt/roundcube/current/plugins/calendar/skins/elastic/elastic.min.css \
+      /opt/roundcube/current/plugins/libcalendaring/skins/elastic/libcal.css
     sed -i \
       's/CREATE INDEX ix_contact_type ON kolab_cache_dav_contact/CREATE INDEX ix_contact_dav_type ON kolab_cache_dav_contact/' \
       /opt/roundcube/current/plugins/libkolab/SQL/sqlite.initial.sql

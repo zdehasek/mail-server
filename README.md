@@ -49,7 +49,8 @@ Email deliverability cannot be made fully automatic. Production use requires DNS
 - DNS control for the domain.
 - Static public IPv4 address.
 - Provider allows inbound and outbound TCP/25.
-- PTR/rDNS for the server IP points to `MAIL_HOSTNAME`.
+- PTR/rDNS for the server IP points to `MAIL_HOSTNAME`. Configure this at the
+  IP/server provider, not as a Cloudflare DNS record.
 - `A`/optional `AAAA`, `MX`, SPF, DKIM, and DMARC records.
 - Public ports open: `25`, `80`, `443`, `587`, `993`.
 

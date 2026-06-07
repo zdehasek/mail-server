@@ -30,6 +30,12 @@ After publishing the records, check current DNS state against `.env` with:
 make dns-state
 ```
 
+To also check SSL/TLS certificates and service ports, run:
+
+```bash
+make check
+```
+
 Initial DMARC policy:
 
 ```text

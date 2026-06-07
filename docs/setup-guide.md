@@ -302,11 +302,17 @@ Content: v=DMARC1; p=none; rua=mailto:dmarc@example.com; adkim=s; aspf=s
 TTL: Auto
 ```
 
-Provider-side PTR/rDNS:
+Provider-side PTR/rDNS is not a DNS-zone record. Set it at the provider that
+owns the server IP address, for example in Hetzner Cloud Console under the
+server's public IPv4 networking settings. The reverse record must point from the
+server IP back to `MAIL_HOSTNAME`:
 
 ```text
 203.0.113.10 -> mail.example.com
 ```
+
+For Hetzner, open the server, go to `Networking`, find the public IPv4 address,
+edit `Reverse DNS` / `rDNS`, and set it to `mail.example.com`.
 
 DKIM is generated during installation. Publish it after `sudo make setup` by
 running `sudo make print-dns`.
@@ -534,7 +540,7 @@ Content: v=DMARC1; p=none; rua=mailto:dmarc@example.org; adkim=s; aspf=s
 TTL: Auto
 ```
 
-PTR/rDNS:
+PTR/rDNS at the server/IP provider, not in Cloudflare DNS:
 
 ```text
 203.0.113.10 -> mail.example.org

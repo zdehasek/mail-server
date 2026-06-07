@@ -7,7 +7,8 @@ Required before production install:
 - Static public IPv4 address.
 - DNS control for `PRIMARY_DOMAIN`.
 - Provider permits inbound and outbound SMTP on TCP/25.
-- PTR/rDNS configured by the provider: server IP to `MAIL_HOSTNAME`.
+- PTR/rDNS configured by the IP/server provider, not in the DNS zone:
+  server IP to `MAIL_HOSTNAME`.
 - Ports reachable from the internet: `25`, `80`, `443`, `587`, `993`.
 - Hostname set to `MAIL_HOSTNAME`.
 - A non-root SSH user with key-based login if `ENABLE_SSH_HARDENING=true`.

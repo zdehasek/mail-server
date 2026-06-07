@@ -24,6 +24,7 @@ phases=(
   70-dkim-dmarc-rspamd
   80-nginx-roundcube
   90-radicale
+  92-primary-mailbox
   95-security
   99-verify
 )

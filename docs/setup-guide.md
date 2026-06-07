@@ -208,6 +208,32 @@ DKIM_SELECTOR=default
 after setup. `DKIM_SELECTOR` becomes the DNS name
 `default._domainkey.example.com`.
 
+### Primary Mailbox And Default Aliases
+
+The setup flow can create one primary mailbox and point the required operational
+aliases to it.
+
+```bash
+PRIMARY_MAILBOX=admin@example.com
+PRIMARY_MAILBOX_FULL_NAME=Mail Admin
+PRIMARY_MAILBOX_PASSWORD=
+PRIMARY_MAILBOX_PASSWORD_FILE=/etc/mailserver/secrets/primary-mailbox-password
+PRIMARY_ALIAS_ADDRESSES="postmaster@example.com abuse@example.com dmarc@example.com admin@example.com"
+```
+
+- `PRIMARY_MAILBOX`: mailbox created automatically during `sudo make setup`.
+- `PRIMARY_MAILBOX_FULL_NAME`: display name stored for the mailbox.
+- `PRIMARY_MAILBOX_PASSWORD`: optional explicit password. Leave empty to
+  generate one.
+- `PRIMARY_MAILBOX_PASSWORD_FILE`: root-only file where the generated password is
+  stored.
+- `PRIMARY_ALIAS_ADDRESSES`: space-separated aliases pointing to
+  `PRIMARY_MAILBOX`.
+
+If `PRIMARY_MAILBOX` is empty, setup skips this step. If the mailbox already
+exists, setup updates the password hash and keeps it active. If an alias already
+exists, setup leaves it in place.
+
 ## 4. Publish DNS Before Installing
 
 Let's Encrypt validation requires DNS to point at the target server before
@@ -355,20 +381,25 @@ TTL: Auto
 Keep DMARC at `p=none` until outbound delivery tests are clean. Later move to
 `p=quarantine`, then `p=reject`.
 
-## 9. Create Mailboxes And Aliases
+## 9. Confirm Primary Mailbox And Aliases
 
-Create the first mailbox:
+If `PRIMARY_MAILBOX` is set, `sudo make setup` creates the mailbox and aliases
+automatically. To run only that step again:
 
 ```bash
-sudo make add-user USER=alpha@example.com
+sudo make setup-primary-mailbox
 ```
 
-Create required aliases:
+If the password was generated, read it from the root-only password file:
 
 ```bash
-sudo make add-alias SOURCE=postmaster@example.com DEST=alpha@example.com
-sudo make add-alias SOURCE=abuse@example.com DEST=alpha@example.com
-sudo make add-alias SOURCE=dmarc@example.com DEST=alpha@example.com
+sudo cat /etc/mailserver/secrets/primary-mailbox-password
+```
+
+Additional mailboxes can still be created manually:
+
+```bash
+sudo make add-user USER=user@example.com
 ```
 
 Install recurring backups:
@@ -440,6 +471,11 @@ BACKUP_CRON_SCHEDULE="17 3 * * *"
 POSTMASTER_ADDRESS=postmaster@example.org
 ABUSE_ADDRESS=abuse@example.org
 DKIM_SELECTOR=default
+PRIMARY_MAILBOX=admin@example.org
+PRIMARY_MAILBOX_FULL_NAME=Alpha5
+PRIMARY_MAILBOX_PASSWORD=
+PRIMARY_MAILBOX_PASSWORD_FILE=/etc/mailserver/secrets/primary-mailbox-password
+PRIMARY_ALIAS_ADDRESSES="postmaster@example.org abuse@example.org dmarc@example.org admin@example.org"
 ```
 
 DNS:

@@ -56,6 +56,7 @@ fi
 if [[ "$DRY_RUN" != "true" ]]; then
   for socket in /run/php/php*-fpm.sock; do
     [[ -S "$socket" ]] || continue
+    [[ "$(basename "$socket")" != "php-fpm.sock" ]] || continue
     ln -sfn "$socket" /run/php/php-fpm.sock
     break
   done

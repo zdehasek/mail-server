@@ -44,7 +44,7 @@ check_http() {
 
 check_content_type() {
   local url="$1"
-  local expected_prefix="$2"
+  local expected_prefixes="$2"
   local label="$3"
   local content_type
   content_type="$(
@@ -52,11 +52,37 @@ check_content_type() {
       | awk 'tolower($0) ~ /^content-type:/ {print $2; exit}' \
       | tr -d '\r'
   )" || true
-  if [[ "$content_type" == "$expected_prefix"* ]]; then
-    ok_state "$label returns $content_type"
+  local expected_prefix
+  IFS='|' read -r -a expected_prefix_list <<< "$expected_prefixes"
+  for expected_prefix in "${expected_prefix_list[@]}"; do
+    if [[ "$content_type" == "$expected_prefix"* ]]; then
+      ok_state "$label returns $content_type"
+      return
+    fi
+  done
+  if [[ -n "$content_type" ]]; then
+    warn_state "$label returned content-type $content_type, expected $expected_prefixes"
   else
-    warn_state "$label returned content-type ${content_type:-<none>}, expected $expected_prefix"
+    warn_state "$label returned no content-type, expected $expected_prefixes"
   fi
+}
+
+check_javascript_content_type() {
+  local url="$1"
+  local label="$2"
+  check_content_type "$url" "text/javascript|application/javascript" "$label"
+}
+
+check_css_content_type() {
+  local url="$1"
+  local label="$2"
+  check_content_type "$url" "text/css" "$label"
+}
+
+check_svg_content_type() {
+  local url="$1"
+  local label="$2"
+  check_content_type "$url" "image/svg+xml" "$label"
 }
 
 printf 'Service state for %s\n\n' "$PRIMARY_DOMAIN"
@@ -84,12 +110,12 @@ check_port 8893 "OpenDMARC milter"
 
 check_http "https://$WEBMAIL_HOSTNAME/" "200"
 check_http "https://$DAV_HOSTNAME/" "302"
-check_content_type "https://$WEBMAIL_HOSTNAME/static.php/skins/elastic/styles/styles.min.css" "text/css" "Roundcube CSS"
-check_content_type "https://$WEBMAIL_HOSTNAME/static.php/program/js/app.min.js" "text/javascript" "Roundcube JavaScript"
-check_content_type "https://$WEBMAIL_HOSTNAME/static.php/skins/elastic/images/logo.svg" "image/svg+xml" "Roundcube logo"
+check_css_content_type "https://$WEBMAIL_HOSTNAME/static.php/skins/elastic/styles/styles.min.css" "Roundcube CSS"
+check_javascript_content_type "https://$WEBMAIL_HOSTNAME/static.php/program/js/app.min.js" "Roundcube JavaScript"
+check_svg_content_type "https://$WEBMAIL_HOSTNAME/static.php/skins/elastic/images/logo.svg" "Roundcube logo"
 if [[ "${ENABLE_ROUNDCUBE_CALENDAR:-true}" == "true" ]]; then
-  check_content_type "https://$WEBMAIL_HOSTNAME/plugins/calendar/skins/elastic/elastic.min.css" "text/css" "Roundcube calendar CSS"
-  check_content_type "https://$WEBMAIL_HOSTNAME/plugins/calendar/calendar_base.js" "text/javascript" "Roundcube calendar JavaScript"
+  check_css_content_type "https://$WEBMAIL_HOSTNAME/plugins/calendar/skins/elastic/elastic.min.css" "Roundcube calendar CSS"
+  check_javascript_content_type "https://$WEBMAIL_HOSTNAME/plugins/calendar/calendar_base.js" "Roundcube calendar JavaScript"
 fi
 
 printf '\nSummary: %d failure(s), %d warning(s)\n' "$failures" "$warnings"

@@ -87,6 +87,10 @@ check_http "https://$DAV_HOSTNAME/" "302"
 check_content_type "https://$WEBMAIL_HOSTNAME/static.php/skins/elastic/styles/styles.min.css" "text/css" "Roundcube CSS"
 check_content_type "https://$WEBMAIL_HOSTNAME/static.php/program/js/app.min.js" "text/javascript" "Roundcube JavaScript"
 check_content_type "https://$WEBMAIL_HOSTNAME/static.php/skins/elastic/images/logo.svg" "image/svg+xml" "Roundcube logo"
+if [[ "${ENABLE_ROUNDCUBE_CALENDAR:-true}" == "true" ]]; then
+  check_content_type "https://$WEBMAIL_HOSTNAME/plugins/calendar/skins/elastic/elastic.min.css" "text/css" "Roundcube calendar CSS"
+  check_content_type "https://$WEBMAIL_HOSTNAME/plugins/calendar/calendar_base.js" "text/javascript" "Roundcube calendar JavaScript"
+fi
 
 printf '\nSummary: %d failure(s), %d warning(s)\n' "$failures" "$warnings"
 [[ "$failures" -eq 0 ]]

@@ -30,6 +30,14 @@ server {
     try_files $uri $uri/ /index.php?$query_string;
   }
 
+  location ~ ^/plugins/.+\.(?:css|js|mjs|map|png|jpe?g|gif|ico|svg|webp|woff2?|ttf|eot)$ {
+    root /opt/roundcube/current;
+    try_files $uri =404;
+    access_log off;
+    expires 7d;
+    add_header Cache-Control "public";
+  }
+
   location ~ \.php(?:/|$) {
     include snippets/fastcgi-php.conf;
     fastcgi_pass unix:/run/php/php-fpm.sock;

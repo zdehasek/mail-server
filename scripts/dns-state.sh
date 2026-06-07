@@ -10,13 +10,14 @@ load_config
 
 failures=0
 warnings=0
+DNS_RESOLVER="${DNS_RESOLVER:-1.1.1.1}"
 
 ok() { printf 'OK    %s\n' "$*"; }
 warn_state() { printf 'WARN  %s\n' "$*"; warnings=$((warnings + 1)); }
 fail_state() { printf 'FAIL  %s\n' "$*"; failures=$((failures + 1)); }
 
 dig_short() {
-  dig +short "$@" 2>/dev/null | sed 's/\.$//' | sort -u
+  dig @"$DNS_RESOLVER" +short "$@" 2>/dev/null | sed 's/\.$//' | sort -u
 }
 
 normalize_txt() {
@@ -75,7 +76,7 @@ check_txt() {
   local expected="$2"
   local normalized_expected normalized_records
   normalized_expected="$(normalize_txt <<< "$expected")"
-  normalized_records="$(dig +short TXT "$name" 2>/dev/null | normalize_txt)"
+  normalized_records="$(dig @"$DNS_RESOLVER" +short TXT "$name" 2>/dev/null | normalize_txt)"
 
   if grep -Fq "$normalized_expected" <<< "$normalized_records"; then
     ok "$name TXT matches"
@@ -84,7 +85,8 @@ check_txt() {
   fi
 }
 
-printf 'DNS state for %s\n\n' "$PRIMARY_DOMAIN"
+printf 'DNS state for %s\n' "$PRIMARY_DOMAIN"
+printf 'Resolver: %s\n\n' "$DNS_RESOLVER"
 
 declare -A hosts=()
 hosts["$MAIL_HOSTNAME"]=1
@@ -116,7 +118,7 @@ fi
 
 dkim_name="$DKIM_SELECTOR._domainkey.$PRIMARY_DOMAIN"
 dkim_file="/etc/mailserver/dkim/$PRIMARY_DOMAIN/$DKIM_SELECTOR.txt"
-dns_dkim="$(dig +short TXT "$dkim_name" 2>/dev/null | normalize_txt)"
+dns_dkim="$(dig @"$DNS_RESOLVER" +short TXT "$dkim_name" 2>/dev/null | normalize_txt)"
 if [[ -r "$dkim_file" ]]; then
   expected_dkim="$(normalize_local_dkim "$dkim_file")"
   if [[ -n "$dns_dkim" && "$dns_dkim" == *"$expected_dkim"* ]]; then

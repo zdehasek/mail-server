@@ -30,6 +30,7 @@ help:
 	  'Health checks:' \
 	  '  make check                   Run DNS, SSL/TLS, and service checks' \
 	  '  make dns-state               Check A/AAAA, MX, SPF, DMARC, PTR, DKIM' \
+	  '                               Uses DNS_RESOLVER=1.1.1.1 by default' \
 	  '  make check-ssl               Check HTTPS, IMAPS, and SMTP TLS certs' \
 	  '  make service-state           Check services, ports, and web endpoints' \
 	  '  sudo make verify             Check local configs and active services' \

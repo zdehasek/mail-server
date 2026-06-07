@@ -30,6 +30,14 @@ After publishing the records, check current DNS state against `.env` with:
 make dns-state
 ```
 
+The DNS check uses `1.1.1.1` by default so local resolver aliases, caches, and
+server-hostname synthetic records do not look like public DNS records. Override
+it when needed:
+
+```bash
+make dns-state DNS_RESOLVER=8.8.8.8
+```
+
 To also check SSL/TLS certificates and service ports, run:
 
 ```bash

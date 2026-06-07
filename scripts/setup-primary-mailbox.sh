@@ -74,6 +74,7 @@ touch /etc/radicale/users
 htpasswd -B -b /etc/radicale/users "$email" "$password" >/dev/null
 chown radicale:radicale /etc/radicale/users
 chmod 0640 /etc/radicale/users
+provision_radicale_calendar "$email" "$password"
 
 for alias_addr in "${primary_alias_addresses[@]}"; do
   [[ -n "$alias_addr" ]] || continue

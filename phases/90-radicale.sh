@@ -6,5 +6,5 @@ run touch /etc/radicale/users
 run chown radicale:radicale /etc/radicale/users /etc/radicale/config /etc/radicale/rights
 run chmod 0640 /etc/radicale/users /etc/radicale/config /etc/radicale/rights
 service_enable_now radicale
-reload_or_restart radicale
+run systemctl restart radicale
 mark_done radicale

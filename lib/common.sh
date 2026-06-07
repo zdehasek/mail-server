@@ -102,6 +102,8 @@ set_config_defaults() {
   : "${ENABLE_ROUNDCUBE_CALENDAR:=true}"
   : "${ROUNDCUBE_CALENDAR_VERSION:=3.6.1}"
   : "${ROUNDCUBE_CALDAV_BASE_URL:=https://$DAV_HOSTNAME/}"
+  : "${ROUNDCUBE_DEFAULT_CALENDAR_NAME:=default}"
+  : "${ROUNDCUBE_DEFAULT_CALENDAR_DISPLAY_NAME:=Default}"
 }
 
 require_var() {
@@ -181,6 +183,7 @@ replace_tokens() {
     POSTMASTER_ADDRESS ABUSE_ADDRESS TIMEZONE UFW_RESET_RULES SSH_PORT SSH_ALLOW_USERS SSH_ALLOW_USERS_DIRECTIVE
     BACKUP_DIR BACKUP_RETENTION_DAYS BACKUP_CRON_SCHEDULE
     ENABLE_ROUNDCUBE_CALENDAR ROUNDCUBE_CALENDAR_VERSION ROUNDCUBE_CALDAV_BASE_URL ROUNDCUBE_PLUGINS
+    ROUNDCUBE_DEFAULT_CALENDAR_NAME ROUNDCUBE_DEFAULT_CALENDAR_DISPLAY_NAME
   )
   local name value token
   for name in "${vars[@]}"; do
@@ -229,6 +232,143 @@ sql_quote() {
   local value="$1"
   value="${value//\'/\'\'}"
   printf "%s" "$value"
+}
+
+xml_escape() {
+  local value="$1"
+  value="${value//&/&amp;}"
+  value="${value//</&lt;}"
+  value="${value//>/&gt;}"
+  value="${value//\"/&quot;}"
+  value="${value//\'/&apos;}"
+  printf "%s" "$value"
+}
+
+curl_config_quote() {
+  local value="$1"
+  value="${value//\\/\\\\}"
+  value="${value//\"/\\\"}"
+  printf "%s" "$value"
+}
+
+radicale_curl_status() {
+  local method="$1"
+  local url="$2"
+  local email="$3"
+  local password="$4"
+  local body_file="${5:-}"
+  local user_config
+  user_config="user = \"$(curl_config_quote "$email:$password")\""
+
+  if [[ -n "$body_file" ]]; then
+    printf '%s\n' "$user_config" | curl --silent --show-error --location \
+      --config - \
+      --request "$method" \
+      --header 'Content-Type: application/xml; charset=utf-8' \
+      --data-binary "@$body_file" \
+      --output /dev/null \
+      --write-out '%{http_code}' \
+      "$url"
+  else
+    printf '%s\n' "$user_config" | curl --silent --show-error --location \
+      --config - \
+      --request "$method" \
+      --header 'Depth: 0' \
+      --output /dev/null \
+      --write-out '%{http_code}' \
+      "$url"
+  fi
+}
+
+radicale_curl_status_retry() {
+  local status attempt
+  for attempt in 1 2 3 4 5; do
+    status="$(radicale_curl_status "$@" || true)"
+    case "$status" in
+      000|502|503)
+        sleep "$attempt"
+        ;;
+      *)
+        printf "%s" "$status"
+        return 0
+        ;;
+    esac
+  done
+  printf "%s" "$status"
+}
+
+provision_radicale_calendar() {
+  local email="$1"
+  local password="$2"
+  [[ "${ENABLE_ROUNDCUBE_CALENDAR:-true}" == "true" ]] || return 0
+
+  local base_url calendar_name display_name parent_url url status body_file
+  base_url="${ROUNDCUBE_CALDAV_BASE_URL%/}"
+  calendar_name="${ROUNDCUBE_DEFAULT_CALENDAR_NAME:-default}"
+  display_name="${ROUNDCUBE_DEFAULT_CALENDAR_DISPLAY_NAME:-Default}"
+  parent_url="$base_url/$email/"
+  url="$base_url/$email/$calendar_name/"
+
+  status="$(radicale_curl_status_retry PROPFIND "$parent_url" "$email" "$password")"
+  case "$status" in
+    200|207) ;;
+    *)
+      status="$(radicale_curl_status_retry MKCOL "$parent_url" "$email" "$password")"
+      case "$status" in
+        200|201|204) ;;
+        405)
+          status="$(radicale_curl_status_retry PROPFIND "$parent_url" "$email" "$password")"
+          [[ "$status" == "200" || "$status" == "207" ]] || die "Radicale user collection provisioning failed for $email: MKCOL returned 405, PROPFIND returned $status"
+          ;;
+        *)
+          die "Radicale user collection provisioning failed for $email: MKCOL returned $status for $parent_url"
+          ;;
+      esac
+      ;;
+  esac
+
+  status="$(radicale_curl_status_retry PROPFIND "$url" "$email" "$password")"
+  case "$status" in
+    200|207)
+      info "Radicale calendar already exists: $url"
+      return 0
+      ;;
+  esac
+
+  body_file="$(mktemp)"
+  chmod 0600 "$body_file"
+  printf '%s\n' \
+    '<?xml version="1.0" encoding="utf-8" ?>' \
+    '<C:mkcalendar xmlns:D="DAV:" xmlns:C="urn:ietf:params:xml:ns:caldav">' \
+    '  <D:set>' \
+    '    <D:prop>' \
+    "      <D:displayname>$(xml_escape "$display_name")</D:displayname>" \
+    '      <C:supported-calendar-component-set>' \
+    '        <C:comp name="VEVENT"/>' \
+    '      </C:supported-calendar-component-set>' \
+    '    </D:prop>' \
+    '  </D:set>' \
+    '</C:mkcalendar>' > "$body_file"
+
+  status="$(radicale_curl_status_retry MKCALENDAR "$url" "$email" "$password" "$body_file")"
+  rm -f "$body_file"
+
+  case "$status" in
+    200|201|204)
+      info "Radicale calendar ready: $url"
+      ;;
+    405)
+      status="$(radicale_curl_status_retry PROPFIND "$url" "$email" "$password")"
+      [[ "$status" == "200" || "$status" == "207" ]] && {
+        info "Radicale calendar already exists: $url"
+        return 0
+      }
+      die "Radicale calendar provisioning failed for $email: MKCALENDAR returned 405, PROPFIND returned $status"
+      ;;
+    *)
+      die "Radicale calendar provisioning failed for $email: MKCALENDAR returned $status for $url"
+      ;;
+  esac
 }
 
 parse_config_only_args() {

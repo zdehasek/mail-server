@@ -49,4 +49,5 @@ install -d -o vmail -g vmail -m 0700 "$VMAIL_ROOT/$domain/$localpart/Maildir"
 htpasswd -B -b /etc/radicale/users "$email" "$password" >/dev/null
 chown radicale:radicale /etc/radicale/users
 chmod 0640 /etc/radicale/users
+provision_radicale_calendar "$email" "$password"
 info "Mailbox ready: $email"

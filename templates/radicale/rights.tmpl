@@ -1,9 +1,14 @@
+[root]
+user: .+
+collection:
+permissions: Rr
+
 [owner-write]
 user: .+
 collection: {user}/.*
-permissions: Rw
+permissions: RrWw
 
 [owner-read]
 user: .+
 collection: {user}
-permissions: R
+permissions: RrWw

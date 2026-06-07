@@ -32,4 +32,5 @@ sqlite3 "$MAIL_DB_PATH" "UPDATE users SET password_hash='$hash_q' WHERE email='$
 htpasswd -B -b /etc/radicale/users "$email" "$password" >/dev/null
 chown radicale:radicale /etc/radicale/users
 chmod 0640 /etc/radicale/users
+provision_radicale_calendar "$email" "$password"
 info "Password changed for $email"

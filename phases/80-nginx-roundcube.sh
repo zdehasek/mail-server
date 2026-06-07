@@ -42,7 +42,8 @@ else
       cd /opt/roundcube/current
       export COMPOSER_ALLOW_SUPERUSER=1
       composer require --no-interaction --update-no-dev --no-plugins \
-        "texxasrulez/calendar:$ROUNDCUBE_CALENDAR_VERSION"
+        "texxasrulez/calendar:$ROUNDCUBE_CALENDAR_VERSION" \
+        "pear/http_request2:^2.7"
     )
     rm -rf \
       /opt/roundcube/current/plugins/calendar \
@@ -73,11 +74,11 @@ else
   fi
   if [[ "${ENABLE_ROUNDCUBE_CALENDAR:-true}" == "true" ]] \
     && ! sqlite3 /var/lib/roundcube/roundcube.sqlite "SELECT 1 FROM system WHERE name = 'libkolab-version';" | grep -q 1; then
-    /opt/roundcube/current/bin/initdb.sh --dir=plugins/libkolab/SQL
+    /opt/roundcube/current/bin/initdb.sh --dir=/opt/roundcube/current/plugins/libkolab/SQL
   fi
   if [[ "${ENABLE_ROUNDCUBE_CALENDAR:-true}" == "true" ]] \
     && ! sqlite3 /var/lib/roundcube/roundcube.sqlite "SELECT 1 FROM system WHERE name = 'calendar-caldav-version';" | grep -q 1; then
-    /opt/roundcube/current/bin/initdb.sh --dir=plugins/calendar/drivers/caldav/SQL
+    /opt/roundcube/current/bin/initdb.sh --dir=/opt/roundcube/current/plugins/calendar/drivers/caldav/SQL
   fi
   chown www-data:www-data /var/lib/roundcube/roundcube.sqlite
   chmod 0640 /var/lib/roundcube/roundcube.sqlite

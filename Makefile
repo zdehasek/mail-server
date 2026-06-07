@@ -16,7 +16,7 @@ SSH ?= ssh
 RSYNC_FLAGS ?= -az --delete --human-readable --info=progress2
 RSYNC_EXCLUDES ?= --exclude .git/
 
-.PHONY: help init deploy setup-dry-run setup doctor dry-run install verify print-dns add-user setup-primary-mailbox add-alias change-password backup install-backup-cron
+.PHONY: help init deploy setup-dry-run setup doctor dry-run install verify print-dns dns-state add-user setup-primary-mailbox add-alias change-password backup install-backup-cron
 
 help:
 	@printf '%s\n' \
@@ -32,6 +32,7 @@ help:
 	  '  sudo make install' \
 	  '  sudo make verify' \
 	  '  sudo make print-dns' \
+	  '  make dns-state' \
 	  '  sudo make add-user USER=user@example.com' \
 	  '  sudo make setup-primary-mailbox' \
 	  '  sudo make add-alias SOURCE=postmaster@example.com DEST=user@example.com' \
@@ -82,6 +83,9 @@ verify:
 
 print-dns:
 	./scripts/print-dns.sh --config "$(CONFIG)"
+
+dns-state:
+	./scripts/dns-state.sh --config "$(CONFIG)"
 
 add-user:
 	@test -n "$(MAIL_USER)" || { printf 'Set USER=user@example.com\n' >&2; exit 1; }

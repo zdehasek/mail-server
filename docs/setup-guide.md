@@ -332,6 +332,15 @@ dig +short TXT _dmarc.example.com
 `mail.example.com` and `dav.example.com` must return `SERVER_PUBLIC_IPV4` before
 continuing.
 
+For a complete check against the configured `.env`, run:
+
+```bash
+make dns-state
+```
+
+The command checks host `A`/`AAAA`, `MX`, SPF, DMARC, provider PTR/rDNS, and
+DKIM when the generated DKIM key exists locally.
+
 ## 6. Dry Run
 
 Run:
@@ -386,6 +395,12 @@ TTL: Auto
 
 Keep DMARC at `p=none` until outbound delivery tests are clean. Later move to
 `p=quarantine`, then `p=reject`.
+
+After publishing DKIM, verify the live DNS state again:
+
+```bash
+make dns-state
+```
 
 ## 9. Confirm Primary Mailbox And Aliases
 

@@ -24,6 +24,12 @@ DKIM is generated during install. Print it with:
 sudo make print-dns
 ```
 
+After publishing the records, check current DNS state against `.env` with:
+
+```bash
+make dns-state
+```
+
 Initial DMARC policy:
 
 ```text

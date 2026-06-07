@@ -16,7 +16,7 @@ SSH ?= ssh
 RSYNC_FLAGS ?= -az --delete --human-readable --info=progress2
 RSYNC_EXCLUDES ?= --exclude .git/
 
-.PHONY: help init deploy doctor dry-run install verify print-dns add-user add-alias change-password backup install-backup-cron
+.PHONY: help init deploy setup-dry-run setup doctor dry-run install verify print-dns add-user add-alias change-password backup install-backup-cron
 
 help:
 	@printf '%s\n' \
@@ -24,6 +24,8 @@ help:
 	  '' \
 	  'Usage:' \
 	  '  make init' \
+	  '  make setup-dry-run' \
+	  '  sudo make setup' \
 	  '  make deploy' \
 	  '  make doctor' \
 	  '  make dry-run' \
@@ -36,7 +38,13 @@ help:
 	  '  sudo make backup' \
 	  '  sudo make install-backup-cron' \
 	  '' \
-	  'Defaults are loaded from ./.env when present. Override with CONFIG=./mail.env or ENV_FILE=path.'
+	  'Defaults are loaded from ./.env when present. Override with CONFIG=./mail.env or ENV_FILE=path.' \
+	  '' \
+	  'Local server setup:' \
+	  '  Copy this repository to the target server, run make init, edit .env, then run make setup-dry-run and sudo make setup.' \
+	  '' \
+	  'Remote deployment:' \
+	  '  make deploy remains SSH/rsync-based for pushing this repository from another machine.'
 
 init:
 	@test -f "$(CONFIG)" || cp .env.example "$(CONFIG)"
@@ -47,6 +55,17 @@ deploy:
 	@command -v "$(RSYNC)" >/dev/null || { printf 'rsync is required locally\n' >&2; exit 1; }
 	$(SSH) "$(HOST)" 'mkdir -p "$(REMOTE_DIR)"'
 	$(RSYNC) $(RSYNC_FLAGS) $(RSYNC_EXCLUDES) ./ "$(HOST):$(REMOTE_DIR)/"
+
+setup-dry-run:
+	./doctor.sh --config "$(CONFIG)"
+	sudo ./install.sh --config "$(CONFIG)" --dry-run --assume-yes
+	./scripts/print-dns.sh --config "$(CONFIG)"
+
+setup:
+	./doctor.sh --config "$(CONFIG)"
+	./install.sh --config "$(CONFIG)" --assume-yes
+	./verify.sh --config "$(CONFIG)"
+	./scripts/print-dns.sh --config "$(CONFIG)"
 
 doctor:
 	./doctor.sh --config "$(CONFIG)"

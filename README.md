@@ -16,6 +16,9 @@ Default stack:
 
 ## Quick Start
 
+For a guided local installation run directly on the target host, follow
+[`docs/local-setup.md`](docs/local-setup.md).
+
 ```bash
 make init
 editor .env

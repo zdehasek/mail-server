@@ -115,6 +115,10 @@ check_javascript_content_type "https://$WEBMAIL_HOSTNAME/static.php/program/js/a
 check_svg_content_type "https://$WEBMAIL_HOSTNAME/static.php/skins/elastic/images/logo.svg" "Roundcube logo"
 if [[ "${ENABLE_ROUNDCUBE_CALENDAR:-true}" == "true" ]]; then
   check_css_content_type "https://$WEBMAIL_HOSTNAME/plugins/calendar/skins/elastic/elastic.min.css" "Roundcube calendar CSS"
+  check_css_content_type "https://$WEBMAIL_HOSTNAME/static.php/plugins/calendar/skins/elastic/fullcalendar.css" "Roundcube calendar FullCalendar CSS"
+  check_css_content_type "https://$WEBMAIL_HOSTNAME/static.php/plugins/calendar/skins/elastic/calendar.css" "Roundcube calendar skin CSS"
+  check_css_content_type "https://$WEBMAIL_HOSTNAME/static.php/plugins/libkolab/skins/elastic/libkolab.css" "Roundcube libkolab skin CSS"
+  check_css_content_type "https://$WEBMAIL_HOSTNAME/static.php/plugins/libcalendaring/skins/elastic/libcal.css" "Roundcube libcalendaring skin CSS"
   check_javascript_content_type "https://$WEBMAIL_HOSTNAME/plugins/calendar/calendar_base.js" "Roundcube calendar JavaScript"
 fi
 

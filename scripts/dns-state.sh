@@ -12,10 +12,6 @@ failures=0
 warnings=0
 DNS_RESOLVER="${DNS_RESOLVER:-1.1.1.1}"
 
-ok() { printf 'OK    %s\n' "$*"; }
-warn_state() { printf 'WARN  %s\n' "$*"; warnings=$((warnings + 1)); }
-fail_state() { printf 'FAIL  %s\n' "$*"; failures=$((failures + 1)); }
-
 dig_short() {
   dig @"$DNS_RESOLVER" +short "$@" 2>/dev/null | sed 's/\.$//' | sort -u
 }
@@ -53,13 +49,13 @@ check_host_ip() {
     if [[ -n "$records" ]]; then
       warn_state "$host $type has records but no expected $type is configured: $(tr '\n' ' ' <<< "$records")"
     else
-      ok "$host $type intentionally absent"
+      ok_state "$host $type intentionally absent"
     fi
     return 0
   fi
 
   if contains_line "$expected" <<< "$records"; then
-    ok "$host $type contains $expected"
+    ok_state "$host $type contains $expected"
   else
     fail_state "$host $type missing $expected; got: ${records:-<none>}"
   fi
@@ -79,7 +75,7 @@ check_txt() {
   normalized_records="$(dig @"$DNS_RESOLVER" +short TXT "$name" 2>/dev/null | normalize_txt)"
 
   if grep -Fq "$normalized_expected" <<< "$normalized_records"; then
-    ok "$name TXT matches"
+    ok_state "$name TXT matches"
   else
     fail_state "$name TXT missing expected value"
   fi
@@ -101,7 +97,7 @@ done
 mx_records="$(dig_short "$PRIMARY_DOMAIN" MX)"
 expected_mx="10 $MAIL_HOSTNAME"
 if contains_line "$expected_mx" <<< "$mx_records"; then
-  ok "$PRIMARY_DOMAIN MX points to $MAIL_HOSTNAME"
+  ok_state "$PRIMARY_DOMAIN MX points to $MAIL_HOSTNAME"
 else
   fail_state "$PRIMARY_DOMAIN MX missing '$expected_mx'; got: ${mx_records:-<none>}"
 fi
@@ -111,7 +107,7 @@ check_txt "_dmarc.$PRIMARY_DOMAIN" "v=DMARC1; p=none; rua=mailto:dmarc@$PRIMARY_
 
 ptr_records="$(dig_short -x "$SERVER_PUBLIC_IPV4")"
 if contains_line "$MAIL_HOSTNAME" <<< "$ptr_records"; then
-  ok "$SERVER_PUBLIC_IPV4 PTR/rDNS points to $MAIL_HOSTNAME"
+  ok_state "$SERVER_PUBLIC_IPV4 PTR/rDNS points to $MAIL_HOSTNAME"
 else
   fail_state "$SERVER_PUBLIC_IPV4 PTR/rDNS missing $MAIL_HOSTNAME; got: ${ptr_records:-<none>}"
 fi
@@ -122,7 +118,7 @@ dns_dkim="$(dig @"$DNS_RESOLVER" +short TXT "$dkim_name" 2>/dev/null | normalize
 if [[ -r "$dkim_file" ]]; then
   expected_dkim="$(normalize_local_dkim "$dkim_file")"
   if [[ -n "$dns_dkim" && "$dns_dkim" == *"$expected_dkim"* ]]; then
-    ok "$dkim_name TXT matches generated DKIM key"
+    ok_state "$dkim_name TXT matches generated DKIM key"
   else
     fail_state "$dkim_name TXT missing or different from generated DKIM key"
   fi

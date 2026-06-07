@@ -12,10 +12,6 @@ failures=0
 warnings=0
 expiry_warn_seconds=$((30 * 24 * 60 * 60))
 
-ok() { printf 'OK    %s\n' "$*"; }
-warn_state() { printf 'WARN  %s\n' "$*"; warnings=$((warnings + 1)); }
-fail_state() { printf 'FAIL  %s\n' "$*"; failures=$((failures + 1)); }
-
 fetch_cert() {
   local host="$1"
   local port="$2"
@@ -41,26 +37,26 @@ check_cert() {
   fi
 
   if openssl x509 -noout -checkhost "$host" <<< "$cert" >/dev/null 2>&1; then
-    ok "$label: certificate matches $host"
+    ok_state "$label: certificate matches $host"
   else
     fail_state "$label: certificate does not match $host"
   fi
 
   if openssl x509 -noout -checkend 0 <<< "$cert" >/dev/null 2>&1; then
     expires="$(openssl x509 -noout -enddate <<< "$cert" | sed 's/^notAfter=//')"
-    ok "$label: certificate is not expired; expires $expires"
+    ok_state "$label: certificate is not expired; expires $expires"
   else
     fail_state "$label: certificate is expired"
   fi
 
   if openssl x509 -noout -checkend "$expiry_warn_seconds" <<< "$cert" >/dev/null 2>&1; then
-    ok "$label: certificate is valid for at least 30 days"
+    ok_state "$label: certificate is valid for at least 30 days"
   else
     warn_state "$label: certificate expires in less than 30 days"
   fi
 
   subject="$(openssl x509 -noout -subject <<< "$cert" | sed 's/^subject=//')"
-  ok "$label: subject $subject"
+  ok_state "$label: subject $subject"
 }
 
 printf 'SSL/TLS state for %s\n\n' "$PRIMARY_DOMAIN"

@@ -17,6 +17,38 @@ info() { log "INFO: $*"; }
 warn() { log "WARN: $*" >&2; }
 die() { log "ERROR: $*" >&2; exit 1; }
 
+use_color() {
+  [[ -n "${NO_COLOR:-}" ]] && return 1
+  [[ -n "${FORCE_COLOR:-}" && "${FORCE_COLOR:-}" != "0" ]] && return 0
+  [[ -n "${CLICOLOR_FORCE:-}" && "${CLICOLOR_FORCE:-}" != "0" ]] && return 0
+  [[ -t 1 && -z "${NO_COLOR:-}" && "${TERM:-}" != "dumb" ]]
+}
+
+state_label() {
+  local label="$1"
+  local color="$2"
+  if use_color; then
+    printf '\033[%sm%-5s\033[0m' "$color" "$label"
+  else
+    printf '%-5s' "$label"
+  fi
+}
+
+ok_state() {
+  state_label OK 32
+  printf ' %s\n' "$*"
+}
+warn_state() {
+  state_label WARN 33
+  printf ' %s\n' "$*"
+  warnings=$((warnings + 1))
+}
+fail_state() {
+  state_label FAIL 31
+  printf ' %s\n' "$*"
+  failures=$((failures + 1))
+}
+
 usage_common() {
   cat <<'USAGE'
 Common options:

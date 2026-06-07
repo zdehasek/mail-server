@@ -16,8 +16,9 @@ Default stack:
 
 ## Quick Start
 
-For a guided local installation run directly on the target host, follow
-[`docs/local-setup.md`](docs/local-setup.md).
+For the complete step-by-step setup guide, including local installation,
+SSH/rsync deployment, `.env`, DNS, DKIM, mailboxes, and tests, follow
+[`docs/setup-guide.md`](docs/setup-guide.md).
 
 ```bash
 make init

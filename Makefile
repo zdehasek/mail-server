@@ -16,37 +16,40 @@ SSH ?= ssh
 RSYNC_FLAGS ?= -az --delete --human-readable --info=progress2
 RSYNC_EXCLUDES ?= --exclude .git/
 
-.PHONY: help init deploy setup-dry-run setup doctor dry-run install verify print-dns dns-state add-user setup-primary-mailbox add-alias change-password backup install-backup-cron
+.PHONY: help init deploy setup-dry-run setup doctor dry-run install verify check print-dns dns-state check-ssl service-state add-user setup-primary-mailbox add-alias change-password backup install-backup-cron
 
 help:
 	@printf '%s\n' \
-	  'Mail server installer entrypoint' \
+	  'Mail server installer' \
 	  '' \
-	  'Usage:' \
-	  '  make init' \
-	  '  make setup-dry-run' \
-	  '  sudo make setup' \
-	  '  make deploy' \
-	  '  make doctor' \
-	  '  make dry-run' \
-	  '  sudo make install' \
-	  '  sudo make verify' \
-	  '  sudo make print-dns' \
-	  '  make dns-state' \
+	  'Setup flow:' \
+	  '  make init                    Create .env from .env.example' \
+	  '  make setup-dry-run           Validate config and show planned changes' \
+	  '  sudo make setup              Install and verify on the target server' \
+	  '' \
+	  'Health checks:' \
+	  '  make check                   Run DNS, SSL/TLS, and service checks' \
+	  '  make dns-state               Check A/AAAA, MX, SPF, DMARC, PTR, DKIM' \
+	  '  make check-ssl               Check HTTPS, IMAPS, and SMTP TLS certs' \
+	  '  make service-state           Check services, ports, and web endpoints' \
+	  '  sudo make verify             Check local configs and active services' \
+	  '  sudo make print-dns          Print DNS records, including generated DKIM' \
+	  '' \
+	  'Mailbox operations:' \
 	  '  sudo make add-user USER=user@example.com' \
 	  '  sudo make setup-primary-mailbox' \
 	  '  sudo make add-alias SOURCE=postmaster@example.com DEST=user@example.com' \
 	  '  sudo make change-password USER=user@example.com' \
+	  '' \
+	  'Backup:' \
 	  '  sudo make backup' \
 	  '  sudo make install-backup-cron' \
 	  '' \
+	  'Remote copy:' \
+	  '  make deploy                  Copy this repository with SSH/rsync' \
+	  '' \
 	  'Defaults are loaded from ./.env when present. Override with CONFIG=./mail.env or ENV_FILE=path.' \
-	  '' \
-	  'Local server setup:' \
-	  '  Copy this repository to the target server, run make init, edit .env, then run make setup-dry-run and sudo make setup.' \
-	  '' \
-	  'Remote deployment:' \
-	  '  make deploy remains SSH/rsync-based for pushing this repository from another machine.'
+	  'Local setup uses the same commands after the repository is copied to the target server.'
 
 init:
 	@test -f "$(CONFIG)" || cp .env.example "$(CONFIG)"
@@ -81,11 +84,26 @@ install:
 verify:
 	./verify.sh --config "$(CONFIG)"
 
+check:
+	@status=0; \
+	./scripts/dns-state.sh --config "$(CONFIG)" || status=$$?; \
+	printf '\n'; \
+	./scripts/check-ssl.sh --config "$(CONFIG)" || status=$$?; \
+	printf '\n'; \
+	./scripts/service-state.sh --config "$(CONFIG)" || status=$$?; \
+	exit $$status
+
 print-dns:
 	./scripts/print-dns.sh --config "$(CONFIG)"
 
 dns-state:
 	./scripts/dns-state.sh --config "$(CONFIG)"
+
+check-ssl:
+	./scripts/check-ssl.sh --config "$(CONFIG)"
+
+service-state:
+	./scripts/service-state.sh --config "$(CONFIG)"
 
 add-user:
 	@test -n "$(MAIL_USER)" || { printf 'Set USER=user@example.com\n' >&2; exit 1; }

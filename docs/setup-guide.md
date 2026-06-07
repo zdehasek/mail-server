@@ -335,11 +335,11 @@ continuing.
 For a complete check against the configured `.env`, run:
 
 ```bash
-make dns-state
+make check
 ```
 
-The command checks host `A`/`AAAA`, `MX`, SPF, DMARC, provider PTR/rDNS, and
-DKIM when the generated DKIM key exists locally.
+This runs DNS, SSL/TLS, and service checks. To inspect only DNS, run
+`make dns-state`.
 
 ## 6. Dry Run
 
@@ -431,18 +431,19 @@ sudo make install-backup-cron
 
 ## 10. Test
 
-Local verification:
+Run the built-in checks:
 
 ```bash
 sudo make verify
+make check
 ```
 
-Public ports from another machine:
+The combined `make check` target runs:
 
 ```bash
-nc -vz mail.example.com 25
-nc -vz mail.example.com 587
-nc -vz mail.example.com 993
+make dns-state
+make check-ssl
+make service-state
 ```
 
 Webmail:

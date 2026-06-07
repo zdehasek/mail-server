@@ -29,6 +29,7 @@ sudo make install
 sudo make add-user USER=user@example.com
 sudo make print-dns
 sudo make verify
+make check
 sudo make install-backup-cron
 ```
 

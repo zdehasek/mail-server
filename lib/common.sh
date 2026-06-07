@@ -62,6 +62,11 @@ set_config_defaults() {
   : "${BACKUP_RETENTION_DAYS:=14}"
   : "${BACKUP_CRON_SCHEDULE:=17 3 * * *}"
   : "${SSH_ALLOW_USERS_DIRECTIVE:=}"
+  : "${PRIMARY_MAILBOX:=}"
+  : "${PRIMARY_MAILBOX_FULL_NAME:=$PRIMARY_MAILBOX}"
+  : "${PRIMARY_MAILBOX_PASSWORD:=}"
+  : "${PRIMARY_MAILBOX_PASSWORD_FILE:=/etc/mailserver/secrets/primary-mailbox-password}"
+  : "${PRIMARY_ALIAS_ADDRESSES:=$POSTMASTER_ADDRESS $ABUSE_ADDRESS dmarc@$PRIMARY_DOMAIN admin@$PRIMARY_DOMAIN}"
 }
 
 require_var() {

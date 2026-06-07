@@ -6,6 +6,18 @@ Create a mailbox:
 sudo ./scripts/add-user.sh user@example.com
 ```
 
+Create or refresh the configured primary mailbox and operational aliases:
+
+```bash
+sudo make setup-primary-mailbox
+```
+
+If the primary mailbox password was generated during setup, read it with:
+
+```bash
+sudo cat /etc/mailserver/secrets/primary-mailbox-password
+```
+
 Create an alias:
 
 ```bash

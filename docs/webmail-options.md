@@ -7,7 +7,6 @@ The default is stable and composable:
 - Email transport/storage: Postfix and Dovecot.
 - Webmail: pinned upstream Roundcube release.
 - Contacts/calendar sync: Radicale.
-- Browser calendar UI: texxasrulez/calendar over Radicale CalDAV.
 
 This avoids a heavy groupware suite while using mature components.
 
@@ -15,7 +14,7 @@ This avoids a heavy groupware suite while using mature components.
 
 Roundcube is mature and widely deployed. This installer uses a pinned upstream Roundcube release instead of the Ubuntu 26.04 package because the packaged Roundcube 1.6.x build is not currently compatible with PHP 8.5. The pinned upstream release keeps the install reproducible while avoiding that runtime breakage.
 
-Roundcube provides reliable browser-based IMAP/SMTP webmail and a built-in address book. Calendar UI is provided by the open-source texxasrulez/calendar plugin, configured as a CalDAV client for the same Radicale server used by native CalDAV/CardDAV clients.
+Roundcube provides reliable browser-based IMAP/SMTP webmail and a built-in address book. This installer does not enable a Roundcube calendar plugin.
 
 ## Radicale
 
@@ -26,13 +25,10 @@ Radicale is a minimal CalDAV/CardDAV server. It stores data as flat files, has a
 The recommended default is Roundcube plus Radicale:
 
 - Use Roundcube for webmail.
-- Use texxasrulez/calendar for browser calendar UI.
 - Use Radicale for the actual CalDAV/CardDAV storage and sync.
 - Use native clients such as iPhone Calendar, macOS Calendar, Thunderbird Calendar, or DAVx5 with an Android calendar app against the same Radicale endpoint.
 
-The calendar plugin is pinned through Composer and configured with the `caldav`
-backend, so Roundcube acts as another CalDAV client instead of becoming the
-source of truth for calendar storage.
+There is no bundled browser calendar UI. If browser calendar access becomes necessary, add it as a separate CalDAV web client instead of coupling it to Roundcube.
 
 ## SnappyMail
 

@@ -9,8 +9,6 @@ Default stack:
 - SQLite for virtual domains, users, and aliases.
 - Roundcube for stable browser webmail.
 - Radicale for contacts, calendars, CalDAV, and CardDAV.
-- texxasrulez/calendar for an open-source Roundcube calendar UI backed by
-  Radicale CalDAV.
 - Nginx as HTTPS reverse proxy.
 - Let's Encrypt certificates via Certbot webroot challenge.
 - OpenDKIM, OpenDMARC, SPF policy checks, and Rspamd.
@@ -61,7 +59,7 @@ See `docs/dns.md` for exact records.
 
 ## Why Roundcube And Radicale
 
-SOGo is capable but overbuilt for a small self-hosted mail server. This installer uses smaller, stable single-purpose components: Roundcube for webmail, Radicale for contacts/calendar sync, and the GPL-licensed texxasrulez/calendar plugin as a browser calendar UI over the existing Radicale CalDAV backend.
+SOGo is capable but overbuilt for a small self-hosted mail server. This installer uses smaller, stable single-purpose components: Roundcube for webmail and Radicale for contacts/calendar sync. Browser calendar access is intentionally left to native CalDAV clients or a separate web UI, not a Roundcube plugin.
 
 See `docs/webmail-options.md` for the comparison.
 

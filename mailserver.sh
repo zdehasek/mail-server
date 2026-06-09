@@ -120,10 +120,10 @@ show_help() {
 
 Usage:
   mailserver [--config PATH] COMMAND [OPTIONS]
-  curl -fsSL https://example.com/mailserver.sh | sudo bash -s -- COMMAND
+  curl -fsSL https://raw.githubusercontent.com/zdehasek/email-server/master/mailserver.sh | sudo bash -s -- COMMAND
 
 Setup:
-  init                         Create ~/.email-server/config.env from .env.example
+  init                         Create ~/.email-server/config.env interactively
   install-cli                  Install mailserver into PATH
   doctor                       Validate local prerequisites and config
   setup-dry-run                Run doctor, dry-run install, and DNS output
@@ -159,14 +159,13 @@ Backup:
 
 Examples:
   mailserver init
-  editor ~/.email-server/config.env
   mailserver doctor
   mailserver setup-dry-run
   sudo mailserver install
   mailserver client-info --user user@example.com
   ./mailserver.sh doctor --config .env.example
-  curl -fsSL https://example.com/mailserver.sh | sudo bash -s -- init
-  curl -fsSL https://example.com/mailserver.sh | sudo MAILSERVER_INSTALL_DIR=/opt/mailserver bash -s -- setup-dry-run
+  curl -fsSL https://raw.githubusercontent.com/zdehasek/email-server/master/mailserver.sh | sudo bash -s -- init
+  curl -fsSL https://raw.githubusercontent.com/zdehasek/email-server/master/mailserver.sh | sudo MAILSERVER_INSTALL_DIR=/opt/mailserver bash -s -- setup-dry-run
 
 Notes:
   The default config is ~/.email-server/config.env. When run through sudo,
@@ -193,7 +192,7 @@ show_command_help() {
       printf 'Usage: mailserver %s [--user user@example.com] [--config PATH]\n' "$1"
       ;;
     init)
-      printf 'Usage: mailserver init [--config PATH]\n'
+      printf 'Usage: mailserver init [--domain DOMAIN] [--admin-email EMAIL] [--mail-hostname HOST] [--webmail-hostname HOST] [--dav-hostname HOST] [--public-ipv4 IP] [--public-ipv6 IP] [--timezone TZ] [--non-interactive] [--config PATH]\n'
       ;;
     install-cli)
       printf 'Usage: mailserver install-cli\n'
@@ -380,9 +379,126 @@ run_root_cmd() {
   fi
 }
 
+has_tty() {
+  [[ -r /dev/tty && -w /dev/tty ]]
+}
+
+prompt_tty() {
+  local label="$1"
+  local default="${2:-}"
+  local reply
+
+  has_tty || return 1
+  if [[ -n "$default" ]]; then
+    printf '%s [%s]: ' "$label" "$default" > /dev/tty
+  else
+    printf '%s: ' "$label" > /dev/tty
+  fi
+  IFS= read -r reply < /dev/tty
+  printf '%s\n' "${reply:-$default}"
+}
+
+detect_public_ipv4() {
+  command -v curl >/dev/null 2>&1 || return 0
+  curl -fsS --max-time 5 https://api.ipify.org 2>/dev/null || true
+}
+
+detect_timezone() {
+  if [[ -n "${TZ:-}" ]]; then
+    printf '%s\n' "$TZ"
+  elif [[ -f /etc/timezone ]]; then
+    head -n 1 /etc/timezone
+  else
+    printf 'UTC\n'
+  fi
+}
+
+config_value() {
+  local value="$1"
+  if [[ "$value" =~ ^[A-Za-z0-9_./:@%+=,-]*$ ]]; then
+    printf '%s\n' "$value"
+  else
+    value="${value//\\/\\\\}"
+    value="${value//\"/\\\"}"
+    value="${value//\$/\\\$}"
+    value="${value//\`/\\\`}"
+    printf '"%s"\n' "$value"
+  fi
+}
+
+set_config_entry() {
+  local file="$1"
+  local key="$2"
+  local value
+  value="$(config_value "$3")"
+  sed -i "s|^$key=.*|$key=$value|" "$file"
+}
+
 cmd_init() {
   extract_common_args "$@"
-  [[ "${#REMAINING_ARGS[@]}" -eq 0 ]] || die "init does not accept positional arguments."
+  local domain=""
+  local mail_hostname=""
+  local admin_email=""
+  local webmail_hostname=""
+  local dav_hostname=""
+  local public_ipv4=""
+  local public_ipv6=""
+  local timezone=""
+  local non_interactive="false"
+  local arg
+
+  while [[ "${#REMAINING_ARGS[@]}" -gt 0 ]]; do
+    arg="${REMAINING_ARGS[0]}"
+    REMAINING_ARGS=("${REMAINING_ARGS[@]:1}")
+    case "$arg" in
+      --domain)
+        [[ -n "${REMAINING_ARGS[0]:-}" ]] || die "Missing value for --domain."
+        domain="${REMAINING_ARGS[0]}"
+        REMAINING_ARGS=("${REMAINING_ARGS[@]:1}")
+        ;;
+      --mail-hostname)
+        [[ -n "${REMAINING_ARGS[0]:-}" ]] || die "Missing value for --mail-hostname."
+        mail_hostname="${REMAINING_ARGS[0]}"
+        REMAINING_ARGS=("${REMAINING_ARGS[@]:1}")
+        ;;
+      --admin-email)
+        [[ -n "${REMAINING_ARGS[0]:-}" ]] || die "Missing value for --admin-email."
+        admin_email="${REMAINING_ARGS[0]}"
+        REMAINING_ARGS=("${REMAINING_ARGS[@]:1}")
+        ;;
+      --webmail-hostname)
+        [[ -n "${REMAINING_ARGS[0]:-}" ]] || die "Missing value for --webmail-hostname."
+        webmail_hostname="${REMAINING_ARGS[0]}"
+        REMAINING_ARGS=("${REMAINING_ARGS[@]:1}")
+        ;;
+      --dav-hostname)
+        [[ -n "${REMAINING_ARGS[0]:-}" ]] || die "Missing value for --dav-hostname."
+        dav_hostname="${REMAINING_ARGS[0]}"
+        REMAINING_ARGS=("${REMAINING_ARGS[@]:1}")
+        ;;
+      --public-ipv4)
+        [[ -n "${REMAINING_ARGS[0]:-}" ]] || die "Missing value for --public-ipv4."
+        public_ipv4="${REMAINING_ARGS[0]}"
+        REMAINING_ARGS=("${REMAINING_ARGS[@]:1}")
+        ;;
+      --public-ipv6)
+        [[ -n "${REMAINING_ARGS[0]:-}" ]] || die "Missing value for --public-ipv6."
+        public_ipv6="${REMAINING_ARGS[0]}"
+        REMAINING_ARGS=("${REMAINING_ARGS[@]:1}")
+        ;;
+      --timezone)
+        [[ -n "${REMAINING_ARGS[0]:-}" ]] || die "Missing value for --timezone."
+        timezone="${REMAINING_ARGS[0]}"
+        REMAINING_ARGS=("${REMAINING_ARGS[@]:1}")
+        ;;
+      --non-interactive)
+        non_interactive="true"
+        ;;
+      *)
+        die "Unknown init option: $arg"
+        ;;
+    esac
+  done
   require_checkout_files
 
   local dest
@@ -394,13 +510,60 @@ cmd_init() {
 
   mkdir -p "$(dirname "$dest")"
   cp "$ROOT_DIR/.env.example" "$dest"
+
+  if [[ "$non_interactive" != "true" && ( -z "$domain" || -z "$admin_email" || -z "$public_ipv4" ) ]]; then
+    if has_tty; then
+      say "Creating $dest"
+      say "Answer the setup prompts. Press Enter to accept shown defaults."
+      domain="${domain:-$(prompt_tty "Primary mail domain" "${MAILSERVER_DOMAIN:-}")}"
+      mail_hostname="${mail_hostname:-mail.$domain}"
+      admin_email="${admin_email:-admin@$domain}"
+      webmail_hostname="${webmail_hostname:-$mail_hostname}"
+      dav_hostname="${dav_hostname:-dav.$domain}"
+      public_ipv4="${public_ipv4:-$(detect_public_ipv4)}"
+      timezone="${timezone:-$(detect_timezone)}"
+      mail_hostname="$(prompt_tty "Mail hostname / MX target" "$mail_hostname")"
+      admin_email="$(prompt_tty "Admin email for Let's Encrypt" "$admin_email")"
+      webmail_hostname="$(prompt_tty "Webmail hostname" "$webmail_hostname")"
+      dav_hostname="$(prompt_tty "CalDAV/CardDAV hostname" "$dav_hostname")"
+      public_ipv4="$(prompt_tty "Server public IPv4" "$public_ipv4")"
+      public_ipv6="$(prompt_tty "Server public IPv6, optional" "$public_ipv6")"
+      timezone="$(prompt_tty "Server timezone" "$timezone")"
+    else
+      warn "No interactive terminal available; created config with example values."
+      warn "Re-run init with --domain, --admin-email, and --public-ipv4 to avoid editing the file manually."
+    fi
+  fi
+
+  if [[ -n "$domain" ]]; then
+    mail_hostname="${mail_hostname:-mail.$domain}"
+    admin_email="${admin_email:-admin@$domain}"
+    webmail_hostname="${webmail_hostname:-$mail_hostname}"
+    dav_hostname="${dav_hostname:-dav.$domain}"
+    timezone="${timezone:-$(detect_timezone)}"
+    set_config_entry "$dest" "PRIMARY_DOMAIN" "$domain"
+    set_config_entry "$dest" "MAIL_HOSTNAME" "$mail_hostname"
+    set_config_entry "$dest" "ADMIN_EMAIL" "$admin_email"
+    set_config_entry "$dest" "WEBMAIL_HOSTNAME" "$webmail_hostname"
+    set_config_entry "$dest" "DAV_HOSTNAME" "$dav_hostname"
+    set_config_entry "$dest" "ROUNDCUBE_CALDAV_BASE_URL" "https://$dav_hostname/"
+    set_config_entry "$dest" "TIMEZONE" "$timezone"
+    set_config_entry "$dest" "POSTMASTER_ADDRESS" "postmaster@$domain"
+    set_config_entry "$dest" "ABUSE_ADDRESS" "abuse@$domain"
+    set_config_entry "$dest" "PRIMARY_MAILBOX" "$admin_email"
+    set_config_entry "$dest" "PRIMARY_ALIAS_ADDRESSES" "postmaster@$domain abuse@$domain dmarc@$domain $admin_email"
+  fi
+  [[ -n "$public_ipv4" ]] && set_config_entry "$dest" "SERVER_PUBLIC_IPV4" "$public_ipv4"
+  [[ -n "$public_ipv6" ]] && set_config_entry "$dest" "SERVER_PUBLIC_IPV6" "$public_ipv6"
+
   chmod 600 "$dest"
   if [[ "$dest" == "$DEFAULT_CONFIG_FILE" ]]; then
     chmod 700 "$(dirname "$dest")"
     chown_for_sudo_user "$(dirname "$dest")"
     chown_for_sudo_user "$dest"
   fi
-  ok "Created $dest. Edit it before installing."
+  ok "Created $dest."
+  say "Next: mailserver doctor"
 }
 
 cmd_install_cli() {

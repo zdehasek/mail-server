@@ -16,7 +16,6 @@ git clone git@github.com:zdehasek/email-server.git
 cd email-server
 ./mailserver.sh install-cli
 mailserver init
-editor ~/.email-server/config.env
 mailserver setup-dry-run
 sudo mailserver setup
 ```
@@ -24,8 +23,7 @@ sudo mailserver setup
 Or bootstrap a checkout from a hosted copy of the CLI:
 
 ```bash
-curl -fsSL https://example.com/mailserver.sh | sudo bash -s -- init
-editor ~/.email-server/config.env
+curl -fsSL https://raw.githubusercontent.com/zdehasek/email-server/master/mailserver.sh | sudo bash -s -- init
 mailserver setup-dry-run
 sudo mailserver setup
 ```
@@ -35,6 +33,27 @@ command there. Override the defaults with `MAILSERVER_REPO_URL`,
 `MAILSERVER_INSTALL_DIR`, or `MAILSERVER_REF`. It keeps the checkout under
 `MAILSERVER_INSTALL_DIR`, `/opt/mailserver` by default, and tries to install the
 `mailserver` command into `/usr/local/bin` when permissions allow it.
+
+To use your own URL, publish the raw `mailserver.sh` file somewhere reachable
+over HTTPS. For GitHub, use this shape:
+
+```text
+https://raw.githubusercontent.com/<owner>/<repo>/<branch>/mailserver.sh
+```
+
+For a custom domain, point Nginx/Caddy/static hosting at the raw file and verify
+the URL before piping it into Bash:
+
+```bash
+curl -fsSL https://your-domain.example/mailserver.sh | head
+```
+
+If the raw script should clone a fork or private mirror, pass its git URL into
+the bootstrap command:
+
+```bash
+curl -fsSL https://your-domain.example/mailserver.sh | sudo MAILSERVER_REPO_URL=https://github.com/<owner>/<repo>.git bash -s -- init
+```
 
 ## 2. Confirm The Target Server
 
@@ -63,13 +82,12 @@ If an existing web server already uses `80`/`443`, keep it running only if it is
 Nginx and separate `server_name` blocks can be added for the mail hostnames.
 The installer manages Nginx vhosts for webmail and DAV.
 
-## 3. Configure `~/.email-server/config.env`
+## 3. Create `~/.email-server/config.env`
 
-Create the default config:
+Create the default config with the interactive init wizard:
 
 ```bash
 mailserver init
-editor ~/.email-server/config.env
 ```
 
 `mailserver` loads this file automatically. You can also pass
@@ -77,6 +95,22 @@ editor ~/.email-server/config.env
 `ENV_FILE`. When a command runs through `sudo`, the sudo user's home is used so
 `sudo mailserver setup` reads the same default config created by
 `mailserver init`.
+
+For unattended setup, pass the important values directly:
+
+```bash
+mailserver init \
+  --domain example.com \
+  --admin-email admin@example.com \
+  --mail-hostname mail.example.com \
+  --webmail-hostname mail.example.com \
+  --dav-hostname dav.example.com \
+  --public-ipv4 203.0.113.10 \
+  --timezone Europe/Prague
+```
+
+Manual editing of `~/.email-server/config.env` is still possible for advanced
+changes, but it is not the normal install path.
 
 ### Domain And Hostnames
 

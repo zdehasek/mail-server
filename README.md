@@ -25,7 +25,6 @@ git clone git@github.com:zdehasek/email-server.git
 cd email-server
 ./mailserver.sh install-cli
 mailserver init
-editor ~/.email-server/config.env
 mailserver doctor
 mailserver dry-run
 sudo mailserver install
@@ -38,16 +37,15 @@ sudo mailserver install-backup-cron
 
 Run these commands on the target server. Remote deployment is not a supported
 interface. By default, `mailserver init` creates
-`~/.email-server/config.env` from `.env.example`. All commands use that file
-unless `--config PATH`, `CONFIG=PATH`, or `ENV_FILE=PATH` is set. When a command
-is run with `sudo`, the sudo user's home is used for the default config path.
+`~/.email-server/config.env` interactively. All commands use that file unless
+`--config PATH`, `CONFIG=PATH`, or `ENV_FILE=PATH` is set. When a command is run
+with `sudo`, the sudo user's home is used for the default config path.
 
 You can also bootstrap the checkout on the target server with a hosted copy of
 `mailserver.sh`:
 
 ```bash
-curl -fsSL https://example.com/mailserver.sh | sudo bash -s -- init
-editor ~/.email-server/config.env
+curl -fsSL https://raw.githubusercontent.com/zdehasek/email-server/master/mailserver.sh | sudo bash -s -- init
 mailserver setup-dry-run
 sudo mailserver setup
 ```
@@ -58,6 +56,24 @@ bootstrap keeps the checkout under `MAILSERVER_INSTALL_DIR`, `/opt/mailserver`
 by default, and tries to install `/usr/local/bin/mailserver` when permissions
 allow it. If PATH installation fails, run `/opt/mailserver/mailserver.sh
 install-cli` later.
+
+To make the curl URL work for your own fork, commit `mailserver.sh`, push it to
+GitHub, and use the raw file URL:
+
+```text
+https://raw.githubusercontent.com/<owner>/<repo>/<branch>/mailserver.sh
+```
+
+For a custom domain, serve the same raw `mailserver.sh` file over HTTPS and make
+sure this succeeds on a clean server:
+
+```bash
+curl -fsSL https://your-domain.example/mailserver.sh | head
+```
+
+The piped script only bootstraps a local git checkout. Set
+`MAILSERVER_REPO_URL=https://github.com/<owner>/<repo>.git` when the hosted
+`mailserver.sh` should clone a fork instead of the default repository.
 
 ```bash
 mailserver update

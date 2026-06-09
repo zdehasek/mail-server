@@ -4,7 +4,7 @@ set -euo pipefail
 IFS=$'\n\t'
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-CONFIG_FILE=""
+CONFIG_FILE="${CONFIG:-${ENV_FILE:-}}"
 DRY_RUN="false"
 ASSUME_YES="false"
 FORCE="false"
@@ -52,7 +52,7 @@ fail_state() {
 usage_common() {
   cat <<'USAGE'
 Common options:
-  --config PATH       Path to mail.env
+  --config PATH       Path to config.env
   --dry-run           Print actions without changing the host
   --assume-yes        Do not prompt for confirmation
   --force             Continue past selected preflight failures
@@ -65,7 +65,11 @@ parse_common_args() {
       --config) CONFIG_FILE="${2:-}"; shift 2 ;;
       --dry-run) DRY_RUN="true"; shift ;;
       --assume-yes|-y) ASSUME_YES="true"; shift ;;
-      --force) FORCE="true"; shift ;;
+      --force)
+        # shellcheck disable=SC2034 # Read by sourced phase/preflight scripts.
+        FORCE="true"
+        shift
+        ;;
       --help|-h) usage_common; exit 0 ;;
       *) die "Unknown argument: $1" ;;
     esac
@@ -76,8 +80,31 @@ require_root() {
   [[ "${EUID}" -eq 0 ]] || die "Run as root, usually with sudo."
 }
 
+config_home() {
+  local sudo_home
+
+  if [[ "$EUID" -eq 0 && -n "${SUDO_USER:-}" && "${SUDO_USER:-}" != "root" ]]; then
+    sudo_home="$(getent passwd "$SUDO_USER" | cut -d: -f6 || true)"
+    if [[ -n "$sudo_home" ]]; then
+      printf '%s\n' "$sudo_home"
+      return 0
+    fi
+  fi
+
+  if [[ -n "${HOME:-}" ]]; then
+    printf '%s\n' "$HOME"
+    return 0
+  fi
+
+  getent passwd "$(id -un)" | cut -d: -f6
+}
+
+default_config_file() {
+  printf '%s/config.env\n' "${MAILSERVER_CONFIG_DIR:-$(config_home)/.email-server}"
+}
+
 load_config() {
-  [[ -n "$CONFIG_FILE" ]] || die "Missing --config PATH."
+  [[ -n "$CONFIG_FILE" ]] || CONFIG_FILE="$(default_config_file)"
   [[ -f "$CONFIG_FILE" ]] || die "Config file not found: $CONFIG_FILE"
   # shellcheck source=/dev/null
   source "$CONFIG_FILE"
@@ -198,7 +225,7 @@ render_template() {
   local body
   body="$(replace_tokens "$src")"
   write_file "$dest" "$MANAGED_HEADER
-# Source template: ${src#$ROOT_DIR/}
+# Source template: ${src#"$ROOT_DIR"/}
 $body"
 }
 
@@ -368,7 +395,7 @@ provision_radicale_calendar() {
 }
 
 parse_config_only_args() {
-  CONFIG_FILE="./mail.env"
+  CONFIG_FILE="${CONFIG:-${ENV_FILE:-$(default_config_file)}}"
   POSITIONAL=()
   while [[ $# -gt 0 ]]; do
     case "$1" in

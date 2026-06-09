@@ -6,7 +6,7 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 source "$ROOT_DIR/lib/common.sh"
 
 parse_config_only_args "$@" || {
-  echo "Usage: sudo $0 [--config ./mail.env] [--dry-run]"
+  echo "Usage: sudo mailserver setup-primary-mailbox [--config PATH] [--dry-run]"
   exit 0
 }
 require_root

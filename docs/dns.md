@@ -1,6 +1,6 @@
 # DNS Records
 
-Replace example values with `.env` values.
+Replace example values with `~/.email-server/config.env` values.
 
 ```text
 example.com.          MX   10 mail.example.com.
@@ -21,13 +21,14 @@ webmail.example.com.  AAAA 2001:db8::10
 DKIM is generated during install. Print it with:
 
 ```bash
-sudo make print-dns
+sudo mailserver print-dns
 ```
 
-After publishing the records, check current DNS state against `.env` with:
+After publishing the records, check current DNS state against
+`~/.email-server/config.env` with:
 
 ```bash
-make dns-state
+mailserver dns-state
 ```
 
 The DNS check uses `1.1.1.1` by default so local resolver aliases, caches, and
@@ -35,13 +36,13 @@ server-hostname synthetic records do not look like public DNS records. Override
 it when needed:
 
 ```bash
-make dns-state DNS_RESOLVER=8.8.8.8
+DNS_RESOLVER=8.8.8.8 mailserver dns-state
 ```
 
 To also check SSL/TLS certificates and service ports, run:
 
 ```bash
-make check
+mailserver check
 ```
 
 Initial DMARC policy:

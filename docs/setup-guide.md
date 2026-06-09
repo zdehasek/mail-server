@@ -1,45 +1,40 @@
 # Mail Server Setup Guide
 
 This guide is the start-to-finish runbook for installing this mail server. It
-covers both supported flows:
-
-- Local setup: run the installer directly on the target server.
-- SSH deploy: copy the repository to a remote server with `rsync`, then run the
-  same local setup commands there.
+covers the supported local setup flow: run the installer directly on the target
+server.
 
 The installer is intentionally not fully automatic. DNS, PTR/rDNS, provider SMTP
 policy, and final deliverability tests must be handled outside the server.
 
 ## 1. Choose The Install Flow
 
-Use local setup when you are already on the server:
+Run on the target server:
 
 ```bash
 git clone git@github.com:zdehasek/email-server.git
 cd email-server
-make init
+./mailserver.sh install-cli
+mailserver init
+editor ~/.email-server/config.env
+mailserver setup-dry-run
+sudo mailserver setup
 ```
 
-Use SSH deploy when you are working from another machine and have SSH access to
-the target server:
+Or bootstrap a checkout from a hosted copy of the CLI:
 
 ```bash
-git clone git@github.com:zdehasek/email-server.git
-cd email-server
-make init
-editor .env
-make deploy HOST=app@example-server REMOTE_DIR=/tmp/mail-server
-ssh app@example-server
-cd /tmp/mail-server
+curl -fsSL https://example.com/mailserver.sh | sudo bash -s -- init
+editor ~/.email-server/config.env
+mailserver setup-dry-run
+sudo mailserver setup
 ```
 
-Both flows converge here:
-
-```bash
-editor .env
-make setup-dry-run
-sudo make setup
-```
+The curl-pipe path only creates or reuses a local git checkout and runs the
+command there. Override the defaults with `MAILSERVER_REPO_URL`,
+`MAILSERVER_INSTALL_DIR`, or `MAILSERVER_REF`. It keeps the checkout under
+`MAILSERVER_INSTALL_DIR`, `/opt/mailserver` by default, and tries to install the
+`mailserver` command into `/usr/local/bin` when permissions allow it.
 
 ## 2. Confirm The Target Server
 
@@ -68,34 +63,20 @@ If an existing web server already uses `80`/`443`, keep it running only if it is
 Nginx and separate `server_name` blocks can be added for the mail hostnames.
 The installer manages Nginx vhosts for webmail and DAV.
 
-## 3. Configure `.env`
+## 3. Configure `~/.email-server/config.env`
 
-Create `.env`:
-
-```bash
-make init
-editor .env
-```
-
-The Makefile and installer both load this file.
-
-### Deploy Settings
-
-Used only by `make deploy`. Local setup ignores these values.
+Create the default config:
 
 ```bash
-HOST=app@example-server
-REMOTE_DIR=/tmp/mail-server
-RSYNC=rsync
-SSH=ssh
-RSYNC_EXCLUDES=--exclude=.git/
+mailserver init
+editor ~/.email-server/config.env
 ```
 
-- `HOST`: SSH destination for deploy, for example `app@203.0.113.10`.
-- `REMOTE_DIR`: target directory on the remote server.
-- `RSYNC`: rsync binary.
-- `SSH`: ssh binary.
-- `RSYNC_EXCLUDES`: extra rsync exclude arguments.
+`mailserver` loads this file automatically. You can also pass
+`--config /path/to/config.env` to any subcommand, or set `CONFIG` or
+`ENV_FILE`. When a command runs through `sudo`, the sudo user's home is used so
+`sudo mailserver setup` reads the same default config created by
+`mailserver init`.
 
 ### Domain And Hostnames
 
@@ -221,7 +202,7 @@ PRIMARY_MAILBOX_PASSWORD_FILE=/etc/mailserver/secrets/primary-mailbox-password
 PRIMARY_ALIAS_ADDRESSES="postmaster@example.com abuse@example.com dmarc@example.com admin@example.com"
 ```
 
-- `PRIMARY_MAILBOX`: mailbox created automatically during `sudo make setup`.
+- `PRIMARY_MAILBOX`: mailbox created automatically during `sudo mailserver setup`.
 - `PRIMARY_MAILBOX_FULL_NAME`: display name stored for the mailbox.
 - `PRIMARY_MAILBOX_PASSWORD`: optional explicit password. Leave empty to
   generate one.
@@ -237,7 +218,7 @@ exists, setup leaves it in place.
 ## 4. Publish DNS Before Installing
 
 Let's Encrypt validation requires DNS to point at the target server before
-`sudo make setup` runs.
+`sudo mailserver setup` runs.
 
 Use DNS-only records for mail hostnames when using Cloudflare. Do not proxy SMTP
 or IMAP hostnames through Cloudflare.
@@ -314,8 +295,8 @@ server IP back to `MAIL_HOSTNAME`:
 For Hetzner, open the server, go to `Networking`, find the public IPv4 address,
 edit `Reverse DNS` / `rDNS`, and set it to `mail.example.com`.
 
-DKIM is generated during installation. Publish it after `sudo make setup` by
-running `sudo make print-dns`.
+DKIM is generated during installation. Publish it after `sudo mailserver setup`
+by running `sudo mailserver print-dns`.
 
 ## 5. Wait For DNS
 
@@ -332,21 +313,21 @@ dig +short TXT _dmarc.example.com
 `mail.example.com` and `dav.example.com` must return `SERVER_PUBLIC_IPV4` before
 continuing.
 
-For a complete check against the configured `.env`, run:
+For a complete check against the configured `~/.email-server/config.env`, run:
 
 ```bash
-make check
+mailserver check
 ```
 
 This runs DNS, SSL/TLS, and service checks. To inspect only DNS, run
-`make dns-state`.
+`mailserver dns-state`.
 
 ## 6. Dry Run
 
 Run:
 
 ```bash
-make setup-dry-run
+mailserver setup-dry-run
 ```
 
 Do not continue until the dry run finishes without errors. Read warnings before
@@ -363,15 +344,15 @@ continuing. Common blockers:
 Run on the target server:
 
 ```bash
-sudo make setup
+sudo mailserver setup
 ```
 
 This runs:
 
-1. `doctor.sh`
-2. `install.sh --assume-yes`
-3. `verify.sh`
-4. `scripts/print-dns.sh`
+1. `mailserver doctor`
+2. `mailserver install`
+3. `mailserver verify`
+4. `mailserver print-dns`
 
 Managed files are backed up under `/var/backups/mailserver/<timestamp>/` before
 they are overwritten.
@@ -381,7 +362,7 @@ they are overwritten.
 After installation:
 
 ```bash
-sudo make print-dns
+sudo mailserver print-dns
 ```
 
 Copy the generated DKIM TXT record:
@@ -399,16 +380,16 @@ Keep DMARC at `p=none` until outbound delivery tests are clean. Later move to
 After publishing DKIM, verify the live DNS state again:
 
 ```bash
-make dns-state
+mailserver dns-state
 ```
 
 ## 9. Confirm Primary Mailbox And Aliases
 
-If `PRIMARY_MAILBOX` is set, `sudo make setup` creates the mailbox and aliases
-automatically. To run only that step again:
+If `PRIMARY_MAILBOX` is set, `sudo mailserver setup` creates the mailbox and
+aliases automatically. To run only that step again:
 
 ```bash
-sudo make setup-primary-mailbox
+sudo mailserver setup-primary-mailbox
 ```
 
 If the password was generated, read it from the root-only password file:
@@ -420,13 +401,13 @@ sudo cat /etc/mailserver/secrets/primary-mailbox-password
 Additional mailboxes can still be created manually:
 
 ```bash
-sudo make add-user USER=user@example.com
+sudo mailserver add-user --user user@example.com
 ```
 
 Install recurring backups:
 
 ```bash
-sudo make install-backup-cron
+sudo mailserver install-backup-cron
 ```
 
 ## 10. Test
@@ -434,16 +415,16 @@ sudo make install-backup-cron
 Run the built-in checks:
 
 ```bash
-sudo make verify
-make check
+sudo mailserver verify
+mailserver check
 ```
 
-The combined `make check` target runs:
+The combined `check` command runs:
 
 ```bash
-make dns-state
-make check-ssl
-make service-state
+mailserver dns-state
+mailserver check-ssl
+mailserver service-state
 ```
 
 Webmail:

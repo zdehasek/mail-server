@@ -17,29 +17,55 @@ Default stack:
 ## Quick Start
 
 For the complete step-by-step setup guide, including local installation,
-SSH/rsync deployment, `.env`, DNS, DKIM, mailboxes, and tests, follow
+`~/.email-server/config.env`, DNS, DKIM, mailboxes, and tests, follow
 [`docs/setup-guide.md`](docs/setup-guide.md).
 
 ```bash
-make init
-editor .env
-make doctor
-make dry-run
-sudo make install
-sudo make add-user USER=user@example.com
-sudo make print-dns
-sudo make verify
-make check
-sudo make install-backup-cron
+git clone git@github.com:zdehasek/email-server.git
+cd email-server
+./mailserver.sh install-cli
+mailserver init
+editor ~/.email-server/config.env
+mailserver doctor
+mailserver dry-run
+sudo mailserver install
+sudo mailserver add-user --user user@example.com
+sudo mailserver print-dns
+sudo mailserver verify
+mailserver check
+sudo mailserver install-backup-cron
 ```
 
-Deploy to a remote host:
+Run these commands on the target server. Remote deployment is not a supported
+interface. By default, `mailserver init` creates
+`~/.email-server/config.env` from `.env.example`. All commands use that file
+unless `--config PATH`, `CONFIG=PATH`, or `ENV_FILE=PATH` is set. When a command
+is run with `sudo`, the sudo user's home is used for the default config path.
+
+You can also bootstrap the checkout on the target server with a hosted copy of
+`mailserver.sh`:
 
 ```bash
-make deploy HOST=app@46.224.197.110 REMOTE_DIR=/tmp/mail-server
+curl -fsSL https://example.com/mailserver.sh | sudo bash -s -- init
+editor ~/.email-server/config.env
+mailserver setup-dry-run
+sudo mailserver setup
 ```
 
-The Makefile loads `./.env` automatically, so `HOST`, `REMOTE_DIR`, and installer settings can live there. `deploy` uses `rsync` and syncs the project directory to `REMOTE_DIR`, excluding only `.git/` by default. Override `RSYNC_EXCLUDES` if you want different exclusions.
+Set `MAILSERVER_REPO_URL`, `MAILSERVER_INSTALL_DIR`, or `MAILSERVER_REF` before
+`bash` to override the git source, install path, or branch/tag. Curl-pipe
+bootstrap keeps the checkout under `MAILSERVER_INSTALL_DIR`, `/opt/mailserver`
+by default, and tries to install `/usr/local/bin/mailserver` when permissions
+allow it. If PATH installation fails, run `/opt/mailserver/mailserver.sh
+install-cli` later.
+
+```bash
+mailserver update
+```
+
+`update` fast-forwards the checked-out installer from its git remote. If you run
+the CLI via a curl-pipe one-liner, it first reuses or creates the local checkout
+and then runs the update there.
 
 Do not run this on an existing mail server without reading `docs/prerequisites.md` and taking backups. The installer backs up managed files before overwriting them, but it is designed for a fresh Ubuntu 26.04 host.
 
@@ -68,8 +94,8 @@ See `docs/webmail-options.md` for the comparison.
 - `doctor.sh` is read-only.
 - `install.sh --dry-run` prints intended changes without applying them.
 - Managed files are backed up under `/var/backups/mailserver/<timestamp>/`.
-- `sudo make backup` creates a mail server data backup.
-- `sudo make install-backup-cron` installs a recurring backup job.
+- `sudo mailserver backup` creates a mail server data backup.
+- `sudo mailserver install-backup-cron` installs a recurring backup job.
 - Mailboxes are never deleted by these scripts.
 - UFW defaults to deny incoming and only allows SSH, SMTP, HTTP/HTTPS, submission, and IMAPS.
 - SSH hardening is skipped unless a key-enabled allowed user is known.

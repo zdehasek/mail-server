@@ -3,6 +3,7 @@
 set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 # shellcheck source=../lib/common.sh
+# shellcheck disable=SC1091
 source "$ROOT_DIR/lib/common.sh"
 
 parse_config_only_args "$@" || true
@@ -124,9 +125,9 @@ if [[ -r "$dkim_file" ]]; then
   fi
 elif [[ -f "$dkim_file" ]]; then
   if [[ "$dns_dkim" == *"v=DKIM1"* && "$dns_dkim" == *"p="* ]]; then
-    warn_state "$dkim_name TXT exists, but $dkim_file is not readable; run sudo make dns-state to compare exact key"
+    warn_state "$dkim_name TXT exists, but $dkim_file is not readable; run sudo mailserver dns-state to compare exact key"
   else
-    fail_state "$dkim_name TXT missing; run sudo make print-dns to read the generated value"
+    fail_state "$dkim_name TXT missing; run sudo mailserver print-dns to read the generated value"
   fi
 else
   warn_state "Generated DKIM file not found yet: $dkim_file"

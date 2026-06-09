@@ -6,4 +6,4 @@ The local-only guide has moved into the complete setup guide:
 docs/setup-guide.md
 ```
 
-Use that guide for both local setup and SSH/rsync deployment.
+Use that guide for local setup on the target server.

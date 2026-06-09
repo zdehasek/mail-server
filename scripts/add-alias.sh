@@ -5,7 +5,7 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 # shellcheck source=../lib/common.sh
 source "$ROOT_DIR/lib/common.sh"
 
-usage() { echo "Usage: sudo $0 [--config ./mail.env] source@example.com destination@example.com"; }
+usage() { echo "Usage: sudo mailserver add-alias --source source@example.com --dest destination@example.com [--config PATH]"; }
 parse_config_only_args "$@" || { usage; exit 0; }
 [[ "${#POSITIONAL[@]}" -eq 2 ]] || { usage; exit 1; }
 require_root

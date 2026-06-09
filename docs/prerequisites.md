@@ -36,7 +36,7 @@ Other listening services are not exposed through UFW by default. `UFW_RESET_RULE
 
 ## SSH Hardening
 
-When `ENABLE_SSH_HARDENING=true`, the installer writes `/etc/ssh/sshd_config.d/99-mailserver-hardening.conf` with root login and password login disabled. Set `SSH_ALLOW_USERS` in `.env` to the SSH user that should remain allowed, for example:
+When `ENABLE_SSH_HARDENING=true`, the installer writes `/etc/ssh/sshd_config.d/99-mailserver-hardening.conf` with root login and password login disabled. Set `SSH_ALLOW_USERS` in `~/.email-server/config.env` to the SSH user that should remain allowed, for example:
 
 ```bash
 SSH_ALLOW_USERS="app"

@@ -45,7 +45,7 @@ You can also bootstrap the checkout on the target server with a hosted copy of
 `mailserver.sh`:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/zdehasek/email-server/master/mailserver.sh | sudo bash -s -- init
+curl -fsSL https://raw.githubusercontent.com/zdehasek/email-server/master/mailserver.sh | sudo bash
 mailserver setup-dry-run
 sudo mailserver setup
 ```
@@ -54,8 +54,8 @@ Set `MAILSERVER_REPO_URL`, `MAILSERVER_INSTALL_DIR`, or `MAILSERVER_REF` before
 `bash` to override the git source, install path, or branch/tag. Curl-pipe
 bootstrap keeps the checkout under `MAILSERVER_INSTALL_DIR`, `/opt/mailserver`
 by default, and tries to install `/usr/local/bin/mailserver` when permissions
-allow it. If PATH installation fails, run `/opt/mailserver/mailserver.sh
-install-cli` later.
+allow it. With no curl-pipe command argument, it runs `init` by default. If PATH
+installation fails, run `/opt/mailserver/mailserver.sh install-cli` later.
 
 To make the curl URL work for your own fork, commit `mailserver.sh`, push it to
 GitHub, and use the raw file URL:

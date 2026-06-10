@@ -23,16 +23,17 @@ sudo mailserver setup
 Or bootstrap a checkout from a hosted copy of the CLI:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/zdehasek/email-server/master/mailserver.sh | sudo bash -s -- init
+curl -fsSL https://raw.githubusercontent.com/zdehasek/email-server/master/mailserver.sh | sudo bash
 mailserver setup-dry-run
 sudo mailserver setup
 ```
 
 The curl-pipe path only creates or reuses a local git checkout and runs the
-command there. Override the defaults with `MAILSERVER_REPO_URL`,
-`MAILSERVER_INSTALL_DIR`, or `MAILSERVER_REF`. It keeps the checkout under
-`MAILSERVER_INSTALL_DIR`, `/opt/mailserver` by default, and tries to install the
-`mailserver` command into `/usr/local/bin` when permissions allow it.
+command there. With no curl-pipe command argument, it runs `init` by default.
+Override the defaults with `MAILSERVER_REPO_URL`, `MAILSERVER_INSTALL_DIR`, or
+`MAILSERVER_REF`. It keeps the checkout under `MAILSERVER_INSTALL_DIR`,
+`/opt/mailserver` by default, and tries to install the `mailserver` command into
+`/usr/local/bin` when permissions allow it.
 
 To use your own URL, publish the raw `mailserver.sh` file somewhere reachable
 over HTTPS. For GitHub, use this shape:
@@ -52,7 +53,7 @@ If the raw script should clone a fork or private mirror, pass its git URL into
 the bootstrap command:
 
 ```bash
-curl -fsSL https://your-domain.example/mailserver.sh | sudo MAILSERVER_REPO_URL=https://github.com/<owner>/<repo>.git bash -s -- init
+curl -fsSL https://your-domain.example/mailserver.sh | sudo MAILSERVER_REPO_URL=https://github.com/<owner>/<repo>.git bash
 ```
 
 ## 2. Confirm The Target Server

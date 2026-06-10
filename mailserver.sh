@@ -120,7 +120,7 @@ show_help() {
 
 Usage:
   mailserver [--config PATH] COMMAND [OPTIONS]
-  curl -fsSL https://raw.githubusercontent.com/zdehasek/email-server/master/mailserver.sh | sudo bash -s -- COMMAND
+  curl -fsSL https://raw.githubusercontent.com/zdehasek/email-server/master/mailserver.sh | sudo bash
 
 Setup:
   init                         Create ~/.email-server/config.env interactively
@@ -164,7 +164,7 @@ Examples:
   sudo mailserver install
   mailserver client-info --user user@example.com
   ./mailserver.sh doctor --config .env.example
-  curl -fsSL https://raw.githubusercontent.com/zdehasek/email-server/master/mailserver.sh | sudo bash -s -- init
+  curl -fsSL https://raw.githubusercontent.com/zdehasek/email-server/master/mailserver.sh | sudo bash
   curl -fsSL https://raw.githubusercontent.com/zdehasek/email-server/master/mailserver.sh | sudo MAILSERVER_INSTALL_DIR=/opt/mailserver bash -s -- setup-dry-run
 
 Notes:
@@ -174,6 +174,7 @@ Notes:
   Install and setup run locally on the target server. This CLI does not provide
   a remote deploy command.
   Curl-pipe use bootstraps a local git checkout, then runs this CLI there.
+  With no curl-pipe command argument, it runs init by default.
 HELP
 }
 
@@ -237,6 +238,12 @@ parse_global_args() {
         ;;
     esac
   done
+
+  if [[ "$PIPE_MODE" == "true" ]]; then
+    COMMAND="init"
+    COMMAND_ARGS=()
+    return 0
+  fi
 
   show_help
   exit 0
@@ -380,7 +387,7 @@ run_root_cmd() {
 }
 
 has_tty() {
-  [[ -r /dev/tty && -w /dev/tty ]]
+  [[ ( -t 0 || -t 1 || -t 2 ) && -r /dev/tty && -w /dev/tty ]]
 }
 
 prompt_tty() {

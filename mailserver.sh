@@ -553,7 +553,7 @@ cmd_init() {
     set_config_entry "$dest" "ADMIN_EMAIL" "$admin_email"
     set_config_entry "$dest" "WEBMAIL_HOSTNAME" "$webmail_hostname"
     set_config_entry "$dest" "DAV_HOSTNAME" "$dav_hostname"
-    set_config_entry "$dest" "ROUNDCUBE_CALDAV_BASE_URL" "https://$dav_hostname/"
+    set_config_entry "$dest" "RADICALE_CALDAV_BASE_URL" "https://$dav_hostname/"
     set_config_entry "$dest" "TIMEZONE" "$timezone"
     set_config_entry "$dest" "POSTMASTER_ADDRESS" "postmaster@$domain"
     set_config_entry "$dest" "ABUSE_ADDRESS" "abuse@$domain"

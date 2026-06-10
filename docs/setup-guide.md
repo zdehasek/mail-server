@@ -168,6 +168,17 @@ ROUNDCUBE_URL=https://github.com/roundcube/roundcubemail/releases/download/1.7.1
 ROUNDCUBE_SHA256=1e0382bcefd627ab0b6285d3181ddfba5b444fdcf6d49f33f5ea15fbf97864ef
 ```
 
+### Radicale Calendar Defaults
+
+These values control calendar URLs and the default calendar created for each
+mailbox. Roundcube does not use a bundled calendar plugin.
+
+```bash
+RADICALE_CALDAV_BASE_URL=https://dav.example.com/
+RADICALE_DEFAULT_CALENDAR_NAME=default
+RADICALE_DEFAULT_CALENDAR_DISPLAY_NAME=Default
+```
+
 ### Install Features
 
 ```bash

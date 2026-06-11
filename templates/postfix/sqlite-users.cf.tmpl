@@ -1,2 +1,2 @@
 dbpath = __MAIL_DB_PATH__
-query = SELECT maildir FROM users WHERE email='%s' AND active=1
+query = SELECT maildir FROM users WHERE email = CASE WHEN instr(lower('%s'), '+') > 0 AND instr(lower('%s'), '@') > instr(lower('%s'), '+') THEN substr(lower('%s'), 1, instr(lower('%s'), '+') - 1) || substr(lower('%s'), instr(lower('%s'), '@')) ELSE lower('%s') END AND active=1

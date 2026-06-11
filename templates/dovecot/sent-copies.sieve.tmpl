@@ -1,0 +1,6 @@
+require ["envelope", "fileinto", "mailbox", "subaddress"];
+
+if envelope :detail :is "to" "sent" {
+  fileinto :create "Sent";
+  stop;
+}

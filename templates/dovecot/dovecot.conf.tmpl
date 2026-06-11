@@ -47,6 +47,13 @@ service lmtp {
 protocol lmtp {
   postmaster_address = __POSTMASTER_ADDRESS__
   mail_plugins = sieve
+  lmtp_save_to_detail_mailbox = yes
+}
+
+sieve_script sent_copies {
+  type = before
+  driver = file
+  path = /etc/dovecot/sieve/before.d
 }
 
 protocol imap {

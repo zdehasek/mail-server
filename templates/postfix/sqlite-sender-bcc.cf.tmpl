@@ -1,0 +1,2 @@
+dbpath = __MAIL_DB_PATH__
+query = SELECT substr(email, 1, instr(email, '@') - 1) || '+Sent@' || substr(email, instr(email, '@') + 1) FROM users WHERE email=lower('%s') AND active=1

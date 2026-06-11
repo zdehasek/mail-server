@@ -71,6 +71,17 @@ Mail, and Thunderbird Calendar:
 mailserver client-info --user user@example.com
 ```
 
+## Sent Copies
+
+Outbound messages submitted through SMTP submission are copied into the sender's
+IMAP `Sent` folder on the server. Postfix applies a submission-only BCC through
+`submission-cleanup`, sending a copy to `user+Sent@domain`; Dovecot LMTP and the
+global before-Sieve script store that plus-addressed copy in `Sent`.
+
+This setup intentionally does not use Postfix `home_mailbox`, because delivery
+uses virtual mailboxes over Dovecot LMTP (`virtual_transport =
+lmtp:unix:private/dovecot-lmtp`), not Postfix local delivery.
+
 ## Storage
 
 Mail accounts, domains, and aliases are stored in SQLite at `MAIL_DB_PATH`.

@@ -140,7 +140,7 @@ TIMEZONE=Europe/Prague
 ```
 
 - `SERVER_PUBLIC_IPV4`: public IPv4 that DNS A records must return.
-- `SERVER_PUBLIC_IPV6`: optional public IPv6 for AAAA records.
+- `SERVER_PUBLIC_IPV6`: optional public IPv6 for AAAA records and IPv6 PTR/rDNS checks.
 - `TIMEZONE`: system timezone to set during install.
 
 ### Mail Storage
@@ -160,7 +160,8 @@ MAIL_DB_PATH=/etc/mailserver/mail.sqlite
 
 ### Roundcube Release Pin
 
-Leave these values unchanged unless intentionally upgrading Roundcube:
+Roundcube is the supported default webmail in the install flow. Leave these
+values unchanged unless intentionally upgrading Roundcube:
 
 ```bash
 ROUNDCUBE_VERSION=1.7.1
@@ -196,7 +197,9 @@ ENABLE_CLAMAV=false
 - `UFW_RESET_RULES`: set `false` on a server with existing firewall rules.
 - `ENABLE_FAIL2BAN`: install mail-oriented Fail2ban jail config.
 - `ENABLE_SSH_HARDENING`: keep `false` until SSH users are verified.
-- `ENABLE_RSPAMD`: spam filtering and milter integration.
+- `ENABLE_RSPAMD`: spam filtering and milter integration. If set to `false`,
+  Postfix is rendered without the Rspamd milter and mail continues without this
+  spam-filtering layer.
 - `ENABLE_CLAMAV`: disabled by default because it needs more RAM.
 
 ### SSH Hardening
@@ -331,14 +334,15 @@ TTL: Auto
 
 Provider-side PTR/rDNS is not a DNS-zone record. Set it at the provider that
 owns the server IP address, for example in Hetzner Cloud Console under the
-server's public IPv4 networking settings. The reverse record must point from the
-server IP back to `MAIL_HOSTNAME`:
+server's public networking settings. Each public mail server IP reverse record
+must point back to `MAIL_HOSTNAME`:
 
 ```text
 203.0.113.10 -> mail.example.com
+2001:db8::10 -> mail.example.com
 ```
 
-For Hetzner, open the server, go to `Networking`, find the public IPv4 address,
+For Hetzner, open the server, go to `Networking`, find the public IP address,
 edit `Reverse DNS` / `rDNS`, and set it to `mail.example.com`.
 
 DKIM is generated during installation. Publish it after `sudo mailserver setup`
@@ -587,4 +591,5 @@ PTR/rDNS at the server/IP provider, not in Cloudflare DNS:
 
 ```text
 203.0.113.10 -> mail.example.org
+2001:db8::10 -> mail.example.org
 ```

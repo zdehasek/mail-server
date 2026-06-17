@@ -113,6 +113,15 @@ else
   fail_state "$SERVER_PUBLIC_IPV4 PTR/rDNS missing $MAIL_HOSTNAME; got: ${ptr_records:-<none>}"
 fi
 
+if [[ -n "${SERVER_PUBLIC_IPV6:-}" ]]; then
+  ptr_records="$(dig_short -x "$SERVER_PUBLIC_IPV6")"
+  if contains_line "$MAIL_HOSTNAME" <<< "$ptr_records"; then
+    ok_state "$SERVER_PUBLIC_IPV6 PTR/rDNS points to $MAIL_HOSTNAME"
+  else
+    fail_state "$SERVER_PUBLIC_IPV6 PTR/rDNS missing $MAIL_HOSTNAME; got: ${ptr_records:-<none>}"
+  fi
+fi
+
 dkim_name="$DKIM_SELECTOR._domainkey.$PRIMARY_DOMAIN"
 dkim_file="/etc/mailserver/dkim/$PRIMARY_DOMAIN/$DKIM_SELECTOR.txt"
 dns_dkim="$(dig @"$DNS_RESOLVER" +short TXT "$dkim_name" 2>/dev/null | normalize_txt)"

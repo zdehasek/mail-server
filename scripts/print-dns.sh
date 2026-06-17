@@ -58,3 +58,9 @@ cat <<DNS
 Provider PTR/rDNS must be:
 $SERVER_PUBLIC_IPV4 -> $MAIL_HOSTNAME
 DNS
+
+if [[ -n "${SERVER_PUBLIC_IPV6:-}" ]]; then
+  cat <<DNS
+$SERVER_PUBLIC_IPV6 -> $MAIL_HOSTNAME
+DNS
+fi

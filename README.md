@@ -92,8 +92,8 @@ Email deliverability cannot be made fully automatic. Production use requires DNS
 - DNS control for the domain.
 - Static public IPv4 address.
 - Provider allows inbound and outbound TCP/25.
-- PTR/rDNS for the server IP points to `MAIL_HOSTNAME`. Configure this at the
-  IP/server provider, not as a Cloudflare DNS record.
+- PTR/rDNS for each public mail server IP points to `MAIL_HOSTNAME`. Configure
+  this at the IP/server provider, not as a Cloudflare DNS record.
 - `A`/optional `AAAA`, `MX`, SPF, DKIM, and DMARC records.
 - Public ports open: `25`, `80`, `443`, `587`, `993`.
 
@@ -101,7 +101,7 @@ See `docs/dns.md` for exact records.
 
 ## Why Roundcube And Radicale
 
-SOGo is capable but overbuilt for a small self-hosted mail server. This installer uses smaller, stable single-purpose components: Roundcube for webmail and Radicale for contacts/calendar sync. Browser calendar access is intentionally left to native CalDAV clients or a separate web UI, not a Roundcube plugin.
+SOGo is capable but overbuilt for a small self-hosted mail server. This installer uses smaller, stable single-purpose components: Roundcube for webmail and Radicale for contacts/calendar sync. Roundcube is the supported default webmail in the install flow. Browser calendar access is intentionally left to native CalDAV clients or a separate web UI, not a Roundcube plugin.
 
 See `docs/webmail-options.md` for the comparison.
 

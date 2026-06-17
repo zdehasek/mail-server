@@ -25,6 +25,8 @@ if [[ "${ENABLE_RSPAMD:-true}" == "true" ]]; then
   run rspamadm configtest
   service_enable_now rspamd
   reload_or_restart rspamd
+else
+  warn "ENABLE_RSPAMD=false; Postfix will be configured without the Rspamd spam-filtering milter."
 fi
 
 mark_done dkim-dmarc-rspamd

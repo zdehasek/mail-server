@@ -125,6 +125,8 @@ set_config_defaults() {
   : "${PRIMARY_MAILBOX_FULL_NAME:=$PRIMARY_MAILBOX}"
   : "${PRIMARY_MAILBOX_PASSWORD:=}"
   : "${PRIMARY_MAILBOX_PASSWORD_FILE:=/etc/mailserver/secrets/primary-mailbox-password}"
+  : "${SECONDARY_DOMAINS:=}"
+  : "${DKIM_ROOT:=/etc/mailserver/dkim}"
   : "${PRIMARY_ALIAS_ADDRESSES:=$POSTMASTER_ADDRESS $ABUSE_ADDRESS dmarc@$PRIMARY_DOMAIN admin@$PRIMARY_DOMAIN}"
   : "${RADICALE_CALDAV_BASE_URL:=https://$DAV_HOSTNAME/}"
   : "${RADICALE_DEFAULT_CALENDAR_NAME:=default}"
@@ -133,6 +135,79 @@ set_config_defaults() {
     RSPAMD_MILTER=", inet:127.0.0.1:11332"
   else
     RSPAMD_MILTER=""
+  fi
+}
+
+mail_domains() {
+  local domain seen=" "
+  local secondary_domains=()
+  IFS=' ' read -r -a secondary_domains <<< "$SECONDARY_DOMAINS"
+  for domain in "$PRIMARY_DOMAIN" "${secondary_domains[@]}"; do
+    [[ -n "$domain" ]] || continue
+    domain="${domain,,}"
+    if [[ "$seen" == *" $domain "* ]]; then
+      continue
+    fi
+    seen+="$domain "
+    printf '%s\n' "$domain"
+  done
+}
+
+validate_domain_name() {
+  local domain="$1"
+  domain="${domain,,}"
+  [[ "$domain" =~ ^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?(\.[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?)+$ ]]
+}
+
+domain_is_managed() {
+  local needle="${1,,}"
+  local domain
+  while IFS= read -r domain; do
+    [[ "$domain" == "$needle" ]] && return 0
+  done < <(mail_domains)
+  return 1
+}
+
+require_managed_domain() {
+  local domain="${1,,}"
+  domain_is_managed "$domain" && return 0
+  die "Domain is not configured: $domain. Add it to SECONDARY_DOMAINS or run: mailserver add-domain --domain $domain"
+}
+
+sync_configured_domains() {
+  local domain domain_q
+  while IFS= read -r domain; do
+    domain_q="$(sql_quote "$domain")"
+    sqlite_mail "INSERT INTO domains(name, active) VALUES('$domain_q', 1) ON CONFLICT(name) DO UPDATE SET active=1;"
+  done < <(mail_domains)
+}
+
+config_value() {
+  local value="$1"
+  if [[ "$value" =~ ^[A-Za-z0-9_./:@%+=,-]*$ ]]; then
+    printf '%s\n' "$value"
+  else
+    value="${value//\\/\\\\}"
+    value="${value//\"/\\\"}"
+    value="${value//\$/\\\$}"
+    value="${value//\`/\\\`}"
+    printf '"%s"\n' "$value"
+  fi
+}
+
+set_config_entry_or_append() {
+  local file="$1"
+  local key="$2"
+  local value
+  value="$(config_value "$3")"
+  if [[ "$DRY_RUN" == "true" ]]; then
+    printf 'DRY-RUN: set %s=%s in %s\n' "$key" "$value" "$file"
+    return 0
+  fi
+  if grep -qE "^${key}=" "$file"; then
+    sed -i "s|^$key=.*|$key=$value|" "$file"
+  else
+    printf '\n%s=%s\n' "$key" "$value" >> "$file"
   fi
 }
 
@@ -150,6 +225,11 @@ validate_config() {
   )
   local name
   for name in "${required[@]}"; do require_var "$name"; done
+
+  local domain
+  while IFS= read -r domain; do
+    validate_domain_name "$domain" || die "Invalid mail domain: $domain"
+  done < <(mail_domains)
 }
 
 confirm() {

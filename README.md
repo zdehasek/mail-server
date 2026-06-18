@@ -28,6 +28,7 @@ mailserver init
 mailserver doctor
 mailserver dry-run
 sudo mailserver install
+sudo mailserver add-domain --domain example.org
 sudo mailserver add-user --user user@example.com
 sudo mailserver print-dns
 sudo mailserver verify
@@ -89,7 +90,7 @@ Do not run this on an existing mail server without reading `docs/prerequisites.m
 
 Email deliverability cannot be made fully automatic. Production use requires DNS and provider-side setup:
 
-- DNS control for the domain.
+- DNS control for each served domain.
 - Static public IPv4 address.
 - Provider allows inbound and outbound TCP/25.
 - PTR/rDNS for each public mail server IP points to `MAIL_HOSTNAME`. Configure

@@ -1,6 +1,8 @@
 # DNS Records
 
 Replace example values with `~/.email-server/config.env` values.
+Repeat the domain-level `MX`, SPF, DMARC, and DKIM records for `PRIMARY_DOMAIN`
+and every domain listed in `SECONDARY_DOMAINS`.
 
 ```text
 example.com.          MX   10 mail.example.com.

@@ -20,9 +20,21 @@ fi
 email="$PRIMARY_MAILBOX"
 full_name="${PRIMARY_MAILBOX_FULL_NAME:-$email}"
 domain="${email#*@}"
+domain="${domain,,}"
 localpart="${email%@*}"
 [[ "$email" == *@* && -n "$domain" && -n "$localpart" ]] || die "Invalid PRIMARY_MAILBOX: $email"
+validate_domain_name "$domain" || die "Invalid PRIMARY_MAILBOX domain: $domain"
+require_managed_domain "$domain"
 IFS=' ' read -r -a primary_alias_addresses <<< "$PRIMARY_ALIAS_ADDRESSES"
+for alias_addr in "${primary_alias_addresses[@]}"; do
+  [[ -n "$alias_addr" ]] || continue
+  [[ "$alias_addr" == "$email" ]] && continue
+  [[ "$alias_addr" == *@* ]] || die "Invalid primary alias address: $alias_addr"
+  alias_domain="${alias_addr#*@}"
+  alias_domain="${alias_domain,,}"
+  validate_domain_name "$alias_domain" || die "Invalid primary alias domain: $alias_domain"
+  require_managed_domain "$alias_domain"
+done
 
 if [[ "$DRY_RUN" == "true" ]]; then
   info "Would create primary mailbox $email"
@@ -61,9 +73,9 @@ hash_q="$(sql_quote "$hash")"
 home_q="$(sql_quote "$VMAIL_ROOT/$domain/$localpart")"
 maildir_q="$(sql_quote "$domain/$localpart/Maildir/")"
 
+sync_configured_domains
 sqlite3 "$MAIL_DB_PATH" <<SQL
 PRAGMA foreign_keys = ON;
-INSERT OR IGNORE INTO domains(name, active) VALUES('$domain_q', 1);
 INSERT INTO users(domain_id, email, username, full_name, password_hash, home, maildir, active)
 VALUES((SELECT id FROM domains WHERE name='$domain_q'), '$email_q', '$local_q', '$name_q', '$hash_q', '$home_q', '$maildir_q', 1)
 ON CONFLICT(email) DO UPDATE SET password_hash=excluded.password_hash, full_name=excluded.full_name, active=1;
@@ -81,12 +93,12 @@ for alias_addr in "${primary_alias_addresses[@]}"; do
   [[ "$alias_addr" == "$email" ]] && continue
   [[ "$alias_addr" == *@* ]] || die "Invalid primary alias address: $alias_addr"
   alias_domain="${alias_addr#*@}"
+  alias_domain="${alias_domain,,}"
   alias_domain_q="$(sql_quote "$alias_domain")"
   alias_q="$(sql_quote "$alias_addr")"
   dest_q="$(sql_quote "$email")"
   sqlite3 "$MAIL_DB_PATH" <<SQL
 PRAGMA foreign_keys = ON;
-INSERT OR IGNORE INTO domains(name, active) VALUES('$alias_domain_q', 1);
 INSERT OR IGNORE INTO aliases(domain_id, source, destination, active)
 VALUES((SELECT id FROM domains WHERE name='$alias_domain_q'), '$alias_q', '$dest_q', 1);
 SQL

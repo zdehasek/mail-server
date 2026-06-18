@@ -76,7 +76,7 @@ Requirements:
 - Static public IPv4.
 - Provider allows inbound and outbound TCP/25.
 - Ports available from the internet: `25`, `80`, `443`, `587`, `993`.
-- DNS control for `PRIMARY_DOMAIN`.
+- DNS control for `PRIMARY_DOMAIN` and every configured `SECONDARY_DOMAINS` entry.
 - Provider control for PTR/rDNS.
 
 If an existing web server already uses `80`/`443`, keep it running only if it is
@@ -118,6 +118,7 @@ changes, but it is not the normal install path.
 ```bash
 MAIL_HOSTNAME=mail.example.com
 PRIMARY_DOMAIN=example.com
+SECONDARY_DOMAINS=
 ADMIN_EMAIL=admin@example.com
 WEBMAIL_HOSTNAME=mail.example.com
 DAV_HOSTNAME=dav.example.com
@@ -125,6 +126,7 @@ DAV_HOSTNAME=dav.example.com
 
 - `MAIL_HOSTNAME`: SMTP, IMAP TLS certificate name, and MX target.
 - `PRIMARY_DOMAIN`: domain that receives mail.
+- `SECONDARY_DOMAINS`: optional space-separated extra domains served by the same mail host, for example `nocni.club zdehasek.com`.
 - `ADMIN_EMAIL`: Let's Encrypt registration and operational contact.
 - `WEBMAIL_HOSTNAME`: Roundcube HTTPS hostname.
 - `DAV_HOSTNAME`: Radicale CalDAV/CardDAV HTTPS hostname.
@@ -236,7 +238,8 @@ DKIM_SELECTOR=default
 
 `POSTMASTER_ADDRESS` and `ABUSE_ADDRESS` must exist as mailboxes or aliases
 after setup. `DKIM_SELECTOR` becomes the DNS name
-`default._domainkey.example.com`.
+`default._domainkey.example.com`. DKIM keys and DNS records are generated for
+`PRIMARY_DOMAIN` and every domain listed in `SECONDARY_DOMAINS`.
 
 ### Primary Mailbox And Default Aliases
 
@@ -263,6 +266,12 @@ PRIMARY_ALIAS_ADDRESSES="postmaster@example.com abuse@example.com dmarc@example.
 If `PRIMARY_MAILBOX` is empty, setup skips this step. If the mailbox already
 exists, setup updates the password hash and keeps it active. If an alias already
 exists, setup leaves it in place.
+
+Mailbox and alias commands only accept domains configured as `PRIMARY_DOMAIN` or
+in `SECONDARY_DOMAINS`. Use `sudo mailserver add-domain --domain example.net`
+to add another domain after setup; it updates config, seeds the domain database,
+refreshes DKIM tables, reloads mail services, and prints the DNS records to
+publish.
 
 ## 4. Publish DNS Before Installing
 
@@ -452,6 +461,14 @@ Additional mailboxes can still be created manually:
 
 ```bash
 sudo mailserver add-user --user user@example.com
+```
+
+Additional domains must be configured before creating mailboxes or aliases for
+them:
+
+```bash
+sudo mailserver add-domain --domain nocni.club
+sudo mailserver add-user --user tipy@nocni.club
 ```
 
 Install recurring backups:

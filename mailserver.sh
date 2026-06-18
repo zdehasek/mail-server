@@ -148,6 +148,7 @@ Client configuration:
 Mailbox operations:
   list-users
   add-user --user user@example.com [--full-name "Full Name"]
+  add-domain --domain example.com
   remove-user --user user@example.com
   setup-primary-mailbox
   add-alias --source postmaster@example.com --dest user@example.com
@@ -182,6 +183,9 @@ show_command_help() {
   case "$1" in
     add-user)
       printf 'Usage: mailserver add-user --user user@example.com [--full-name "Full Name"] [--config PATH]\n'
+      ;;
+    add-domain)
+      printf 'Usage: mailserver add-domain --domain example.com [--config PATH] [--dry-run]\n'
       ;;
     remove-user|change-password)
       printf 'Usage: mailserver %s --user user@example.com [--config PATH]\n' "$1"
@@ -797,6 +801,42 @@ cmd_add_alias() {
   run_root_cmd "$ROOT_DIR/scripts/add-alias.sh" --config "$(config_arg)" "$source_addr" "$dest_addr"
 }
 
+cmd_add_domain() {
+  extract_common_args "$@"
+  require_checkout_files
+  local domain=""
+  local dry_run="false"
+
+  while [[ "${#REMAINING_ARGS[@]}" -gt 0 ]]; do
+    case "${REMAINING_ARGS[0]}" in
+      --domain)
+        [[ -n "${REMAINING_ARGS[1]:-}" ]] || die "Missing value for --domain."
+        domain="${REMAINING_ARGS[1]}"
+        REMAINING_ARGS=("${REMAINING_ARGS[@]:2}")
+        ;;
+      --dry-run)
+        dry_run="true"
+        REMAINING_ARGS=("${REMAINING_ARGS[@]:1}")
+        ;;
+      *)
+        if [[ -z "$domain" ]]; then
+          domain="${REMAINING_ARGS[0]}"
+          REMAINING_ARGS=("${REMAINING_ARGS[@]:1}")
+        else
+          die "Unexpected argument: ${REMAINING_ARGS[0]}"
+        fi
+        ;;
+    esac
+  done
+
+  [[ -n "$domain" ]] || die "Missing --domain example.com."
+  if [[ "$dry_run" == "true" ]]; then
+    run_cmd "$ROOT_DIR/scripts/add-domain.sh" --config "$(config_arg)" --dry-run "$domain"
+  else
+    run_root_cmd "$ROOT_DIR/scripts/add-domain.sh" --config "$(config_arg)" "$domain"
+  fi
+}
+
 main() {
   parse_global_args "$@"
   case "$COMMAND" in
@@ -816,6 +856,7 @@ main() {
     service-state) cmd_simple_script scripts/service-state.sh false "${COMMAND_ARGS[@]}" ;;
     list-users) cmd_simple_script scripts/list-users.sh true "${COMMAND_ARGS[@]}" ;;
     setup-primary-mailbox) cmd_simple_script scripts/setup-primary-mailbox.sh true "${COMMAND_ARGS[@]}" ;;
+    add-domain) cmd_add_domain "${COMMAND_ARGS[@]}" ;;
     backup) cmd_simple_script scripts/backup.sh true "${COMMAND_ARGS[@]}" ;;
     install-backup-cron) cmd_simple_script scripts/install-backup-cron.sh true "${COMMAND_ARGS[@]}" ;;
     client-info|client-config) cmd_client_info "${COMMAND_ARGS[@]}" ;;

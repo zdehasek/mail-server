@@ -85,6 +85,9 @@ lmtp:unix:private/dovecot-lmtp`), not Postfix local delivery.
 ## Storage
 
 Mail accounts, domains, and aliases are stored in SQLite at `MAIL_DB_PATH`.
+Configure served domains with `PRIMARY_DOMAIN`, `SECONDARY_DOMAINS`, or
+`sudo mailserver add-domain --domain example.net`; mailbox and alias commands
+reject unknown domains instead of creating them implicitly.
 
 Roundcube stores its application data in `/var/lib/roundcube` and uses SQLite by default.
 

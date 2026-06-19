@@ -502,36 +502,47 @@ validate_timezone_or_die() {
   timezone_exists "$zone" || die "Invalid timezone: $zone. Use an IANA name like Europe/Prague."
 }
 
+available_timezones() {
+  {
+    printf '%s\n' "Europe/Prague" "UTC"
+    if command -v timedatectl >/dev/null 2>&1; then
+      timedatectl list-timezones 2>/dev/null || true
+    elif [[ -f /usr/share/zoneinfo/zone1970.tab ]]; then
+      awk 'NF && $1 !~ /^#/ { print $3 }' /usr/share/zoneinfo/zone1970.tab
+    elif [[ -f /usr/share/zoneinfo/zone.tab ]]; then
+      awk 'NF && $1 !~ /^#/ { print $3 }' /usr/share/zoneinfo/zone.tab
+    fi
+  } | awk 'NF && !seen[$0]++'
+}
+
 prompt_timezone_tty() {
   local default="$1"
   local reply
-  local zones=(
-    "Europe/Prague"
-    "UTC"
-    "Europe/London"
-    "America/New_York"
-  )
-
+  local zones=()
   local selected
+  local i
 
   has_tty || return 1
+  mapfile -t zones < <(available_timezones)
+  if [[ "${#zones[@]}" -eq 0 ]]; then
+    zones=("Europe/Prague" "UTC")
+  fi
 
   while true; do
     printf 'Server timezone:\n' > /dev/tty
-    printf '  1) Europe/Prague\n' > /dev/tty
-    printf '  2) UTC\n' > /dev/tty
-    printf '  3) Europe/London\n' > /dev/tty
-    printf '  4) America/New_York\n' > /dev/tty
+    for i in "${!zones[@]}"; do
+      printf '  %d) %s\n' "$((i + 1))" "${zones[$i]}" > /dev/tty
+    done
     if [[ -n "$default" ]]; then
       printf '  Enter = %s, or type any IANA timezone like Europe/Berlin\n' "$default" > /dev/tty
     else
       printf '  Type any IANA timezone like Europe/Berlin\n' > /dev/tty
     fi
-    printf 'Timezone choice [1-4/%s]: ' "${default:-IANA timezone}" > /dev/tty
+    printf 'Timezone choice [1-%d/%s]: ' "${#zones[@]}" "${default:-IANA timezone}" > /dev/tty
     IFS= read -r reply < /dev/tty
     reply="${reply:-$default}"
 
-    if [[ "$reply" =~ ^[1-4]$ ]]; then
+    if [[ "$reply" =~ ^[0-9]+$ && "$reply" -ge 1 && "$reply" -le "${#zones[@]}" ]]; then
       selected="${zones[$((reply - 1))]}"
     else
       selected="$reply"

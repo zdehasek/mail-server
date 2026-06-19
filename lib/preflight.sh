@@ -14,14 +14,6 @@ check_ubuntu_2604() {
 
 check_systemd() { [[ -d /run/systemd/system ]] || die "systemd is required."; }
 
-check_hostname() {
-  local current
-  current="$(hostname -f 2>/dev/null || hostname)"
-  if [[ "$current" != "$MAIL_HOSTNAME" ]]; then
-    warn "System hostname is '$current', expected '$MAIL_HOSTNAME'. Run: hostnamectl set-hostname $MAIL_HOSTNAME"
-  fi
-}
-
 check_dns() {
   check_command getent
   local resolved=""
@@ -61,7 +53,6 @@ check_external_firewall_notice() {
 run_preflight() {
   check_ubuntu_2604
   check_systemd
-  check_hostname
   check_dns
   check_resources
   check_ports

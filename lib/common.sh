@@ -39,8 +39,8 @@ log_line() {
   printf '%s\n' "$(style_text "$color" "$line")"
 }
 
-log() { log_line "LOG  " 30 "• " "$*"; }
-info() { log_line "INFO " 30 "ℹ️ " "$*"; }
+log() { log_line "LOG  " 36 "• " "$*"; }
+info() { log_line "INFO " 36 "ℹ️ " "$*"; }
 warn() { log_line "WARN " "38;5;208" "⚠️ " "$*" >&2; }
 die() { log_line "ERROR" 31 "❌" "$*" >&2; exit 1; }
 

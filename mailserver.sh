@@ -81,7 +81,7 @@ color() {
 }
 
 say() {
-  printf '%s\n' "$(color 30 "🔹 $*")"
+  printf '%s\n' "$(color 36 "🔹 $*")"
 }
 
 ok() {
@@ -430,7 +430,7 @@ prompt_tty() {
 say_tty() {
   local message="$*"
   if has_tty; then
-    printf '%s\n' "$(color 30 "• $message")" > /dev/tty
+    printf '%s\n' "$(color 36 "• $message")" > /dev/tty
   else
     say "$message"
   fi

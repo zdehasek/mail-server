@@ -471,13 +471,79 @@ detect_public_ipv4() {
 }
 
 detect_timezone() {
+  local zone=""
+
   if [[ -n "${TZ:-}" ]]; then
-    printf '%s\n' "$TZ"
-  elif [[ -f /etc/timezone ]]; then
-    head -n 1 /etc/timezone
-  else
-    printf 'UTC\n'
+    zone="$TZ"
+  elif command -v timedatectl >/dev/null 2>&1; then
+    zone="$(timedatectl show -p Timezone --value 2>/dev/null || true)"
   fi
+
+  if [[ -z "$zone" && -f /etc/timezone ]]; then
+    zone="$(head -n 1 /etc/timezone)"
+  fi
+
+  if [[ -z "$zone" && -L /etc/localtime ]]; then
+    zone="$(readlink /etc/localtime 2>/dev/null || true)"
+    zone="${zone#/usr/share/zoneinfo/}"
+  fi
+
+  printf '%s\n' "${zone:-UTC}"
+}
+
+timezone_exists() {
+  local zone="$1"
+  [[ -n "$zone" && "$zone" != *".."* && -f "/usr/share/zoneinfo/$zone" ]]
+}
+
+validate_timezone_or_die() {
+  local zone="$1"
+  [[ -d /usr/share/zoneinfo ]] || return 0
+  timezone_exists "$zone" || die "Invalid timezone: $zone. Use an IANA name like Europe/Prague."
+}
+
+prompt_timezone_tty() {
+  local default="$1"
+  local reply
+  local zones=(
+    "Europe/Prague"
+    "UTC"
+    "Europe/London"
+    "America/New_York"
+  )
+
+  local selected
+
+  has_tty || return 1
+
+  while true; do
+    printf 'Server timezone:\n' > /dev/tty
+    printf '  1) Europe/Prague\n' > /dev/tty
+    printf '  2) UTC\n' > /dev/tty
+    printf '  3) Europe/London\n' > /dev/tty
+    printf '  4) America/New_York\n' > /dev/tty
+    if [[ -n "$default" ]]; then
+      printf '  Enter = %s, or type any IANA timezone like Europe/Berlin\n' "$default" > /dev/tty
+    else
+      printf '  Type any IANA timezone like Europe/Berlin\n' > /dev/tty
+    fi
+    printf 'Timezone choice [1-4/%s]: ' "${default:-IANA timezone}" > /dev/tty
+    IFS= read -r reply < /dev/tty
+    reply="${reply:-$default}"
+
+    if [[ "$reply" =~ ^[1-4]$ ]]; then
+      selected="${zones[$((reply - 1))]}"
+    else
+      selected="$reply"
+    fi
+
+    if [[ ! -d /usr/share/zoneinfo ]] || timezone_exists "$selected"; then
+      printf '%s\n' "$selected"
+      return 0
+    fi
+
+    printf 'Invalid timezone: %s. Use an IANA name like Europe/Prague.\n' "$selected" > /dev/tty
+  done
 }
 
 config_value() {
@@ -590,7 +656,7 @@ cmd_init() {
       dav_hostname="$(prompt_tty "CalDAV/CardDAV hostname" "$dav_hostname")"
       public_ipv4="$(prompt_tty "Server public IPv4, blank to auto-detect after prompts" "$public_ipv4")"
       public_ipv6="$(prompt_tty "Server public IPv6, optional" "$public_ipv6")"
-      timezone="$(prompt_tty "Server timezone" "$timezone")"
+      timezone="$(prompt_timezone_tty "$timezone")"
       say_tty "Setup answers collected."
     else
       warn "No interactive terminal available; created config with example values."
@@ -604,6 +670,7 @@ cmd_init() {
     webmail_hostname="${webmail_hostname:-$mail_hostname}"
     dav_hostname="${dav_hostname:-dav.$domain}"
     timezone="${timezone:-$(detect_timezone)}"
+    validate_timezone_or_die "$timezone"
     if [[ -z "$public_ipv4" ]]; then
       say "Detecting server IPv4 from Linux networking; external lookup is fallback, up to 5 seconds"
       public_ipv4="$(detect_public_ipv4)"

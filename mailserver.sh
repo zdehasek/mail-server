@@ -534,32 +534,23 @@ cmd_init() {
     return 0
   fi
 
-  mkdir -p "$(dirname "$dest")"
-  local config_tmp
-  config_tmp="$(mktemp "$dest.tmp.XXXXXX")"
-  cp "$ROOT_DIR/.env.example" "$config_tmp"
-
   if [[ "$non_interactive" != "true" && ( -z "$domain" || -z "$admin_email" || -z "$public_ipv4" ) ]]; then
     if has_tty; then
-      say_tty "Preparing $dest"
-      say_tty "Answer the setup prompts. Press Enter to accept shown defaults."
+      say_tty "Collecting setup answers first. No network or install steps will run until prompts finish."
       domain="${domain:-$(prompt_tty "Primary mail domain" "${MAILSERVER_DOMAIN:-}")}"
       mail_hostname="${mail_hostname:-mail.$domain}"
       admin_email="${admin_email:-admin@$domain}"
       webmail_hostname="${webmail_hostname:-$mail_hostname}"
       dav_hostname="${dav_hostname:-dav.$domain}"
-      if [[ -z "$public_ipv4" ]]; then
-        say_tty "Detecting public IPv4 from api.ipify.org, up to 5 seconds"
-      fi
-      public_ipv4="${public_ipv4:-$(detect_public_ipv4)}"
       timezone="${timezone:-$(detect_timezone)}"
       mail_hostname="$(prompt_tty "Mail hostname / MX target" "$mail_hostname")"
       admin_email="$(prompt_tty "Admin email for Let's Encrypt" "$admin_email")"
       webmail_hostname="$(prompt_tty "Webmail hostname" "$webmail_hostname")"
       dav_hostname="$(prompt_tty "CalDAV/CardDAV hostname" "$dav_hostname")"
-      public_ipv4="$(prompt_tty "Server public IPv4" "$public_ipv4")"
+      public_ipv4="$(prompt_tty "Server public IPv4, blank to auto-detect after prompts" "$public_ipv4")"
       public_ipv6="$(prompt_tty "Server public IPv6, optional" "$public_ipv6")"
       timezone="$(prompt_tty "Server timezone" "$timezone")"
+      say_tty "Setup answers collected."
     else
       warn "No interactive terminal available; created config with example values."
       warn "Re-run init with --domain, --admin-email, and --public-ipv4 to avoid editing the file manually."
@@ -572,6 +563,19 @@ cmd_init() {
     webmail_hostname="${webmail_hostname:-$mail_hostname}"
     dav_hostname="${dav_hostname:-dav.$domain}"
     timezone="${timezone:-$(detect_timezone)}"
+    if [[ -z "$public_ipv4" ]]; then
+      say "Detecting public IPv4 from api.ipify.org, up to 5 seconds"
+      public_ipv4="$(detect_public_ipv4)"
+    fi
+  fi
+
+  say "Writing config: $dest"
+  mkdir -p "$(dirname "$dest")"
+  local config_tmp
+  config_tmp="$(mktemp "$dest.tmp.XXXXXX")"
+  cp "$ROOT_DIR/.env.example" "$config_tmp"
+
+  if [[ -n "$domain" ]]; then
     set_config_entry "$config_tmp" "PRIMARY_DOMAIN" "$domain"
     set_config_entry "$config_tmp" "MAIL_HOSTNAME" "$mail_hostname"
     set_config_entry "$config_tmp" "ADMIN_EMAIL" "$admin_email"

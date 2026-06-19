@@ -81,19 +81,19 @@ color() {
 }
 
 say() {
-  printf '%s %s\n' "$(color 36 "•")" "$*"
+  printf '%s %s\n' "$(color 36 "🔹")" "$*"
 }
 
 ok() {
-  printf '%s %s\n' "$(color 32 "✓")" "$*"
+  printf '%s %s\n' "$(color 32 "✅")" "$*"
 }
 
 warn() {
-  printf '%s %s\n' "$(color 33 "!")" "$*" >&2
+  printf '%s %s\n' "$(color 33 "⚠️")" "$*" >&2
 }
 
 die() {
-  printf '%s %s\n' "$(color 31 "✗")" "$*" >&2
+  printf '%s %s\n' "$(color 31 "❌")" "$*" >&2
   exit 1
 }
 

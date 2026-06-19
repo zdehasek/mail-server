@@ -424,7 +424,48 @@ say_tty() {
   fi
 }
 
+is_public_ipv4() {
+  local ip="$1"
+  local a b c d
+  local ai bi ci di
+
+  [[ "$ip" =~ ^([0-9]{1,3}\.){3}[0-9]{1,3}$ ]] || return 1
+  IFS=. read -r a b c d <<< "$ip"
+  ai=$((10#$a))
+  bi=$((10#$b))
+  ci=$((10#$c))
+  di=$((10#$d))
+  (( ai <= 255 && bi <= 255 && ci <= 255 && di <= 255 )) || return 1
+
+  (( ai == 0 )) && return 1
+  (( ai == 10 )) && return 1
+  (( ai == 127 )) && return 1
+  (( ai == 169 && bi == 254 )) && return 1
+  (( ai == 172 && bi >= 16 && bi <= 31 )) && return 1
+  (( ai == 192 && bi == 168 )) && return 1
+  (( ai == 100 && bi >= 64 && bi <= 127 )) && return 1
+  (( ai >= 224 )) && return 1
+
+  return 0
+}
+
 detect_public_ipv4() {
+  local ip
+
+  if command -v ip >/dev/null 2>&1; then
+    ip="$(ip -o -4 route get 1.1.1.1 2>/dev/null | sed -n 's/.* src \([0-9.]*\).*/\1/p' | head -n 1 || true)"
+    if is_public_ipv4 "$ip"; then
+      printf '%s\n' "$ip"
+      return 0
+    fi
+
+    ip="$(ip -o -4 addr show scope global 2>/dev/null | awk '{ split($4, a, "/"); print a[1] }' | while IFS= read -r candidate; do is_public_ipv4 "$candidate" && { printf "%s\n" "$candidate"; break; }; done || true)"
+    if is_public_ipv4 "$ip"; then
+      printf '%s\n' "$ip"
+      return 0
+    fi
+  fi
+
   command -v curl >/dev/null 2>&1 || return 0
   curl -fsS --connect-timeout 2 --max-time 5 https://api.ipify.org 2>/dev/null || true
 }
@@ -564,7 +605,7 @@ cmd_init() {
     dav_hostname="${dav_hostname:-dav.$domain}"
     timezone="${timezone:-$(detect_timezone)}"
     if [[ -z "$public_ipv4" ]]; then
-      say "Detecting public IPv4 from api.ipify.org, up to 5 seconds"
+      say "Detecting server IPv4 from Linux networking; external lookup is fallback, up to 5 seconds"
       public_ipv4="$(detect_public_ipv4)"
     fi
   fi

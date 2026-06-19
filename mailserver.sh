@@ -409,9 +409,18 @@ prompt_tty() {
   printf '%s\n' "${reply:-$default}"
 }
 
+say_tty() {
+  local message="$*"
+  if has_tty; then
+    printf '%s %s\n' "$(color 36 "•")" "$message" > /dev/tty
+  else
+    say "$message"
+  fi
+}
+
 detect_public_ipv4() {
   command -v curl >/dev/null 2>&1 || return 0
-  curl -fsS --max-time 5 https://api.ipify.org 2>/dev/null || true
+  curl -fsS --connect-timeout 2 --max-time 5 https://api.ipify.org 2>/dev/null || true
 }
 
 detect_timezone() {
@@ -520,17 +529,22 @@ cmd_init() {
   fi
 
   mkdir -p "$(dirname "$dest")"
-  cp "$ROOT_DIR/.env.example" "$dest"
+  local config_tmp
+  config_tmp="$(mktemp "$dest.tmp.XXXXXX")"
+  cp "$ROOT_DIR/.env.example" "$config_tmp"
 
   if [[ "$non_interactive" != "true" && ( -z "$domain" || -z "$admin_email" || -z "$public_ipv4" ) ]]; then
     if has_tty; then
-      say "Creating $dest"
-      say "Answer the setup prompts. Press Enter to accept shown defaults."
+      say_tty "Preparing $dest"
+      say_tty "Answer the setup prompts. Press Enter to accept shown defaults."
       domain="${domain:-$(prompt_tty "Primary mail domain" "${MAILSERVER_DOMAIN:-}")}"
       mail_hostname="${mail_hostname:-mail.$domain}"
       admin_email="${admin_email:-admin@$domain}"
       webmail_hostname="${webmail_hostname:-$mail_hostname}"
       dav_hostname="${dav_hostname:-dav.$domain}"
+      if [[ -z "$public_ipv4" ]]; then
+        say_tty "Detecting public IPv4 from api.ipify.org, up to 5 seconds"
+      fi
       public_ipv4="${public_ipv4:-$(detect_public_ipv4)}"
       timezone="${timezone:-$(detect_timezone)}"
       mail_hostname="$(prompt_tty "Mail hostname / MX target" "$mail_hostname")"
@@ -552,22 +566,23 @@ cmd_init() {
     webmail_hostname="${webmail_hostname:-$mail_hostname}"
     dav_hostname="${dav_hostname:-dav.$domain}"
     timezone="${timezone:-$(detect_timezone)}"
-    set_config_entry "$dest" "PRIMARY_DOMAIN" "$domain"
-    set_config_entry "$dest" "MAIL_HOSTNAME" "$mail_hostname"
-    set_config_entry "$dest" "ADMIN_EMAIL" "$admin_email"
-    set_config_entry "$dest" "WEBMAIL_HOSTNAME" "$webmail_hostname"
-    set_config_entry "$dest" "DAV_HOSTNAME" "$dav_hostname"
-    set_config_entry "$dest" "RADICALE_CALDAV_BASE_URL" "https://$dav_hostname/"
-    set_config_entry "$dest" "TIMEZONE" "$timezone"
-    set_config_entry "$dest" "POSTMASTER_ADDRESS" "postmaster@$domain"
-    set_config_entry "$dest" "ABUSE_ADDRESS" "abuse@$domain"
-    set_config_entry "$dest" "PRIMARY_MAILBOX" "$admin_email"
-    set_config_entry "$dest" "PRIMARY_ALIAS_ADDRESSES" "postmaster@$domain abuse@$domain dmarc@$domain $admin_email"
+    set_config_entry "$config_tmp" "PRIMARY_DOMAIN" "$domain"
+    set_config_entry "$config_tmp" "MAIL_HOSTNAME" "$mail_hostname"
+    set_config_entry "$config_tmp" "ADMIN_EMAIL" "$admin_email"
+    set_config_entry "$config_tmp" "WEBMAIL_HOSTNAME" "$webmail_hostname"
+    set_config_entry "$config_tmp" "DAV_HOSTNAME" "$dav_hostname"
+    set_config_entry "$config_tmp" "RADICALE_CALDAV_BASE_URL" "https://$dav_hostname/"
+    set_config_entry "$config_tmp" "TIMEZONE" "$timezone"
+    set_config_entry "$config_tmp" "POSTMASTER_ADDRESS" "postmaster@$domain"
+    set_config_entry "$config_tmp" "ABUSE_ADDRESS" "abuse@$domain"
+    set_config_entry "$config_tmp" "PRIMARY_MAILBOX" "$admin_email"
+    set_config_entry "$config_tmp" "PRIMARY_ALIAS_ADDRESSES" "postmaster@$domain abuse@$domain dmarc@$domain $admin_email"
   fi
-  [[ -n "$public_ipv4" ]] && set_config_entry "$dest" "SERVER_PUBLIC_IPV4" "$public_ipv4"
-  [[ -n "$public_ipv6" ]] && set_config_entry "$dest" "SERVER_PUBLIC_IPV6" "$public_ipv6"
+  [[ -n "$public_ipv4" ]] && set_config_entry "$config_tmp" "SERVER_PUBLIC_IPV4" "$public_ipv4"
+  [[ -n "$public_ipv6" ]] && set_config_entry "$config_tmp" "SERVER_PUBLIC_IPV6" "$public_ipv6"
 
-  chmod 600 "$dest"
+  chmod 600 "$config_tmp"
+  mv "$config_tmp" "$dest"
   if [[ "$dest" == "$DEFAULT_CONFIG_FILE" ]]; then
     chmod 700 "$(dirname "$dest")"
     chown_for_sudo_user "$(dirname "$dest")"

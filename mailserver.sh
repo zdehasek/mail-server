@@ -786,6 +786,7 @@ cmd_update() {
     die "No upstream found for branch $branch."
   fi
 
+  install_cli_link optional || true
   ok "Installer checkout is up to date."
 }
 

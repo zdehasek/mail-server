@@ -33,41 +33,27 @@ log_line() {
   local level="$1"
   local color="$2"
   local icon="$3"
+  local line
   shift 3
-  printf '[%s] %s %s %s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$icon" "$(style_text "$color" "$level")" "$*"
+  line="[$(date -u +%Y-%m-%dT%H:%M:%SZ)] $icon $level $*"
+  printf '%s\n' "$(style_text "$color" "$line")"
 }
 
-log() { printf '[%s] %s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$*"; }
-info() { log_line "INFO " 36 "ℹ️ " "$*"; }
-warn() { log_line "WARN " 33 "⚠️ " "$*" >&2; }
+log() { log_line "LOG  " 30 "• " "$*"; }
+info() { log_line "INFO " 30 "ℹ️ " "$*"; }
+warn() { log_line "WARN " "38;5;208" "⚠️ " "$*" >&2; }
 die() { log_line "ERROR" 31 "❌" "$*" >&2; exit 1; }
 
-state_label() {
-  local label="$1"
-  local color="$2"
-  if use_color; then
-    printf '\033[%sm%-5s\033[0m' "$color" "$label"
-  else
-    printf '%-5s' "$label"
-  fi
-}
-
 ok_state() {
-  printf '✅ '
-  state_label OK 32
-  printf ' %s\n' "$*"
+  printf '%s\n' "$(style_text 32 "✅ OK    $*")"
 }
 warn_state() {
-  printf '⚠️  '
-  state_label WARN 33
-  printf ' %s\n' "$*"
+  printf '%s\n' "$(style_text "38;5;208" "⚠️  WARN  $*")"
   : "${warnings:=0}"
   warnings=$((warnings + 1))
 }
 fail_state() {
-  printf '❌ '
-  state_label FAIL 31
-  printf ' %s\n' "$*"
+  printf '%s\n' "$(style_text 31 "❌ FAIL  $*")"
   : "${failures:=0}"
   failures=$((failures + 1))
 }

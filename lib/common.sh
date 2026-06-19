@@ -12,17 +12,35 @@ BACKUP_ROOT="/var/backups/mailserver"
 STATE_DIR="/etc/mailserver/install-state"
 MANAGED_HEADER="# Managed by mail-server installer. Manual changes may be overwritten."
 
-log() { printf '[%s] %s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$*"; }
-info() { log "INFO: $*"; }
-warn() { log "WARN: $*" >&2; }
-die() { log "ERROR: $*" >&2; exit 1; }
-
 use_color() {
   [[ -n "${NO_COLOR:-}" ]] && return 1
   [[ -n "${FORCE_COLOR:-}" && "${FORCE_COLOR:-}" != "0" ]] && return 0
   [[ -n "${CLICOLOR_FORCE:-}" && "${CLICOLOR_FORCE:-}" != "0" ]] && return 0
   [[ -t 1 && -z "${NO_COLOR:-}" && "${TERM:-}" != "dumb" ]]
 }
+
+style_text() {
+  local color="$1"
+  shift
+  if use_color; then
+    printf '\033[%sm%s\033[0m' "$color" "$*"
+  else
+    printf '%s' "$*"
+  fi
+}
+
+log_line() {
+  local level="$1"
+  local color="$2"
+  local icon="$3"
+  shift 3
+  printf '[%s] %s %s %s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$icon" "$(style_text "$color" "$level")" "$*"
+}
+
+log() { printf '[%s] %s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$*"; }
+info() { log_line "INFO " 36 "ℹ️ " "$*"; }
+warn() { log_line "WARN " 33 "⚠️ " "$*" >&2; }
+die() { log_line "ERROR" 31 "❌" "$*" >&2; exit 1; }
 
 state_label() {
   local label="$1"
@@ -35,17 +53,22 @@ state_label() {
 }
 
 ok_state() {
+  printf '✅ '
   state_label OK 32
   printf ' %s\n' "$*"
 }
 warn_state() {
+  printf '⚠️  '
   state_label WARN 33
   printf ' %s\n' "$*"
+  : "${warnings:=0}"
   warnings=$((warnings + 1))
 }
 fail_state() {
+  printf '❌ '
   state_label FAIL 31
   printf ' %s\n' "$*"
+  : "${failures:=0}"
   failures=$((failures + 1))
 }
 

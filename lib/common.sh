@@ -16,7 +16,7 @@ use_color() {
   [[ -n "${NO_COLOR:-}" ]] && return 1
   [[ -n "${FORCE_COLOR:-}" && "${FORCE_COLOR:-}" != "0" ]] && return 0
   [[ -n "${CLICOLOR_FORCE:-}" && "${CLICOLOR_FORCE:-}" != "0" ]] && return 0
-  [[ -t 1 && -z "${NO_COLOR:-}" && "${TERM:-}" != "dumb" ]]
+  [[ ( -t 1 || -t 2 ) && -z "${NO_COLOR:-}" && "${TERM:-}" != "dumb" ]]
 }
 
 style_text() {

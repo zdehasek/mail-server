@@ -67,7 +67,7 @@ use_color() {
   [[ -n "${NO_COLOR:-}" ]] && return 1
   [[ -n "${FORCE_COLOR:-}" && "${FORCE_COLOR:-}" != "0" ]] && return 0
   [[ -n "${CLICOLOR_FORCE:-}" && "${CLICOLOR_FORCE:-}" != "0" ]] && return 0
-  [[ -t 1 && "${TERM:-}" != "dumb" ]]
+  [[ ( -t 1 || -t 2 ) && "${TERM:-}" != "dumb" ]]
 }
 
 color() {
@@ -381,16 +381,28 @@ require_checkout_files() {
 
 run_cmd() {
   say "$(format_command "$@")"
-  "$@"
+  if use_color; then
+    FORCE_COLOR="${FORCE_COLOR:-1}" CLICOLOR_FORCE="${CLICOLOR_FORCE:-1}" "$@"
+  else
+    "$@"
+  fi
 }
 
 run_root_cmd() {
   if [[ "$EUID" -eq 0 ]]; then
     say "$(format_command "$@")"
-    "$@"
+    if use_color; then
+      FORCE_COLOR="${FORCE_COLOR:-1}" CLICOLOR_FORCE="${CLICOLOR_FORCE:-1}" "$@"
+    else
+      "$@"
+    fi
   elif command -v sudo >/dev/null 2>&1; then
     say "sudo $(format_command "$@")"
-    sudo "$@"
+    if use_color; then
+      sudo env FORCE_COLOR="${FORCE_COLOR:-1}" CLICOLOR_FORCE="${CLICOLOR_FORCE:-1}" "$@"
+    else
+      sudo "$@"
+    fi
   else
     die "This command needs root. Re-run with sudo."
   fi
@@ -418,7 +430,7 @@ prompt_tty() {
 say_tty() {
   local message="$*"
   if has_tty; then
-    printf '%s %s\n' "$(color 36 "•")" "$message" > /dev/tty
+    printf '%s\n' "$(color 30 "• $message")" > /dev/tty
   else
     say "$message"
   fi

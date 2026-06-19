@@ -54,6 +54,10 @@ check_ports() {
   done
 }
 
+check_external_firewall_notice() {
+  warn "Provider firewalls cannot be verified before mail services are listening. After setup, run: mailserver check"
+}
+
 run_preflight() {
   check_ubuntu_2604
   check_systemd
@@ -61,4 +65,5 @@ run_preflight() {
   check_dns
   check_resources
   check_ports
+  check_external_firewall_notice
 }

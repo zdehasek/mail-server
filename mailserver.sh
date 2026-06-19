@@ -348,7 +348,17 @@ bootstrap_checkout() {
   elif [[ -e "$dest" && ! -d "$dest" ]]; then
     die "Install path exists and is not a directory: $dest"
   elif [[ -e "$dest" && -n "$(find "$dest" -mindepth 1 -maxdepth 1 -print -quit 2>/dev/null)" ]]; then
-    die "Install directory exists and is not an email-server git checkout: $dest"
+    if [[ -f "$dest/mailserver.sh" ]]; then
+      local backup
+      backup="${dest}.non-git-backup.$(date -u +%Y%m%dT%H%M%SZ)"
+      warn "Install directory is not a git checkout; moving it to $backup"
+      mv "$dest" "$backup"
+      say "Cloning installer into $dest"
+      git clone "$REPO_URL" "$dest"
+      ok "Previous installer directory kept at $backup"
+    else
+      die "Install directory exists and is not an email-server git checkout: $dest"
+    fi
   else
     say "Cloning installer into $dest"
     mkdir -p "$(dirname "$dest")"
@@ -599,13 +609,40 @@ cmd_install_cli() {
   install_cli_link interactive
 }
 
+replace_non_git_checkout() {
+  local parent backup
+
+  command -v git >/dev/null 2>&1 || die "git is required to repair installer checkout. Install git, then retry."
+
+  parent="$(dirname "$ROOT_DIR")"
+  if [[ "$EUID" -ne 0 && ( ! -w "$parent" || ! -w "$ROOT_DIR" ) ]]; then
+    die "Update needs write access to $ROOT_DIR. Re-run: sudo mailserver update"
+  fi
+
+  backup="${ROOT_DIR}.non-git-backup.$(date -u +%Y%m%dT%H%M%SZ)"
+  warn "$ROOT_DIR is not a git checkout; moving it to $backup and cloning a fresh installer checkout."
+  mv "$ROOT_DIR" "$backup"
+  if ! git clone "$REPO_URL" "$ROOT_DIR"; then
+    mv "$backup" "$ROOT_DIR" 2>/dev/null || true
+    die "Could not clone $REPO_URL into $ROOT_DIR. Restored previous installer directory."
+  fi
+  if [[ -n "$REPO_REF" ]]; then
+    say "Checking out $REPO_REF"
+    git -C "$ROOT_DIR" fetch --tags --prune
+    git -C "$ROOT_DIR" checkout "$REPO_REF"
+  fi
+  [[ -x "$ROOT_DIR/mailserver.sh" ]] || chmod +x "$ROOT_DIR/mailserver.sh"
+  install_cli_link optional || true
+  ok "Repaired installer checkout. Previous directory kept at $backup"
+}
+
 cmd_update() {
   extract_common_args "$@"
   [[ "${#REMAINING_ARGS[@]}" -eq 0 ]] || die "update does not accept positional arguments."
   require_checkout_files
 
   if ! git -C "$ROOT_DIR" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
-    die "Update requires a git checkout: $ROOT_DIR"
+    replace_non_git_checkout
   fi
 
   local worktree branch upstream

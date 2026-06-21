@@ -24,11 +24,28 @@ DKIM is generated during install. Print it with:
 sudo mailserver print-dns
 ```
 
+For an additional domain, activate the domain first, then print domain-specific
+records:
+
+```bash
+sudo mailserver add-domain --domain example.net
+sudo mailserver print-dns --domain example.net
+```
+
+`add-domain` creates `postmaster`, `abuse`, and `dmarc` aliases for the domain
+by default so DMARC aggregate reports have a destination.
+
 After publishing the records, check current DNS state against
 `~/.email-server/config.env` with:
 
 ```bash
 mailserver dns-state
+```
+
+For an additional domain:
+
+```bash
+mailserver dns-state --domain example.net
 ```
 
 The DNS check uses `1.1.1.1` by default so local resolver aliases, caches, and

@@ -34,6 +34,15 @@ if [[ "$DRY_RUN" == "true" ]]; then
   exit 0
 fi
 
+dkim_domain_args=("$domain")
+for alias_addr in "${primary_alias_addresses[@]}"; do
+  [[ -n "$alias_addr" ]] || continue
+  [[ "$alias_addr" == *@* ]] || die "Invalid primary alias address: $alias_addr"
+  dkim_domain_args+=("${alias_addr#*@}")
+done
+refresh_opendkim_domain_maps "${dkim_domain_args[@]}"
+reload_or_restart opendkim
+
 password="${PRIMARY_MAILBOX_PASSWORD:-}"
 if [[ -z "$password" ]]; then
   if [[ -f "$PRIMARY_MAILBOX_PASSWORD_FILE" ]]; then
@@ -63,7 +72,8 @@ maildir_q="$(sql_quote "$domain/$localpart/Maildir/")"
 
 sqlite3 "$MAIL_DB_PATH" <<SQL
 PRAGMA foreign_keys = ON;
-INSERT OR IGNORE INTO domains(name, active) VALUES('$domain_q', 1);
+INSERT INTO domains(name, active) VALUES('$domain_q', 1)
+ON CONFLICT(name) DO UPDATE SET active=1;
 INSERT INTO users(domain_id, email, username, full_name, password_hash, home, maildir, active)
 VALUES((SELECT id FROM domains WHERE name='$domain_q'), '$email_q', '$local_q', '$name_q', '$hash_q', '$home_q', '$maildir_q', 1)
 ON CONFLICT(email) DO UPDATE SET password_hash=excluded.password_hash, full_name=excluded.full_name, active=1;
@@ -86,9 +96,11 @@ for alias_addr in "${primary_alias_addresses[@]}"; do
   dest_q="$(sql_quote "$email")"
   sqlite3 "$MAIL_DB_PATH" <<SQL
 PRAGMA foreign_keys = ON;
-INSERT OR IGNORE INTO domains(name, active) VALUES('$alias_domain_q', 1);
-INSERT OR IGNORE INTO aliases(domain_id, source, destination, active)
-VALUES((SELECT id FROM domains WHERE name='$alias_domain_q'), '$alias_q', '$dest_q', 1);
+INSERT INTO domains(name, active) VALUES('$alias_domain_q', 1)
+ON CONFLICT(name) DO UPDATE SET active=1;
+INSERT INTO aliases(domain_id, source, destination, active)
+VALUES((SELECT id FROM domains WHERE name='$alias_domain_q'), '$alias_q', '$dest_q', 1)
+ON CONFLICT(source, destination) DO UPDATE SET active=1;
 SQL
   info "Alias ready: $alias_addr -> $email"
 done

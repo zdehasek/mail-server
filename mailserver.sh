@@ -146,6 +146,9 @@ Client configuration:
   client-info --user user@example.com
 
 Mailbox operations:
+  list-domains
+  add-domain --domain example.com
+  remove-domain --domain example.com
   list-users
   add-user --user user@example.com [--full-name "Full Name"]
   remove-user --user user@example.com
@@ -182,6 +185,18 @@ show_command_help() {
   case "$1" in
     add-user)
       printf 'Usage: mailserver add-user --user user@example.com [--full-name "Full Name"] [--config PATH]\n'
+      ;;
+    add-domain)
+      printf 'Usage: mailserver add-domain --domain example.com [--alias-dest admin@example.com] [--no-default-aliases] [--config PATH]\n'
+      ;;
+    remove-domain)
+      printf 'Usage: mailserver remove-domain --domain example.com [--config PATH]\n'
+      ;;
+    print-dns|dns-state)
+      printf 'Usage: mailserver %s [--domain example.com] [--config PATH]\n' "$1"
+      ;;
+    list-domains)
+      printf 'Usage: mailserver list-domains [--config PATH]\n'
       ;;
     remove-user|change-password)
       printf 'Usage: mailserver %s --user user@example.com [--config PATH]\n' "$1"
@@ -882,6 +897,19 @@ cmd_simple_script() {
   fi
 }
 
+cmd_option_script() {
+  local script="$1"
+  local root_needed="$2"
+  shift 2
+  extract_common_args "$@"
+  require_checkout_files
+  if [[ "$root_needed" == "true" ]]; then
+    run_root_cmd "$ROOT_DIR/$script" --config "$(config_arg)" "${REMAINING_ARGS[@]}"
+  else
+    run_cmd "$ROOT_DIR/$script" --config "$(config_arg)" "${REMAINING_ARGS[@]}"
+  fi
+}
+
 cmd_client_info() {
   extract_common_args "$@"
   require_checkout_files
@@ -998,10 +1026,13 @@ main() {
     setup) cmd_setup "${COMMAND_ARGS[@]}" ;;
     verify) cmd_verify "${COMMAND_ARGS[@]}" ;;
     check) cmd_check "${COMMAND_ARGS[@]}" ;;
-    print-dns) cmd_simple_script scripts/print-dns.sh true "${COMMAND_ARGS[@]}" ;;
-    dns-state) cmd_simple_script scripts/dns-state.sh false "${COMMAND_ARGS[@]}" ;;
+    print-dns) cmd_option_script scripts/print-dns.sh true "${COMMAND_ARGS[@]}" ;;
+    dns-state) cmd_option_script scripts/dns-state.sh false "${COMMAND_ARGS[@]}" ;;
     check-ssl) cmd_simple_script scripts/check-ssl.sh false "${COMMAND_ARGS[@]}" ;;
     service-state) cmd_simple_script scripts/service-state.sh false "${COMMAND_ARGS[@]}" ;;
+    list-domains) cmd_simple_script scripts/list-domains.sh true "${COMMAND_ARGS[@]}" ;;
+    add-domain) cmd_option_script scripts/add-domain.sh true "${COMMAND_ARGS[@]}" ;;
+    remove-domain) cmd_option_script scripts/remove-domain.sh true "${COMMAND_ARGS[@]}" ;;
     list-users) cmd_simple_script scripts/list-users.sh true "${COMMAND_ARGS[@]}" ;;
     setup-primary-mailbox) cmd_simple_script scripts/setup-primary-mailbox.sh true "${COMMAND_ARGS[@]}" ;;
     backup) cmd_simple_script scripts/backup.sh true "${COMMAND_ARGS[@]}" ;;

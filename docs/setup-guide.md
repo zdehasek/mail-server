@@ -342,7 +342,11 @@ For Hetzner, open the server, go to `Networking`, find the public IPv4 address,
 edit `Reverse DNS` / `rDNS`, and set it to `mail.example.com`.
 
 DKIM is generated during installation. Publish it after `sudo mailserver setup`
-by running `sudo mailserver print-dns`.
+by running `sudo mailserver print-dns`. For additional domains, run
+`sudo mailserver add-domain --domain example.net`, then
+`sudo mailserver print-dns --domain example.net`. `add-domain` creates the
+standard `postmaster`, `abuse`, and `dmarc` aliases to `ADMIN_EMAIL` unless
+you pass `--alias-dest` or `--no-default-aliases`.
 
 ## 5. Wait For DNS
 

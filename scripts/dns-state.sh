@@ -6,12 +6,28 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 # shellcheck disable=SC1091
 source "$ROOT_DIR/lib/common.sh"
 
-parse_config_only_args "$@" || true
+usage() { echo "Usage: mailserver dns-state [--domain example.com] [--config PATH]"; }
+parse_config_only_args "$@" || { usage; exit 0; }
 load_config
 
 failures=0
 warnings=0
 DNS_RESOLVER="${DNS_RESOLVER:-1.1.1.1}"
+target_domain="$(normalize_domain "$PRIMARY_DOMAIN")"
+
+while [[ "${#POSITIONAL[@]}" -gt 0 ]]; do
+  case "${POSITIONAL[0]}" in
+    --domain)
+      [[ -n "${POSITIONAL[1]:-}" ]] || die "Missing value for --domain."
+      target_domain="$(normalize_domain "${POSITIONAL[1]}")"
+      POSITIONAL=("${POSITIONAL[@]:2}")
+      ;;
+    *)
+      die "Unknown dns-state option: ${POSITIONAL[0]}"
+      ;;
+  esac
+done
+validate_domain_or_die "$target_domain"
 
 dig_short() {
   dig @"$DNS_RESOLVER" +short "$@" 2>/dev/null | sed 's/\.$//' | sort -u
@@ -82,7 +98,7 @@ check_txt() {
   fi
 }
 
-printf 'DNS state for %s\n' "$PRIMARY_DOMAIN"
+printf 'DNS state for %s\n' "$target_domain"
 printf 'Resolver: %s\n\n' "$DNS_RESOLVER"
 
 declare -A hosts=()
@@ -95,16 +111,16 @@ for host in "${!hosts[@]}"; do
   check_host_ip AAAA "$host" "${SERVER_PUBLIC_IPV6:-}"
 done
 
-mx_records="$(dig_short "$PRIMARY_DOMAIN" MX)"
+mx_records="$(dig_short "$target_domain" MX)"
 expected_mx="10 $MAIL_HOSTNAME"
 if contains_line "$expected_mx" <<< "$mx_records"; then
-  ok_state "$PRIMARY_DOMAIN MX points to $MAIL_HOSTNAME"
+  ok_state "$target_domain MX points to $MAIL_HOSTNAME"
 else
-  fail_state "$PRIMARY_DOMAIN MX missing '$expected_mx'; got: ${mx_records:-<none>}"
+  fail_state "$target_domain MX missing '$expected_mx'; got: ${mx_records:-<none>}"
 fi
 
-check_txt "$PRIMARY_DOMAIN" "v=spf1 mx -all"
-check_txt "_dmarc.$PRIMARY_DOMAIN" "v=DMARC1; p=none; rua=mailto:dmarc@$PRIMARY_DOMAIN; adkim=s; aspf=s"
+check_txt "$target_domain" "v=spf1 mx -all"
+check_txt "_dmarc.$target_domain" "v=DMARC1; p=none; rua=mailto:dmarc@$target_domain; adkim=s; aspf=s"
 
 ptr_records="$(dig_short -x "$SERVER_PUBLIC_IPV4")"
 if contains_line "$MAIL_HOSTNAME" <<< "$ptr_records"; then
@@ -113,8 +129,8 @@ else
   fail_state "$SERVER_PUBLIC_IPV4 PTR/rDNS missing $MAIL_HOSTNAME; got: ${ptr_records:-<none>}"
 fi
 
-dkim_name="$DKIM_SELECTOR._domainkey.$PRIMARY_DOMAIN"
-dkim_file="/etc/mailserver/dkim/$PRIMARY_DOMAIN/$DKIM_SELECTOR.txt"
+dkim_name="$DKIM_SELECTOR._domainkey.$target_domain"
+dkim_file="/etc/mailserver/dkim/$target_domain/$DKIM_SELECTOR.txt"
 dns_dkim="$(dig @"$DNS_RESOLVER" +short TXT "$dkim_name" 2>/dev/null | normalize_txt)"
 if [[ -r "$dkim_file" ]]; then
   expected_dkim="$(normalize_local_dkim "$dkim_file")"

@@ -6,6 +6,47 @@ Create a mailbox:
 sudo mailserver add-user --user user@example.com
 ```
 
+List configured mail domains:
+
+```bash
+sudo mailserver list-domains
+```
+
+Activate another mail domain in the virtual mailbox database:
+
+```bash
+sudo mailserver add-domain --domain example.net
+```
+
+This also generates a DKIM key under `/etc/mailserver/dkim/example.net/`,
+refreshes the OpenDKIM signing maps, reloads OpenDKIM, and creates
+`postmaster@example.net`, `abuse@example.net`, and `dmarc@example.net` aliases
+to `ADMIN_EMAIL`. Use `--alias-dest admin@example.com` to choose a different
+destination, or `--no-default-aliases` to skip them.
+
+Print and publish the DNS records for that domain:
+
+```bash
+sudo mailserver print-dns --domain example.net
+mailserver dns-state --domain example.net
+```
+
+Then add mailboxes or aliases on that domain:
+
+```bash
+sudo mailserver add-user --user user@example.net
+sudo mailserver add-alias --source postmaster@example.net --dest admin@example.com
+```
+
+Deactivate a non-primary domain, including its active mailboxes and aliases:
+
+```bash
+sudo mailserver remove-domain --domain example.net
+```
+
+This does not delete maildirs from disk. DNS and DKIM records for non-primary
+domains are domain-specific; use `--domain` when printing or checking them.
+
 Create or refresh the configured primary mailbox and operational aliases:
 
 ```bash

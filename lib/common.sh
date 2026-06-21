@@ -267,6 +267,93 @@ sql_quote() {
   printf "%s" "$value"
 }
 
+normalize_domain() {
+  local domain="$1"
+  printf '%s\n' "${domain,,}"
+}
+
+validate_domain_or_die() {
+  local domain="$1"
+  [[ "$domain" =~ ^[a-z0-9][a-z0-9.-]*[a-z0-9]$ && "$domain" == *.* && "$domain" != *..* ]] || die "Invalid domain: $domain"
+}
+
+configured_mail_domains() {
+  local primary db_domains extra
+  primary="$(normalize_domain "$PRIMARY_DOMAIN")"
+  {
+    printf '%s\n' "$primary"
+    if [[ -f "$MAIL_DB_PATH" ]]; then
+      if ! db_domains="$(sqlite3 "$MAIL_DB_PATH" "SELECT lower(name) FROM domains WHERE active=1 ORDER BY name;" 2>&1)"; then
+        die "Could not read active mail domains from $MAIL_DB_PATH: $db_domains"
+      fi
+      printf '%s\n' "$db_domains"
+    fi
+    for extra in "$@"; do
+      [[ -n "$extra" ]] || continue
+      normalize_domain "$extra"
+    done
+  } | awk 'NF && !seen[$0]++'
+}
+
+ensure_dkim_key_for_domain() {
+  local domain="$1"
+  local dkim_dir="/etc/mailserver/dkim/$domain"
+  local private_key="$dkim_dir/$DKIM_SELECTOR.private"
+
+  validate_domain_or_die "$domain"
+  run mkdir -p "$dkim_dir"
+  if [[ "$DRY_RUN" != "true" && ! -f "$private_key" ]]; then
+    command -v opendkim-genkey >/dev/null 2>&1 || die "opendkim-genkey is required to generate DKIM for $domain. Install OpenDKIM first."
+    opendkim-genkey -b 2048 -d "$domain" -s "$DKIM_SELECTOR" -D "$dkim_dir"
+  fi
+
+  if [[ "$DRY_RUN" != "true" && -f "$private_key" ]]; then
+    if getent passwd opendkim >/dev/null 2>&1; then
+      chown -R opendkim:opendkim "$dkim_dir"
+    fi
+    chmod 0600 "$private_key"
+  fi
+}
+
+refresh_opendkim_domain_maps() {
+  local domain_lines
+  local domains=()
+  local domain
+  local key_table=""
+  local signing_table=""
+  local trusted_hosts=""
+  local host
+  declare -A trusted_seen=()
+
+  domain_lines="$(configured_mail_domains "$@")"
+  mapfile -t domains <<< "$domain_lines"
+  [[ "${#domains[@]}" -gt 0 ]] || die "No mail domains configured for DKIM."
+
+  run mkdir -p /etc/opendkim /etc/mailserver/dkim
+
+  for host in 127.0.0.1 ::1 localhost "$MAIL_HOSTNAME"; do
+    [[ -n "$host" ]] || continue
+    trusted_hosts+="$host"$'\n'
+    trusted_seen["$host"]=1
+  done
+
+  for domain in "${domains[@]}"; do
+    domain="$(normalize_domain "$domain")"
+    validate_domain_or_die "$domain"
+    ensure_dkim_key_for_domain "$domain"
+    key_table+="$DKIM_SELECTOR._domainkey.$domain $domain:$DKIM_SELECTOR:/etc/mailserver/dkim/$domain/$DKIM_SELECTOR.private"$'\n'
+    signing_table+="*@$domain $DKIM_SELECTOR._domainkey.$domain"$'\n'
+    if [[ -z "${trusted_seen[$domain]:-}" ]]; then
+      trusted_hosts+="$domain"$'\n'
+      trusted_seen["$domain"]=1
+    fi
+  done
+
+  write_file /etc/opendkim/key.table "${key_table%$'\n'}"
+  write_file /etc/opendkim/signing.table "${signing_table%$'\n'}"
+  write_file /etc/opendkim/trusted.hosts "${trusted_hosts%$'\n'}"
+}
+
 xml_escape() {
   local value="$1"
   value="${value//&/&amp;}"

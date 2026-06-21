@@ -1,17 +1,7 @@
 #!/usr/bin/env bash
 
-dkim_dir="/etc/mailserver/dkim/$PRIMARY_DOMAIN"
-run mkdir -p "$dkim_dir"
-if [[ "$DRY_RUN" != "true" && ! -f "$dkim_dir/$DKIM_SELECTOR.private" ]]; then
-  opendkim-genkey -b 2048 -d "$PRIMARY_DOMAIN" -s "$DKIM_SELECTOR" -D "$dkim_dir"
-  chown -R opendkim:opendkim "$dkim_dir"
-  chmod 0600 "$dkim_dir/$DKIM_SELECTOR.private"
-fi
-
 render_template "$ROOT_DIR/templates/opendkim/opendkim.conf.tmpl" /etc/opendkim.conf
-render_template "$ROOT_DIR/templates/opendkim/signing.table.tmpl" /etc/opendkim/signing.table
-render_template "$ROOT_DIR/templates/opendkim/key.table.tmpl" /etc/opendkim/key.table
-render_template "$ROOT_DIR/templates/opendkim/trusted.hosts.tmpl" /etc/opendkim/trusted.hosts
+refresh_opendkim_domain_maps
 render_template "$ROOT_DIR/templates/opendmarc/opendmarc.conf.tmpl" /etc/opendmarc.conf
 
 service_enable_now opendkim

@@ -1,10 +1,7 @@
 #!/usr/bin/env bash
 
-# shellcheck source=../lib/dkim.sh
-source "$ROOT_DIR/lib/dkim.sh"
-
 render_template "$ROOT_DIR/templates/opendkim/opendkim.conf.tmpl" /etc/opendkim.conf
-sync_dkim_domains
+refresh_opendkim_domain_maps
 render_template "$ROOT_DIR/templates/opendmarc/opendmarc.conf.tmpl" /etc/opendmarc.conf
 
 service_enable_now opendkim
@@ -18,8 +15,6 @@ if [[ "${ENABLE_RSPAMD:-true}" == "true" ]]; then
   run rspamadm configtest
   service_enable_now rspamd
   reload_or_restart rspamd
-else
-  warn "ENABLE_RSPAMD=false; Postfix will be configured without the Rspamd spam-filtering milter."
 fi
 
 mark_done dkim-dmarc-rspamd

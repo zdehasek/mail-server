@@ -4,77 +4,86 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 # shellcheck source=../lib/common.sh
 source "$ROOT_DIR/lib/common.sh"
-# shellcheck source=../lib/dkim.sh
-source "$ROOT_DIR/lib/dkim.sh"
 
-usage() { echo "Usage: sudo mailserver add-domain --domain example.com [--config PATH] [--dry-run]"; }
-
+usage() { echo "Usage: sudo mailserver add-domain --domain example.com [--alias-dest admin@example.com] [--no-default-aliases] [--config PATH]"; }
+parse_config_only_args "$@" || { usage; exit 0; }
 domain=""
-POSITIONAL=()
-CONFIG_FILE="${CONFIG:-${ENV_FILE:-$(default_config_file)}}"
-while [[ $# -gt 0 ]]; do
-  case "$1" in
-    --config) CONFIG_FILE="${2:-}"; shift 2 ;;
-    --dry-run) DRY_RUN="true"; shift ;;
-    --assume-yes|-y) ASSUME_YES="true"; shift ;;
-    --domain) domain="${2:-}"; shift 2 ;;
-    --help|-h) usage; exit 0 ;;
-    *) POSITIONAL+=("$1"); shift ;;
+alias_dest=""
+create_default_aliases="true"
+while [[ "${#POSITIONAL[@]}" -gt 0 ]]; do
+  case "${POSITIONAL[0]}" in
+    --domain)
+      [[ -n "${POSITIONAL[1]:-}" ]] || { usage; exit 1; }
+      domain="${POSITIONAL[1]}"
+      POSITIONAL=("${POSITIONAL[@]:2}")
+      ;;
+    --alias-dest|--alias-destination)
+      [[ -n "${POSITIONAL[1]:-}" ]] || { usage; exit 1; }
+      alias_dest="${POSITIONAL[1]}"
+      POSITIONAL=("${POSITIONAL[@]:2}")
+      ;;
+    --no-default-aliases)
+      create_default_aliases="false"
+      POSITIONAL=("${POSITIONAL[@]:1}")
+      ;;
+    *)
+      if [[ -z "$domain" ]]; then
+        domain="${POSITIONAL[0]}"
+        POSITIONAL=("${POSITIONAL[@]:1}")
+      else
+        usage
+        exit 1
+      fi
+      ;;
   esac
 done
-
-if [[ -z "$domain" && "${#POSITIONAL[@]}" -eq 1 ]]; then
-  domain="${POSITIONAL[0]}"
-elif [[ "${#POSITIONAL[@]}" -gt 0 ]]; then
-  usage
-  exit 1
-fi
 [[ -n "$domain" ]] || { usage; exit 1; }
-
+require_root
 load_config
-[[ "$DRY_RUN" == "true" ]] || require_root
 
-domain="${domain,,}"
-validate_domain_name "$domain" || die "Invalid domain: $domain"
+domain="$(normalize_domain "$domain")"
+validate_domain_or_die "$domain"
+alias_dest="${alias_dest:-$ADMIN_EMAIL}"
+if [[ "$create_default_aliases" == "true" ]]; then
+  [[ "$alias_dest" == *@* ]] || die "Default alias destination must be an email address: $alias_dest"
+fi
 
-if ! domain_is_managed "$domain"; then
-  if [[ "$domain" == "${PRIMARY_DOMAIN,,}" ]]; then
-    info "Domain is already the primary domain: $domain"
-  else
-    SECONDARY_DOMAINS="$({
-      primary_domain="${PRIMARY_DOMAIN,,}"
-      while IFS= read -r configured_domain; do
-        [[ "$configured_domain" == "$primary_domain" ]] || printf '%s\n' "$configured_domain"
-      done < <(mail_domains)
-      printf '%s\n' "$domain"
-    } | awk 'NF { value=tolower($0); if (!seen[value]++) print value }' | paste -sd ' ' -)"
-    set_config_entry_or_append "$CONFIG_FILE" SECONDARY_DOMAINS "$SECONDARY_DOMAINS"
-    info "Added $domain to SECONDARY_DOMAINS in $CONFIG_FILE"
+if [[ "$DRY_RUN" == "true" ]]; then
+  info "Would activate mail domain $domain"
+  if [[ "$create_default_aliases" == "true" ]]; then
+    info "Would add standard aliases postmaster@$domain, abuse@$domain, dmarc@$domain -> $alias_dest"
   fi
-else
-  info "Domain is already configured: $domain"
+  exit 0
 fi
 
-if [[ -f "$MAIL_DB_PATH" || "$DRY_RUN" == "true" ]]; then
-  sync_configured_domains
-else
-  warn "Mail database not found at $MAIL_DB_PATH; domain will be seeded during install."
+refresh_opendkim_domain_maps "$domain"
+reload_or_restart opendkim
+
+domain_q="$(sql_quote "$domain")"
+alias_dest_q="$(sql_quote "$alias_dest")"
+sqlite3 "$MAIL_DB_PATH" <<SQL
+PRAGMA foreign_keys = ON;
+INSERT INTO domains(name, active) VALUES('$domain_q', 1)
+ON CONFLICT(name) DO UPDATE SET active=1;
+SQL
+
+if [[ "$create_default_aliases" == "true" ]]; then
+  for alias_localpart in postmaster abuse dmarc; do
+    alias_q="$(sql_quote "$alias_localpart@$domain")"
+    sqlite3 "$MAIL_DB_PATH" <<SQL
+PRAGMA foreign_keys = ON;
+INSERT INTO aliases(domain_id, source, destination, active)
+VALUES((SELECT id FROM domains WHERE name='$domain_q'), '$alias_q', '$alias_dest_q', 1)
+ON CONFLICT(source, destination) DO UPDATE SET active=1;
+SQL
+  done
 fi
 
-if command -v opendkim-genkey >/dev/null 2>&1 || [[ "$DRY_RUN" == "true" ]]; then
-  sync_dkim_domains
-else
-  warn "opendkim-genkey is not installed; DKIM keys will be generated during install."
+info "Mail domain active: $domain"
+if [[ "$create_default_aliases" == "true" ]]; then
+  info "Standard aliases ready: postmaster@$domain abuse@$domain dmarc@$domain -> $alias_dest"
 fi
-
-if [[ "$DRY_RUN" != "true" ]]; then
-  if systemctl cat opendkim >/dev/null 2>&1; then
-    reload_or_restart opendkim
-  fi
-  if command -v postfix >/dev/null 2>&1; then
-    run postfix reload || warn "Postfix reload failed; check service state manually."
-  fi
+if [[ "$domain" != "$(normalize_domain "$PRIMARY_DOMAIN")" ]]; then
+  info "Add mailboxes with: sudo mailserver add-user --user user@$domain"
+  info "Print DNS records with: sudo mailserver print-dns --domain $domain"
 fi
-
-info "Domain ready: $domain"
-"$ROOT_DIR/scripts/print-dns.sh" --config "$CONFIG_FILE"

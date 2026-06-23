@@ -14,11 +14,8 @@ load_config
 email="${POSITIONAL[0]}"
 full_name="${POSITIONAL[1]:-$email}"
 domain="${email#*@}"
-domain="${domain,,}"
 localpart="${email%@*}"
 [[ "$email" == *@* && -n "$domain" && -n "$localpart" ]] || die "Invalid email address: $email"
-validate_domain_name "$domain" || die "Invalid domain in email address: $domain"
-require_managed_domain "$domain"
 
 if [[ "$DRY_RUN" == "true" ]]; then
   info "Would create mailbox $email"
@@ -40,9 +37,13 @@ hash_q="$(sql_quote "$hash")"
 home_q="$(sql_quote "$VMAIL_ROOT/$domain/$localpart")"
 maildir_q="$(sql_quote "$domain/$localpart/Maildir/")"
 
-sync_configured_domains
+refresh_opendkim_domain_maps "$domain"
+reload_or_restart opendkim
+
 sqlite3 "$MAIL_DB_PATH" <<SQL
 PRAGMA foreign_keys = ON;
+INSERT INTO domains(name, active) VALUES('$domain_q', 1)
+ON CONFLICT(name) DO UPDATE SET active=1;
 INSERT INTO users(domain_id, email, username, full_name, password_hash, home, maildir, active)
 VALUES((SELECT id FROM domains WHERE name='$domain_q'), '$email_q', '$local_q', '$name_q', '$hash_q', '$home_q', '$maildir_q', 1)
 ON CONFLICT(email) DO UPDATE SET password_hash=excluded.password_hash, full_name=excluded.full_name, active=1;

@@ -6,12 +6,28 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 # shellcheck disable=SC1091
 source "$ROOT_DIR/lib/common.sh"
 
-parse_config_only_args "$@" || true
+usage() { echo "Usage: mailserver dns-state [--domain example.com] [--config PATH]"; }
+parse_config_only_args "$@" || { usage; exit 0; }
 load_config
 
 failures=0
 warnings=0
 DNS_RESOLVER="${DNS_RESOLVER:-1.1.1.1}"
+target_domain="$(normalize_domain "$PRIMARY_DOMAIN")"
+
+while [[ "${#POSITIONAL[@]}" -gt 0 ]]; do
+  case "${POSITIONAL[0]}" in
+    --domain)
+      [[ -n "${POSITIONAL[1]:-}" ]] || die "Missing value for --domain."
+      target_domain="$(normalize_domain "${POSITIONAL[1]}")"
+      POSITIONAL=("${POSITIONAL[@]:2}")
+      ;;
+    *)
+      die "Unknown dns-state option: ${POSITIONAL[0]}"
+      ;;
+  esac
+done
+validate_domain_or_die "$target_domain"
 
 dig_short() {
   dig @"$DNS_RESOLVER" +short "$@" 2>/dev/null | sed 's/\.$//' | sort -u
@@ -82,10 +98,7 @@ check_txt() {
   fi
 }
 
-printf 'DNS state for mail domains:\n'
-while IFS= read -r domain; do
-  printf '  - %s\n' "$domain"
-done < <(mail_domains)
+printf 'DNS state for %s\n' "$target_domain"
 printf 'Resolver: %s\n\n' "$DNS_RESOLVER"
 
 declare -A hosts=()
@@ -98,18 +111,16 @@ for host in "${!hosts[@]}"; do
   check_host_ip AAAA "$host" "${SERVER_PUBLIC_IPV6:-}"
 done
 
-while IFS= read -r domain; do
-  mx_records="$(dig_short "$domain" MX)"
-  expected_mx="10 $MAIL_HOSTNAME"
-  if contains_line "$expected_mx" <<< "$mx_records"; then
-    ok_state "$domain MX points to $MAIL_HOSTNAME"
-  else
-    fail_state "$domain MX missing '$expected_mx'; got: ${mx_records:-<none>}"
-  fi
+mx_records="$(dig_short "$target_domain" MX)"
+expected_mx="10 $MAIL_HOSTNAME"
+if contains_line "$expected_mx" <<< "$mx_records"; then
+  ok_state "$target_domain MX points to $MAIL_HOSTNAME"
+else
+  fail_state "$target_domain MX missing '$expected_mx'; got: ${mx_records:-<none>}"
+fi
 
-  check_txt "$domain" "v=spf1 mx -all"
-  check_txt "_dmarc.$domain" "v=DMARC1; p=none; rua=mailto:dmarc@$domain; adkim=s; aspf=s"
-done < <(mail_domains)
+check_txt "$target_domain" "v=spf1 mx -all"
+check_txt "_dmarc.$target_domain" "v=DMARC1; p=none; rua=mailto:dmarc@$target_domain; adkim=s; aspf=s"
 
 ptr_records="$(dig_short -x "$SERVER_PUBLIC_IPV4")"
 if contains_line "$MAIL_HOSTNAME" <<< "$ptr_records"; then
@@ -118,36 +129,25 @@ else
   fail_state "$SERVER_PUBLIC_IPV4 PTR/rDNS missing $MAIL_HOSTNAME; got: ${ptr_records:-<none>}"
 fi
 
-if [[ -n "${SERVER_PUBLIC_IPV6:-}" ]]; then
-  ptr_records="$(dig_short -x "$SERVER_PUBLIC_IPV6")"
-  if contains_line "$MAIL_HOSTNAME" <<< "$ptr_records"; then
-    ok_state "$SERVER_PUBLIC_IPV6 PTR/rDNS points to $MAIL_HOSTNAME"
+dkim_name="$DKIM_SELECTOR._domainkey.$target_domain"
+dkim_file="/etc/mailserver/dkim/$target_domain/$DKIM_SELECTOR.txt"
+dns_dkim="$(dig @"$DNS_RESOLVER" +short TXT "$dkim_name" 2>/dev/null | normalize_txt)"
+if [[ -r "$dkim_file" ]]; then
+  expected_dkim="$(normalize_local_dkim "$dkim_file")"
+  if [[ -n "$dns_dkim" && "$dns_dkim" == *"$expected_dkim"* ]]; then
+    ok_state "$dkim_name TXT matches generated DKIM key"
   else
-    fail_state "$SERVER_PUBLIC_IPV6 PTR/rDNS missing $MAIL_HOSTNAME; got: ${ptr_records:-<none>}"
+    fail_state "$dkim_name TXT missing or different from generated DKIM key"
   fi
+elif [[ -f "$dkim_file" ]]; then
+  if [[ "$dns_dkim" == *"v=DKIM1"* && "$dns_dkim" == *"p="* ]]; then
+    warn_state "$dkim_name TXT exists, but $dkim_file is not readable; run sudo mailserver dns-state to compare exact key"
+  else
+    fail_state "$dkim_name TXT missing; run sudo mailserver print-dns to read the generated value"
+  fi
+else
+  warn_state "Generated DKIM file not found yet: $dkim_file"
 fi
-
-while IFS= read -r domain; do
-  dkim_name="$DKIM_SELECTOR._domainkey.$domain"
-  dkim_file="$DKIM_ROOT/$domain/$DKIM_SELECTOR.txt"
-  dns_dkim="$(dig @"$DNS_RESOLVER" +short TXT "$dkim_name" 2>/dev/null | normalize_txt)"
-  if [[ -r "$dkim_file" ]]; then
-    expected_dkim="$(normalize_local_dkim "$dkim_file")"
-    if [[ -n "$dns_dkim" && "$dns_dkim" == *"$expected_dkim"* ]]; then
-      ok_state "$dkim_name TXT matches generated DKIM key"
-    else
-      fail_state "$dkim_name TXT missing or different from generated DKIM key"
-    fi
-  elif [[ -f "$dkim_file" ]]; then
-    if [[ "$dns_dkim" == *"v=DKIM1"* && "$dns_dkim" == *"p="* ]]; then
-      warn_state "$dkim_name TXT exists, but $dkim_file is not readable; run sudo mailserver dns-state to compare exact key"
-    else
-      fail_state "$dkim_name TXT missing; run sudo mailserver print-dns to read the generated value"
-    fi
-  else
-    warn_state "Generated DKIM file not found yet: $dkim_file"
-  fi
-done < <(mail_domains)
 
 printf '\nSummary: %d failure(s), %d warning(s)\n' "$failures" "$warnings"
 [[ "$failures" -eq 0 ]]

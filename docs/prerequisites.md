@@ -5,7 +5,7 @@ Use a fresh Ubuntu 26.04 LTS server with root or sudo access.
 Required before production install:
 
 - Static public IPv4 address.
-- DNS control for `PRIMARY_DOMAIN`.
+- DNS control for `PRIMARY_DOMAIN` and every configured `SECONDARY_DOMAINS` entry.
 - Provider permits inbound and outbound SMTP on TCP/25.
 - PTR/rDNS configured by the IP/server provider, not in the DNS zone:
   server IP to `MAIL_HOSTNAME`.

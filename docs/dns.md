@@ -1,6 +1,8 @@
 # DNS Records
 
 Replace example values with `~/.email-server/config.env` values.
+Repeat the domain-level `MX`, SPF, DMARC, and DKIM records for `PRIMARY_DOMAIN`
+and every domain listed in `SECONDARY_DOMAINS`.
 
 ```text
 example.com.          MX   10 mail.example.com.
@@ -73,11 +75,12 @@ After successful delivery tests, move gradually to `p=quarantine`, then `p=rejec
 Provider-side PTR/rDNS must be set at the provider that owns the server IP
 address. This is not a normal DNS-zone record and is not configured in
 Cloudflare DNS. For Hetzner, open the server in Hetzner Cloud Console, go to
-`Networking`, find the public IPv4 address, edit `Reverse DNS` / `rDNS`, and set
-it to `MAIL_HOSTNAME`.
+`Networking`, find each public mail server IP address, edit `Reverse DNS` /
+`rDNS`, and set it to `MAIL_HOSTNAME`.
 
 Expected reverse mapping:
 
 ```text
 203.0.113.10 -> mail.example.com
+2001:db8::10 -> mail.example.com
 ```

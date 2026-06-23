@@ -4,18 +4,48 @@ Create a mailbox:
 
 ```bash
 sudo mailserver add-user --user user@example.com
+sudo mailserver users add --user user@example.com
 ```
 
 List configured mail domains:
 
 ```bash
 sudo mailserver list-domains
+sudo mailserver domains ls
+```
+
+Change the configured primary mail domain:
+
+```bash
+mailserver set-domain --domain example.net
+mailserver domains set --domain example.net
+```
+
+This updates `PRIMARY_DOMAIN`, required operational aliases, `ADMIN_EMAIL` when
+it used the old primary domain, and the configured primary mailbox. It keeps a
+timestamped `.bak` copy beside the config file. Hostnames are not changed unless
+you pass them explicitly:
+
+```bash
+mailserver set-domain --domain example.net \
+  --mail-hostname mail.example.net \
+  --webmail-hostname mail.example.net \
+  --dav-hostname dav.example.net
+```
+
+After changing the primary domain, run:
+
+```bash
+mailserver doctor
+sudo mailserver setup-primary-mailbox
+sudo mailserver print-dns
 ```
 
 Activate another mail domain in the virtual mailbox database:
 
 ```bash
 sudo mailserver add-domain --domain example.net
+sudo mailserver domains add --domain example.net
 ```
 
 This also generates a DKIM key under `/etc/mailserver/dkim/example.net/`,
@@ -36,12 +66,15 @@ Then add mailboxes or aliases on that domain:
 ```bash
 sudo mailserver add-user --user user@example.net
 sudo mailserver add-alias --source postmaster@example.net --dest admin@example.com
+sudo mailserver users add --user user@example.net
+sudo mailserver aliases add --source postmaster@example.net --dest admin@example.com
 ```
 
 Deactivate a non-primary domain, including its active mailboxes and aliases:
 
 ```bash
 sudo mailserver remove-domain --domain example.net
+sudo mailserver domains rm --domain example.net
 ```
 
 This does not delete maildirs from disk. DNS and DKIM records for non-primary
@@ -63,12 +96,59 @@ Create an alias:
 
 ```bash
 sudo mailserver add-alias --source postmaster@example.com --dest admin@example.com
+sudo mailserver aliases add --source postmaster@example.com --dest admin@example.com
+```
+
+List active aliases and forwards:
+
+```bash
+sudo mailserver list-aliases
+sudo mailserver list-aliases --domain example.com
+sudo mailserver aliases ls --domain example.com
+sudo mailserver list-forwards
+sudo mailserver forwards ls --domain example.com
+```
+
+The `source_is_mailbox` column is `yes` when the source address is an active
+mailbox, which means the row behaves as a mailbox forward.
+
+Redirect an address to exactly one active destination, deactivating any other
+active alias rows for the same source:
+
+```bash
+sudo mailserver set-alias --source abuse@example.com --dest admin@example.net
+sudo mailserver aliases set --source abuse@example.com --dest admin@example.net
+```
+
+Redirect operational addresses to one mailbox:
+
+```bash
+sudo mailserver set-alias --source postmaster@example.com --dest admin@example.net
+sudo mailserver set-alias --source abuse@example.com --dest admin@example.net
+sudo mailserver set-alias --source dmarc@example.com --dest admin@example.net
+```
+
+Forward an address with mailbox-source protection:
+
+```bash
+sudo mailserver add-forward --source ops@example.com --dest admin@example.net
+sudo mailserver forwards add --source ops@example.com --dest admin@example.net
+```
+
+If the source is an active mailbox, forwarding redirects delivery away from the
+local mailbox. The command refuses that case unless you make the behavior
+explicit:
+
+```bash
+sudo mailserver add-forward --source admin@example.com --dest admin@example.net --allow-mailbox-source
+sudo mailserver forwards add --source admin@example.com --dest admin@example.net --allow-mailbox-source
 ```
 
 Change a password:
 
 ```bash
 sudo mailserver change-password --user user@example.com
+sudo mailserver users passwd --user user@example.com
 ```
 
 Create an on-demand backup:

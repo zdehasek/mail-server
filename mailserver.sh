@@ -97,6 +97,16 @@ die() {
   exit 1
 }
 
+normalize_domain() {
+  local domain="$1"
+  printf '%s\n' "${domain,,}"
+}
+
+validate_domain_or_die() {
+  local domain="$1"
+  [[ "$domain" =~ ^[a-z0-9][a-z0-9.-]*[a-z0-9]$ && "$domain" == *.* && "$domain" != *..* ]] || die "Invalid domain: $domain"
+}
+
 format_command() {
   local arg rendered=""
   for arg in "$@"; do
@@ -120,6 +130,7 @@ show_help() {
 
 Usage:
   mailserver [--config PATH] COMMAND [OPTIONS]
+  mailserver RESOURCE ACTION [OPTIONS]
   curl -fsSL https://raw.githubusercontent.com/zdehasek/email-server/master/mailserver.sh | sudo bash
 
 Setup:
@@ -147,14 +158,32 @@ Client configuration:
 
 Mailbox operations:
   list-domains
+  domains ls|list
+  set-domain --domain example.com
+  domains set --domain example.com
   add-domain --domain example.com
+  domains add --domain example.com
   remove-domain --domain example.com
+  domains rm|remove --domain example.com
+  list-aliases [--domain example.com]
+  aliases ls|list [--domain example.com]
+  list-forwards [--domain example.com]
+  forwards ls|list [--domain example.com]
   list-users
+  users ls|list
   add-user --user user@example.com [--full-name "Full Name"]
+  users add --user user@example.com [--full-name "Full Name"]
   remove-user --user user@example.com
+  users rm|remove --user user@example.com
   setup-primary-mailbox
   add-alias --source postmaster@example.com --dest user@example.com
+  aliases add --source postmaster@example.com --dest user@example.com
+  set-alias --source postmaster@example.com --dest user@example.com
+  aliases set --source postmaster@example.com --dest user@example.com
+  add-forward --source user@example.com --dest user@example.net [--allow-mailbox-source]
+  forwards add --source user@example.com --dest user@example.net [--allow-mailbox-source]
   change-password --user user@example.com
+  users passwd|password|change-password --user user@example.com
 
 Backup:
   backup
@@ -165,6 +194,10 @@ Examples:
   mailserver doctor
   mailserver setup-dry-run
   sudo mailserver install
+  sudo mailserver domains ls
+  sudo mailserver users add --user user@example.com
+  sudo mailserver aliases ls --domain example.com
+  sudo mailserver forwards add --source user@example.com --dest user@example.net --allow-mailbox-source
   mailserver client-info --user user@example.com
   ./mailserver.sh doctor --config .env.example
   curl -fsSL https://raw.githubusercontent.com/zdehasek/email-server/master/mailserver.sh | sudo bash
@@ -184,25 +217,46 @@ HELP
 show_command_help() {
   case "$1" in
     add-user)
-      printf 'Usage: mailserver add-user --user user@example.com [--full-name "Full Name"] [--config PATH]\n'
+      printf 'Usage: mailserver users add --user user@example.com [--full-name "Full Name"] [--config PATH]\n'
       ;;
     add-domain)
-      printf 'Usage: mailserver add-domain --domain example.com [--alias-dest admin@example.com] [--no-default-aliases] [--config PATH]\n'
+      printf 'Usage: mailserver domains add --domain example.com [--alias-dest admin@example.com] [--no-default-aliases] [--config PATH]\n'
+      ;;
+    set-domain)
+      printf 'Usage: mailserver domains set --domain example.com [--admin-email admin@example.com] [--primary-mailbox admin@example.com] [--mail-hostname mail.example.com] [--webmail-hostname mail.example.com] [--dav-hostname dav.example.com] [--config PATH]\n'
       ;;
     remove-domain)
-      printf 'Usage: mailserver remove-domain --domain example.com [--config PATH]\n'
+      printf 'Usage: mailserver domains rm --domain example.com [--config PATH]\n'
       ;;
     print-dns|dns-state)
       printf 'Usage: mailserver %s [--domain example.com] [--config PATH]\n' "$1"
       ;;
     list-domains)
-      printf 'Usage: mailserver list-domains [--config PATH]\n'
+      printf 'Usage: mailserver domains ls [--config PATH]\n'
       ;;
-    remove-user|change-password)
-      printf 'Usage: mailserver %s --user user@example.com [--config PATH]\n' "$1"
+    list-aliases)
+      printf 'Usage: mailserver aliases ls [--domain example.com] [--config PATH]\n'
+      ;;
+    list-forwards)
+      printf 'Usage: mailserver forwards ls [--domain example.com] [--config PATH]\n'
+      ;;
+    list-users)
+      printf 'Usage: mailserver users ls [--config PATH]\n'
+      ;;
+    remove-user)
+      printf 'Usage: mailserver users rm --user user@example.com [--config PATH]\n'
+      ;;
+    change-password)
+      printf 'Usage: mailserver users passwd --user user@example.com [--config PATH]\n'
       ;;
     add-alias)
-      printf 'Usage: mailserver add-alias --source source@example.com --dest dest@example.com [--config PATH]\n'
+      printf 'Usage: mailserver aliases add --source source@example.com --dest dest@example.com [--config PATH]\n'
+      ;;
+    set-alias)
+      printf 'Usage: mailserver aliases set --source source@example.com --dest dest@example.com [--config PATH]\n'
+      ;;
+    add-forward)
+      printf 'Usage: mailserver forwards add --source mailbox@example.com --dest dest@example.com [--allow-mailbox-source] [--config PATH]\n'
       ;;
     client-info|client-config)
       printf 'Usage: mailserver %s [--user user@example.com] [--config PATH]\n' "$1"
@@ -222,6 +276,120 @@ show_command_help() {
   esac
 }
 
+show_resource_help() {
+  case "$1" in
+    domain|domains)
+      printf 'Usage: mailserver domains ls|list|add|rm|remove|set [OPTIONS]\n'
+      ;;
+    user|users)
+      printf 'Usage: mailserver users ls|list|add|rm|remove|passwd|password|change-password [OPTIONS]\n'
+      ;;
+    alias|aliases)
+      printf 'Usage: mailserver aliases ls|list|add|set [OPTIONS]\n'
+      ;;
+    forward|forwards)
+      printf 'Usage: mailserver forwards ls|list|add [OPTIONS]\n'
+      ;;
+    *)
+      show_help
+      ;;
+  esac
+}
+
+show_command_help_for_args() {
+  local saved_command="$COMMAND"
+  local saved_args=("${COMMAND_ARGS[@]}")
+
+  if [[ $# -eq 0 ]]; then
+    show_help
+    return 0
+  fi
+
+  COMMAND="$1"
+  shift
+  COMMAND_ARGS=("$@")
+  if [[ "${#COMMAND_ARGS[@]}" -eq 0 ]]; then
+    case "$COMMAND" in
+      domain|domains|user|users|alias|aliases|forward|forwards)
+        show_resource_help "$COMMAND"
+        COMMAND="$saved_command"
+        COMMAND_ARGS=("${saved_args[@]}")
+        return 0
+        ;;
+    esac
+  fi
+  normalize_command
+  show_command_help "$COMMAND"
+
+  COMMAND="$saved_command"
+  COMMAND_ARGS=("${saved_args[@]}")
+}
+
+normalize_command() {
+  local resource="$COMMAND"
+  local action="${COMMAND_ARGS[0]:-}"
+
+  case "$resource" in
+    domain|domains)
+      [[ -n "$action" ]] || { show_resource_help "$resource"; exit 0; }
+      COMMAND_ARGS=("${COMMAND_ARGS[@]:1}")
+      case "$action" in
+        ls|list) COMMAND="list-domains" ;;
+        add) COMMAND="add-domain" ;;
+        rm|remove) COMMAND="remove-domain" ;;
+        set) COMMAND="set-domain" ;;
+        help|--help|-h)
+          show_command_help list-domains
+          exit 0
+          ;;
+        *) die "Unknown domains action: $action. Use: ls, add, rm, remove, or set." ;;
+      esac
+      ;;
+    user|users)
+      [[ -n "$action" ]] || { show_resource_help "$resource"; exit 0; }
+      COMMAND_ARGS=("${COMMAND_ARGS[@]:1}")
+      case "$action" in
+        ls|list) COMMAND="list-users" ;;
+        add) COMMAND="add-user" ;;
+        rm|remove) COMMAND="remove-user" ;;
+        passwd|password|change-password) COMMAND="change-password" ;;
+        help|--help|-h)
+          show_command_help list-users
+          exit 0
+          ;;
+        *) die "Unknown users action: $action. Use: ls, add, rm, remove, passwd, password, or change-password." ;;
+      esac
+      ;;
+    alias|aliases)
+      [[ -n "$action" ]] || { show_resource_help "$resource"; exit 0; }
+      COMMAND_ARGS=("${COMMAND_ARGS[@]:1}")
+      case "$action" in
+        ls|list) COMMAND="list-aliases" ;;
+        add) COMMAND="add-alias" ;;
+        set) COMMAND="set-alias" ;;
+        help|--help|-h)
+          show_command_help list-aliases
+          exit 0
+          ;;
+        *) die "Unknown aliases action: $action. Use: ls, add, or set." ;;
+      esac
+      ;;
+    forward|forwards)
+      [[ -n "$action" ]] || { show_resource_help "$resource"; exit 0; }
+      COMMAND_ARGS=("${COMMAND_ARGS[@]:1}")
+      case "$action" in
+        ls|list) COMMAND="list-forwards" ;;
+        add) COMMAND="add-forward" ;;
+        help|--help|-h)
+          show_command_help list-forwards
+          exit 0
+          ;;
+        *) die "Unknown forwards action: $action. Use: ls or add." ;;
+      esac
+      ;;
+  esac
+}
+
 parse_global_args() {
   while [[ $# -gt 0 ]]; do
     case "$1" in
@@ -236,7 +404,8 @@ parse_global_args() {
         ;;
       help)
         if [[ -n "${2:-}" ]]; then
-          show_command_help "$2"
+          shift
+          show_command_help_for_args "$@"
         else
           show_help
         fi
@@ -605,6 +774,38 @@ set_config_entry() {
   sed -i "s|^$key=.*|$key=$value|" "$file"
 }
 
+set_or_append_config_entry() {
+  local file="$1"
+  local key="$2"
+  local value
+  value="$(config_value "$3")"
+  if grep -q "^$key=" "$file"; then
+    sed -i "s|^$key=.*|$key=$value|" "$file"
+  else
+    printf '%s=%s\n' "$key" "$value" >> "$file"
+  fi
+}
+
+email_with_domain() {
+  local email="$1"
+  local old_domain="$2"
+  local new_domain="$3"
+  local localpart domain
+
+  [[ "$email" == *@* ]] || {
+    printf '%s\n' "$email"
+    return 0
+  }
+
+  localpart="${email%@*}"
+  domain="${email#*@}"
+  if [[ "$(normalize_domain "$domain")" == "$(normalize_domain "$old_domain")" ]]; then
+    printf '%s@%s\n' "$localpart" "$new_domain"
+  else
+    printf '%s\n' "$email"
+  fi
+}
+
 cmd_init() {
   extract_common_args "$@"
   local domain=""
@@ -746,6 +947,118 @@ cmd_init() {
   fi
   ok "Created $dest."
   say "Next: mailserver doctor"
+}
+
+cmd_set_domain() {
+  extract_common_args "$@"
+  local domain=""
+  local admin_email=""
+  local primary_mailbox=""
+  local mail_hostname=""
+  local webmail_hostname=""
+  local dav_hostname=""
+  local keep_primary_mailbox="false"
+  local arg
+
+  while [[ "${#REMAINING_ARGS[@]}" -gt 0 ]]; do
+    arg="${REMAINING_ARGS[0]}"
+    REMAINING_ARGS=("${REMAINING_ARGS[@]:1}")
+    case "$arg" in
+      --domain)
+        [[ -n "${REMAINING_ARGS[0]:-}" ]] || die "Missing value for --domain."
+        domain="${REMAINING_ARGS[0]}"
+        REMAINING_ARGS=("${REMAINING_ARGS[@]:1}")
+        ;;
+      --admin-email)
+        [[ -n "${REMAINING_ARGS[0]:-}" ]] || die "Missing value for --admin-email."
+        admin_email="${REMAINING_ARGS[0]}"
+        REMAINING_ARGS=("${REMAINING_ARGS[@]:1}")
+        ;;
+      --primary-mailbox)
+        [[ -n "${REMAINING_ARGS[0]:-}" ]] || die "Missing value for --primary-mailbox."
+        primary_mailbox="${REMAINING_ARGS[0]}"
+        REMAINING_ARGS=("${REMAINING_ARGS[@]:1}")
+        ;;
+      --mail-hostname)
+        [[ -n "${REMAINING_ARGS[0]:-}" ]] || die "Missing value for --mail-hostname."
+        mail_hostname="${REMAINING_ARGS[0]}"
+        REMAINING_ARGS=("${REMAINING_ARGS[@]:1}")
+        ;;
+      --webmail-hostname)
+        [[ -n "${REMAINING_ARGS[0]:-}" ]] || die "Missing value for --webmail-hostname."
+        webmail_hostname="${REMAINING_ARGS[0]}"
+        REMAINING_ARGS=("${REMAINING_ARGS[@]:1}")
+        ;;
+      --dav-hostname)
+        [[ -n "${REMAINING_ARGS[0]:-}" ]] || die "Missing value for --dav-hostname."
+        dav_hostname="${REMAINING_ARGS[0]}"
+        REMAINING_ARGS=("${REMAINING_ARGS[@]:1}")
+        ;;
+      --keep-primary-mailbox)
+        keep_primary_mailbox="true"
+        ;;
+      *)
+        if [[ -z "$domain" ]]; then
+          domain="$arg"
+        else
+          die "Unexpected argument: $arg"
+        fi
+        ;;
+    esac
+  done
+
+  [[ -n "$domain" ]] || die "Missing --domain example.com."
+  domain="$(normalize_domain "$domain")"
+  validate_domain_or_die "$domain"
+
+  local config old_primary old_admin old_primary_mailbox config_tmp backup
+  config="$(config_arg)"
+  [[ -f "$config" ]] || die "Config file not found: $config"
+
+  # shellcheck source=/dev/null
+  source "$config"
+  old_primary="$(normalize_domain "${PRIMARY_DOMAIN:-}")"
+  [[ -n "$old_primary" ]] || die "PRIMARY_DOMAIN is empty in $config"
+
+  old_admin="${ADMIN_EMAIL:-admin@$old_primary}"
+  old_primary_mailbox="${PRIMARY_MAILBOX:-}"
+  admin_email="${admin_email:-$(email_with_domain "$old_admin" "$old_primary" "$domain")}"
+  if [[ "$keep_primary_mailbox" == "true" ]]; then
+    primary_mailbox="${primary_mailbox:-$old_primary_mailbox}"
+  else
+    primary_mailbox="${primary_mailbox:-$(email_with_domain "${old_primary_mailbox:-$admin_email}" "$old_primary" "$domain")}"
+  fi
+
+  [[ "$admin_email" == *@* ]] || die "Invalid admin email address: $admin_email"
+  [[ -z "$primary_mailbox" || "$primary_mailbox" == *@* ]] || die "Invalid primary mailbox: $primary_mailbox"
+  [[ -z "$mail_hostname" ]] || validate_domain_or_die "$mail_hostname"
+  [[ -z "$webmail_hostname" ]] || validate_domain_or_die "$webmail_hostname"
+  [[ -z "$dav_hostname" ]] || validate_domain_or_die "$dav_hostname"
+
+  config_tmp="$(mktemp "$config.tmp.XXXXXX")"
+  cp -p "$config" "$config_tmp"
+  set_or_append_config_entry "$config_tmp" "PRIMARY_DOMAIN" "$domain"
+  set_or_append_config_entry "$config_tmp" "ADMIN_EMAIL" "$admin_email"
+  set_or_append_config_entry "$config_tmp" "POSTMASTER_ADDRESS" "postmaster@$domain"
+  set_or_append_config_entry "$config_tmp" "ABUSE_ADDRESS" "abuse@$domain"
+  set_or_append_config_entry "$config_tmp" "PRIMARY_MAILBOX" "$primary_mailbox"
+  set_or_append_config_entry "$config_tmp" "PRIMARY_ALIAS_ADDRESSES" "postmaster@$domain abuse@$domain dmarc@$domain $primary_mailbox"
+  [[ -z "$mail_hostname" ]] || set_or_append_config_entry "$config_tmp" "MAIL_HOSTNAME" "$mail_hostname"
+  [[ -z "$webmail_hostname" ]] || set_or_append_config_entry "$config_tmp" "WEBMAIL_HOSTNAME" "$webmail_hostname"
+  if [[ -n "$dav_hostname" ]]; then
+    set_or_append_config_entry "$config_tmp" "DAV_HOSTNAME" "$dav_hostname"
+    set_or_append_config_entry "$config_tmp" "RADICALE_CALDAV_BASE_URL" "https://$dav_hostname/"
+  fi
+
+  backup="$config.bak.$(date -u +%Y%m%dT%H%M%SZ)"
+  cp -p "$config" "$backup"
+  mv "$config_tmp" "$config"
+  chown_for_sudo_user "$config"
+  chown_for_sudo_user "$backup"
+
+  ok "Updated primary domain in $config: $old_primary -> $domain"
+  ok "Backup kept at $backup"
+  say "Next: mailserver doctor, then sudo mailserver setup-primary-mailbox and sudo mailserver print-dns"
 }
 
 cmd_install_cli() {
@@ -981,6 +1294,14 @@ cmd_add_alias() {
   require_checkout_files
   local source_addr=""
   local dest_addr=""
+  local allow_mailbox_source="false"
+  local script="scripts/add-alias.sh"
+
+  if [[ "$COMMAND" == "set-alias" ]]; then
+    script="scripts/set-alias.sh"
+  elif [[ "$COMMAND" == "add-forward" ]]; then
+    script="scripts/add-forward.sh"
+  fi
 
   while [[ "${#REMAINING_ARGS[@]}" -gt 0 ]]; do
     case "${REMAINING_ARGS[0]}" in
@@ -993,6 +1314,11 @@ cmd_add_alias() {
         [[ -n "${REMAINING_ARGS[1]:-}" ]] || die "Missing value for --dest."
         dest_addr="${REMAINING_ARGS[1]}"
         REMAINING_ARGS=("${REMAINING_ARGS[@]:2}")
+        ;;
+      --allow-mailbox-source)
+        [[ "$COMMAND" == "add-forward" ]] || die "Unexpected argument: ${REMAINING_ARGS[0]}"
+        allow_mailbox_source="true"
+        REMAINING_ARGS=("${REMAINING_ARGS[@]:1}")
         ;;
       *)
         if [[ -z "$source_addr" ]]; then
@@ -1010,13 +1336,19 @@ cmd_add_alias() {
 
   [[ -n "$source_addr" ]] || die "Missing --source source@example.com."
   [[ -n "$dest_addr" ]] || die "Missing --dest dest@example.com."
-  run_root_cmd "$ROOT_DIR/scripts/add-alias.sh" --config "$(config_arg)" "$source_addr" "$dest_addr"
+  if [[ "$allow_mailbox_source" == "true" ]]; then
+    run_root_cmd "$ROOT_DIR/$script" --config "$(config_arg)" "$source_addr" "$dest_addr" --allow-mailbox-source
+  else
+    run_root_cmd "$ROOT_DIR/$script" --config "$(config_arg)" "$source_addr" "$dest_addr"
+  fi
 }
 
 main() {
   parse_global_args "$@"
+  normalize_command
   case "$COMMAND" in
     init) cmd_init "${COMMAND_ARGS[@]}" ;;
+    set-domain) cmd_set_domain "${COMMAND_ARGS[@]}" ;;
     install-cli) cmd_install_cli "${COMMAND_ARGS[@]}" ;;
     update) cmd_update "${COMMAND_ARGS[@]}" ;;
     doctor) cmd_doctor "${COMMAND_ARGS[@]}" ;;
@@ -1031,6 +1363,8 @@ main() {
     check-ssl) cmd_simple_script scripts/check-ssl.sh false "${COMMAND_ARGS[@]}" ;;
     service-state) cmd_simple_script scripts/service-state.sh false "${COMMAND_ARGS[@]}" ;;
     list-domains) cmd_simple_script scripts/list-domains.sh true "${COMMAND_ARGS[@]}" ;;
+    list-aliases) cmd_option_script scripts/list-aliases.sh true "${COMMAND_ARGS[@]}" ;;
+    list-forwards) cmd_option_script scripts/list-forwards.sh true "${COMMAND_ARGS[@]}" ;;
     add-domain) cmd_option_script scripts/add-domain.sh true "${COMMAND_ARGS[@]}" ;;
     remove-domain) cmd_option_script scripts/remove-domain.sh true "${COMMAND_ARGS[@]}" ;;
     list-users) cmd_simple_script scripts/list-users.sh true "${COMMAND_ARGS[@]}" ;;
@@ -1041,7 +1375,7 @@ main() {
     add-user) cmd_user_arg scripts/add-user.sh "${COMMAND_ARGS[@]}" ;;
     remove-user) cmd_user_arg scripts/remove-user.sh "${COMMAND_ARGS[@]}" ;;
     change-password) cmd_user_arg scripts/change-password.sh "${COMMAND_ARGS[@]}" ;;
-    add-alias) cmd_add_alias "${COMMAND_ARGS[@]}" ;;
+    add-alias|set-alias|add-forward) cmd_add_alias "${COMMAND_ARGS[@]}" ;;
     *)
       die "Unknown command: $COMMAND. Run mailserver help."
       ;;

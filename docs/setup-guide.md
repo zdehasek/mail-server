@@ -187,6 +187,7 @@ calendar plugin stack.
 
 ```bash
 ROUNDCUBE_SKIN=elastic2026
+ROUNDCUBE_SKINS_ALLOWED="'elastic2026', 'elastic'"
 ROUNDCUBE_SKIN_URL=https://github.com/zdehasek/Elastic2026/archive/refs/heads/main.zip
 ROUNDCUBE_SKIN_LOGO=/images/logo-ai.png
 ROUNDCUBE_ENABLE_CALENDAR=true

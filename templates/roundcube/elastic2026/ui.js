@@ -720,6 +720,7 @@ if(rcmail.env.action=="preview")
 						
 						redraw_cubeselect()
 						rcmail.message_list.addEventListener('select', redraw_cubeselect)
+						e2026_mobile_open_message_on_tap()
 						
 						//prevent ugly bottom popup when delete email
 						rcmail.addEventListener('actionafter', function(e) {if(e.action=="delete"){	hide_messagestack_few_secs()}})
@@ -4845,6 +4846,77 @@ function change_contactphoto_by_divLetter()
 
     contactphoto.parentElement.insertBefore(d, contactphoto.parentElement.firstChild);
     contactphoto.style.display="none";
+}
+
+function e2026_mobile_open_message_on_tap()
+{
+	if(!rcmail || rcmail.task != "mail" || !rcmail.message_list || !document.getElementById("messagelist")) return;
+	if(document.getElementById("messagelist").dataset.e2026TapOpen == "1") return;
+
+	var list = document.getElementById("messagelist");
+	var start = null;
+	var lastOpen = {uid: null, ts: 0};
+
+	function isSmallMailList()
+	{
+		return document.documentElement.classList.contains("layout-small")
+			&& document.body.classList.contains("task-mail")
+			&& document.body.classList.contains("action-none");
+	}
+
+	function rowFromEvent(event)
+	{
+		var target = event.target;
+		if(!target || target.closest(".selection, .flag, .attachment, .threads, input, button, .button, .treetoggle")) return null;
+		return target.closest("#messagelist tr.message");
+	}
+
+	function openRow(row, event)
+	{
+		if(!isSmallMailList() || !row) return;
+
+		var uid = row.uid || row.dataset.uid || (rcmail.message_list && rcmail.message_list.get_row_uid ? rcmail.message_list.get_row_uid(row) : null);
+		if(!uid) return;
+
+		var now = Date.now();
+		if(lastOpen.uid == uid && now - lastOpen.ts < 700) return;
+		lastOpen = {uid: uid, ts: now};
+
+		event.preventDefault();
+		event.stopPropagation();
+
+		if(rcmail.message_list.select_row) {
+			rcmail.message_list.select_row(uid, false, true);
+		}
+
+		setTimeout(function() {
+			rcmail.show_message(uid);
+		}, 0);
+	}
+
+	list.addEventListener("touchstart", function(event) {
+		if(event.touches.length != 1) return;
+		var touch = event.touches[0];
+		start = {x: touch.clientX, y: touch.clientY, ts: Date.now()};
+	}, {passive: true});
+
+	list.addEventListener("touchend", function(event) {
+		if(!start || event.changedTouches.length != 1) return;
+		var touch = event.changedTouches[0];
+		var dx = Math.abs(touch.clientX - start.x);
+		var dy = Math.abs(touch.clientY - start.y);
+		var dt = Date.now() - start.ts;
+		start = null;
+
+		if(dx > 12 || dy > 12 || dt > 700) return;
+		openRow(rowFromEvent(event), event);
+	}, {passive: false});
+
+	list.addEventListener("click", function(event) {
+		openRow(rowFromEvent(event), event);
+	}, true);
+
+	list.dataset.e2026TapOpen = "1";
 }
 
 function flag_click()

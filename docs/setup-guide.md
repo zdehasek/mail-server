@@ -191,6 +191,7 @@ ROUNDCUBE_SKIN_URL=https://github.com/zdehasek/Elastic2026/archive/refs/heads/ma
 ROUNDCUBE_ENABLE_CALENDAR=true
 ROUNDCUBE_CALDAV_SERVER=http://127.0.0.1:5232/
 ROUNDCUBE_CALDAV_URL=http://127.0.0.1:5232/%u/%n/
+ROUNDCUBE_DEFAULT_CALENDAR_NAME=default
 ```
 
 ### Install Features

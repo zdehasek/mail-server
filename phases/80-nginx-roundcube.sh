@@ -147,6 +147,7 @@ SQL
 \$config['calendar_driver'] = 'caldav';
 \$config['calendar_caldav_server'] = '$ROUNDCUBE_CALDAV_SERVER';
 \$config['calendar_caldav_url'] = '$ROUNDCUBE_CALDAV_URL';
+\$config['kolab_dav_default_folder_regex'] = '~/' . preg_quote('$ROUNDCUBE_DEFAULT_CALENDAR_NAME', '~') . '/?\$~';
 \$config['calendar_default_view'] = 'month';
 \$config['calendar_contact_birthdays'] = true;
 \$config['calendar_timeslots'] = 4;

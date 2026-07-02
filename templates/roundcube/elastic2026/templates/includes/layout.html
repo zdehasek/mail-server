@@ -33,7 +33,7 @@
 		<link rel="stylesheet" href="/styles/styles.css">
 		<roundcube:link rel="stylesheet" href="/styles/print.css" condition="env:action == 'print'" />
 	<roundcube:endif />
-	<link rel="stylesheet" href="/styles/brand.css?v=20260702-10">
+	<link rel="stylesheet" href="/styles/brand.css?v=20260702-11">
 	<script>
 	if (document.title.trim() === 'Welcome to') {
 		document.title = '';
@@ -54,4 +54,7 @@
 <body class="task-<roundcube:exp expression="env:error_task ?: env:task ?: 'error'"> action-<roundcube:exp expression="asciiwords(env:action, true, '-') ?: 'none'">">
 	<roundcube:if condition="!env:framed || env:extwin" />
 		<div id="<roundcube:exp expression="env:action == 'print' ? 'print-' : ''">layout">
+		<roundcube:if condition="env:task != 'login' && env:action != 'print'" />
+			<roundcube:include file="includes/footer_menu.html" />
+		<roundcube:endif />
 	<roundcube:endif />

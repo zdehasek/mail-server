@@ -1336,3 +1336,49 @@ html.iframe body.task-mail.action-preview #message-header > .header {
   background: var(--brand-paper-2) !important;
   border-color: var(--brand-line) !important;
 }
+
+/* Keep the custom rail from stealing folder-list clicks. */
+html #layout-sidebar {
+  box-sizing: border-box !important;
+  padding-left: 84px !important;
+}
+
+html #layout-sidebar > .brand-taskrail {
+  left: 0 !important;
+  z-index: 20;
+  pointer-events: none;
+}
+
+html #layout-sidebar > .brand-taskrail a,
+html #layout-sidebar > .brand-taskrail button {
+  pointer-events: auto;
+}
+
+html #layout-sidebar > :not(.brand-taskrail) {
+  position: relative !important;
+  z-index: 2;
+  margin-left: 0 !important;
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+html body.task-mail #folderlist-content,
+html body.task-mail #mailboxlist,
+html body.task-mail #mailboxlist li,
+html body.task-mail #mailboxlist a {
+  position: relative;
+  z-index: 3;
+  pointer-events: auto !important;
+}
+
+html body.task-mail #mailboxlist a {
+  cursor: pointer;
+}
+
+html #greydiv:not(.fadeoff70create) {
+  pointer-events: none !important;
+}
+
+html #greydiv.fadeoff70create {
+  pointer-events: auto !important;
+}

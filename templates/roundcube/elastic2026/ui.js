@@ -4871,6 +4871,41 @@ function e2026_mobile_open_message_on_tap()
 		return target.closest("#messagelist tr.message");
 	}
 
+	function isRowContentEvent(event)
+	{
+		return isSmallMailList() && rowFromEvent(event);
+	}
+
+	function rememberStart(event)
+	{
+		var point = event.touches ? event.touches[0] : event;
+		if(!point) return;
+
+		start = {
+			x: point.clientX,
+			y: point.clientY,
+			ts: Date.now()
+		};
+	}
+
+	function isTap(event)
+	{
+		var point;
+
+		if(!start) return false;
+
+		point = event.changedTouches ? event.changedTouches[0] : event;
+		if(!point) return false;
+
+		var dx = Math.abs(point.clientX - start.x);
+		var dy = Math.abs(point.clientY - start.y);
+		var dt = Date.now() - start.ts;
+
+		start = null;
+
+		return dx <= 12 && dy <= 12 && dt <= 700;
+	}
+
 	function openRow(row, event)
 	{
 		if(!isSmallMailList() || !row) return;
@@ -4894,23 +4929,33 @@ function e2026_mobile_open_message_on_tap()
 		}, 0);
 	}
 
+	list.addEventListener("pointerdown", function(event) {
+		if(event.pointerType == "mouse" || !isRowContentEvent(event)) return;
+		rememberStart(event);
+		event.stopPropagation();
+	}, true);
+
+	list.addEventListener("pointerup", function(event) {
+		if(event.pointerType == "mouse" || !isTap(event)) return;
+		openRow(rowFromEvent(event), event);
+	}, true);
+
+	list.addEventListener("mousedown", function(event) {
+		if(isRowContentEvent(event)) event.stopPropagation();
+	}, true);
+
 	list.addEventListener("touchstart", function(event) {
-		if(event.touches.length != 1) return;
-		var touch = event.touches[0];
-		start = {x: touch.clientX, y: touch.clientY, ts: Date.now()};
-	}, {passive: true});
+		if(event.touches.length != 1 || !isRowContentEvent(event)) return;
+		rememberStart(event);
+		event.stopPropagation();
+	}, {capture: true, passive: true});
 
 	list.addEventListener("touchend", function(event) {
 		if(!start || event.changedTouches.length != 1) return;
-		var touch = event.changedTouches[0];
-		var dx = Math.abs(touch.clientX - start.x);
-		var dy = Math.abs(touch.clientY - start.y);
-		var dt = Date.now() - start.ts;
-		start = null;
 
-		if(dx > 12 || dy > 12 || dt > 700) return;
+		if(!isTap(event)) return;
 		openRow(rowFromEvent(event), event);
-	}, {passive: false});
+	}, {capture: true, passive: false});
 
 	list.addEventListener("click", function(event) {
 		openRow(rowFromEvent(event), event);

@@ -1547,7 +1547,7 @@ html body.task-mail.action-none #mailboxlist {
   display: block !important;
   width: 100% !important;
   margin: 0 !important;
-  padding: 12px 10px !important;
+  padding: 10px 0 !important;
   background: transparent !important;
   pointer-events: auto !important;
 }
@@ -1563,20 +1563,22 @@ html body.task-mail.action-none #mailboxlist li.mailbox > a {
   z-index: 3 !important;
   display: flex !important;
   align-items: center !important;
-  min-height: 40px !important;
-  padding: 9px 12px !important;
+  height: 44px !important;
+  min-height: 44px !important;
+  max-height: 44px !important;
+  padding: 0 14px !important;
   color: var(--brand-dark-muted) !important;
-  background: rgba(255, 255, 255, .035) !important;
-  border: 1px solid rgba(255, 255, 255, .08) !important;
-  border-radius: 8px !important;
+  background: transparent !important;
+  border: 1px solid transparent !important;
+  border-radius: 7px !important;
   box-shadow: none !important;
   pointer-events: auto !important;
 }
 
 html:not(.dark-mode) body.task-mail.action-none #mailboxlist li.mailbox > a {
   color: var(--brand-light-muted) !important;
-  background: #ffffff !important;
-  border-color: var(--brand-light-line) !important;
+  background: transparent !important;
+  border-color: transparent !important;
 }
 
 html body.task-mail.action-none #mailboxlist li.mailbox.selected > a,
@@ -1585,7 +1587,7 @@ html body.task-mail.action-none #mailboxlist li.mailbox.focused > a {
   color: var(--brand-folder-green) !important;
   background: #303a20 !important;
   border-color: rgba(200, 255, 42, .4) !important;
-  box-shadow: inset 4px 0 0 var(--brand-folder-green) !important;
+  box-shadow: inset 3px 0 0 var(--brand-folder-green) !important;
 }
 
 html:not(.dark-mode) body.task-mail.action-none #mailboxlist li.mailbox.selected > a,
@@ -1601,4 +1603,1296 @@ html body.task-addressbook #directorylist li > a,
 html body.task-calendar #calendars-content li > a,
 html body.task-calendar #calendarslist li > a {
   border-radius: 8px !important;
+}
+
+/* Baseline polish from the last good mailbox panel screenshot. */
+html body.task-mail.action-none #layout > #layout-sidebar {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  left: 0 !important;
+  width: 292px !important;
+  min-width: 292px !important;
+  max-width: 292px !important;
+  margin-left: 0 !important;
+  color: var(--brand-dark-text) !important;
+  background: #172126 !important;
+  border-right: 1px solid rgba(255, 255, 255, .1) !important;
+}
+
+html:not(.dark-mode) body.task-mail.action-none #layout > #layout-sidebar {
+  color: #e7eef5 !important;
+  background: #172126 !important;
+  border-right-color: rgba(255, 255, 255, .1) !important;
+}
+
+html body.task-mail.action-none #layout-sidebar > .footer,
+html body.task-mail.action-none #layout-sidebar > .scroller,
+html body.task-mail.action-none #layout-sidebar .listing,
+html body.task-mail.action-none #layout-sidebar .listing li {
+  color: inherit !important;
+  background: transparent !important;
+  border-color: transparent !important;
+}
+
+html body.task-mail.action-none #layout-sidebar .brand-taskrail {
+  position: absolute !important;
+  inset: auto 12px 14px 12px !important;
+  z-index: 5 !important;
+  display: grid !important;
+  width: auto !important;
+  min-width: 0 !important;
+  padding: 0 !important;
+  color: #d7e0ea !important;
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  pointer-events: auto !important;
+}
+
+html body.task-mail.action-none #layout > .brand-taskrail {
+  display: none !important;
+}
+
+html body.task-mail.action-none #layout > #layout-list,
+html body.task-mail.action-none #layout > #layout-content {
+  margin-left: 0 !important;
+}
+
+html body.task-mail.action-none #layout > #layout-sidebar {
+  padding: 12px 12px 154px !important;
+}
+
+html body.task-mail.action-none #layout-sidebar > .header {
+  display: block !important;
+  height: 48px !important;
+  margin: 0 0 18px !important;
+  padding: 0 !important;
+  background: transparent !important;
+  border: 0 !important;
+}
+
+html body.task-mail.action-none #layout-sidebar a.compose.button {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 100% !important;
+  height: 48px !important;
+  min-height: 48px !important;
+  padding: 0 16px !important;
+  color: #ffffff !important;
+  background: linear-gradient(135deg, #8068f2 0%, #ff5c72 100%) !important;
+  border: 0 !important;
+  border-radius: 2px !important;
+  box-shadow: 0 14px 24px rgba(0, 0, 0, .2) !important;
+}
+
+html body.task-mail.action-none #layout-sidebar a.compose.button > div {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 10px !important;
+  color: inherit !important;
+  background: transparent !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  font-size: 15px !important;
+  font-weight: 800 !important;
+  line-height: 1 !important;
+}
+
+html body.task-mail.action-none #layout-sidebar a.compose.button i {
+  color: inherit !important;
+  font-size: 18px !important;
+}
+
+html body.task-mail.action-none #folderlist-content,
+html body.task-mail.action-none #mailboxlist {
+  padding: 0 !important;
+}
+
+html body.task-mail.action-none #mailboxlist li.mailbox > a {
+  color: #c7d2df !important;
+  font-size: 15px !important;
+  font-weight: 650 !important;
+  line-height: 1.2 !important;
+}
+
+html body.task-mail.action-none #mailboxlist li.mailbox > a::before {
+  width: 24px !important;
+  margin-right: 10px !important;
+  color: inherit !important;
+  font-size: 18px !important;
+  text-align: center !important;
+  opacity: .95 !important;
+}
+
+html body.task-mail.action-none #mailboxlist li.mailbox.sent > a,
+html body.task-mail.action-none #mailboxlist li.mailbox.drafts > a,
+html body.task-mail.action-none #mailboxlist li.mailbox.trash > a,
+html body.task-mail.action-none #mailboxlist li.mailbox.junk > a {
+  color: #d7e0ea !important;
+}
+
+html body.task-mail.action-none #mailboxlist li.mailbox.selected > a,
+html body.task-mail.action-none #mailboxlist li.mailbox:hover > a,
+html body.task-mail.action-none #mailboxlist li.mailbox.focused > a,
+html:not(.dark-mode) body.task-mail.action-none #mailboxlist li.mailbox.selected > a,
+html:not(.dark-mode) body.task-mail.action-none #mailboxlist li.mailbox:hover > a,
+html:not(.dark-mode) body.task-mail.action-none #mailboxlist li.mailbox.focused > a {
+  color: var(--brand-folder-green) !important;
+  background: #303a20 !important;
+  border-color: rgba(200, 255, 42, .36) !important;
+  box-shadow: inset 3px 0 0 var(--brand-folder-green) !important;
+}
+
+html body.task-mail.action-none #mailboxlist li.mailbox.selected > a::before,
+html body.task-mail.action-none #mailboxlist li.mailbox:hover > a::before,
+html body.task-mail.action-none #mailboxlist li.mailbox.focused > a::before {
+  color: var(--brand-folder-green) !important;
+}
+
+html body.task-mail.action-none #layout-sidebar #quotadisplay,
+html body.task-mail.action-none #layout-sidebar .logout,
+html body.task-mail.action-none #layout-sidebar .compose,
+html body.task-mail.action-none #layout-sidebar .mail,
+html body.task-mail.action-none #layout-sidebar .theme,
+html body.task-mail.action-none #layout-sidebar .about {
+  display: none !important;
+}
+
+html body.task-mail.action-none #layout-sidebar .brand-taskrail .menu,
+html body.task-mail.action-none #layout-sidebar .brand-taskrail #taskmenu {
+  display: grid !important;
+  width: 100% !important;
+  background: transparent !important;
+}
+
+html body.task-mail.action-none #layout-sidebar .brand-taskrail-main {
+  gap: 6px !important;
+}
+
+html body.task-mail.action-none #layout-sidebar .brand-taskrail-bottom {
+  display: none !important;
+}
+
+html body.task-mail.action-none #layout-sidebar .brand-taskrail a {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  width: 100% !important;
+  min-height: 36px !important;
+  padding: 0 12px !important;
+  color: #d7e0ea !important;
+  line-height: 1.2 !important;
+  text-align: left !important;
+  text-decoration: none !important;
+  background: transparent !important;
+  border: 1px solid transparent !important;
+  border-radius: 7px !important;
+  box-shadow: none !important;
+}
+
+html body.task-mail.action-none #layout-sidebar .brand-taskrail a:before {
+  width: 24px !important;
+  height: auto !important;
+  margin: 0 10px 0 0 !important;
+  color: inherit !important;
+  font-family: Icons !important;
+  font-size: 16px !important;
+  line-height: 1 !important;
+  text-align: center !important;
+}
+
+html body.task-mail.action-none #layout-sidebar .brand-taskrail a .inner {
+  display: block !important;
+  color: inherit !important;
+  font-size: 13px !important;
+  font-weight: 650 !important;
+  line-height: 1.2 !important;
+}
+
+html body.task-mail.action-none #layout-sidebar .brand-taskrail a:hover,
+html body.task-mail.action-none #layout-sidebar .brand-taskrail a:focus {
+  color: var(--brand-folder-green) !important;
+  background: #303a20 !important;
+  border-color: rgba(200, 255, 42, .28) !important;
+  outline: none !important;
+}
+
+html body.task-mail.action-none #layout-sidebar .brand-taskrail a.contacts:before {
+  content: "\f0c0" !important;
+}
+
+html body.task-mail.action-none #layout-sidebar .brand-taskrail a.calendar:before,
+html body.task-mail.action-none #layout-sidebar .brand-taskrail a.button-calendar:before {
+  content: "\f073" !important;
+}
+
+html body.task-mail.action-none #layout-sidebar .brand-taskrail a.settings:before {
+  content: "\f013" !important;
+}
+
+html body.task-mail.action-none #layout-sidebar .brand-taskrail a.compose,
+html body.task-mail.action-none #layout-sidebar .brand-taskrail a.mail,
+html body.task-mail.action-none #layout-sidebar .brand-taskrail a.theme,
+html body.task-mail.action-none #layout-sidebar .brand-taskrail a.about,
+html body.task-mail.action-none #layout-sidebar .brand-taskrail a.logout,
+html body.task-mail.action-none #layout-sidebar .brand-taskrail .quota-widget {
+  display: none !important;
+}
+
+html body.task-mail.action-compose #layout > .brand-taskrail,
+html body.task-mail.action-compose #layout-sidebar .brand-taskrail,
+html.iframe body.task-mail.action-compose #layout > .brand-taskrail,
+html.iframe body.task-mail.action-compose #layout-sidebar .brand-taskrail {
+  display: none !important;
+}
+
+html body.task-mail.action-compose #layout > #layout-content,
+html body.task-mail.action-compose #layout > #layout-sidebar.sidebar-right,
+html.iframe body.task-mail.action-compose #layout > #layout-content,
+html.iframe body.task-mail.action-compose #layout > #layout-sidebar.sidebar-right {
+  margin-left: 0 !important;
+}
+
+html body.task-addressbook #layout > .brand-taskrail,
+html body.task-calendar #layout > .brand-taskrail,
+html body.task-settings #layout > .brand-taskrail {
+  display: none !important;
+}
+
+html body.task-addressbook #layout > #layout-sidebar,
+html body.task-addressbook #layout > #layout-list,
+html body.task-addressbook #layout > #layout-content,
+html body.task-calendar #layout > #layout-sidebar,
+html body.task-calendar #layout > #layout-list,
+html body.task-calendar #layout > #layout-content,
+html body.task-settings #layout > #layout-sidebar,
+html body.task-settings #layout > #layout-list,
+html body.task-settings #layout > #layout-content {
+  margin-left: 0 !important;
+}
+
+html body.task-addressbook #layout > #layout-sidebar,
+html body.task-calendar #layout > #layout-sidebar,
+html body.task-settings #layout > #layout-sidebar {
+  padding-left: 0 !important;
+}
+
+html body.task-addressbook #layout-sidebar > .header,
+html body.task-calendar #layout-sidebar > .header,
+html body.task-settings #layout-sidebar > .header {
+  align-items: center !important;
+  gap: 8px !important;
+  min-height: 42px !important;
+  height: 42px !important;
+  padding: 0 8px !important;
+  color: var(--brand-dark-text) !important;
+  background: #172126 !important;
+  border-bottom: 1px solid rgba(255, 255, 255, .1) !important;
+}
+
+html body.task-addressbook #layout-sidebar .brand-back-mail,
+html body.task-calendar #layout-sidebar .brand-back-mail,
+html body.task-settings #layout-sidebar .brand-back-mail {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex: 0 0 30px !important;
+  width: 30px !important;
+  height: 30px !important;
+  min-height: 30px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  color: #d7e0ea !important;
+  background: transparent !important;
+  border: 1px solid transparent !important;
+  border-radius: 7px !important;
+  text-decoration: none !important;
+}
+
+html body.task-addressbook #layout-sidebar .brand-back-mail:before,
+html body.task-calendar #layout-sidebar .brand-back-mail:before,
+html body.task-settings #layout-sidebar .brand-back-mail:before {
+  content: "\f060" !important;
+  display: block !important;
+  width: auto !important;
+  height: auto !important;
+  margin: 0 !important;
+  color: inherit !important;
+  font-family: Icons !important;
+  font-size: 16px !important;
+  line-height: 1 !important;
+}
+
+html body.task-addressbook #layout-sidebar .brand-back-mail:hover,
+html body.task-addressbook #layout-sidebar .brand-back-mail:focus,
+html body.task-calendar #layout-sidebar .brand-back-mail:hover,
+html body.task-calendar #layout-sidebar .brand-back-mail:focus,
+html body.task-settings #layout-sidebar .brand-back-mail:hover,
+html body.task-settings #layout-sidebar .brand-back-mail:focus {
+  color: var(--brand-folder-green) !important;
+  background: #303a20 !important;
+  border-color: rgba(200, 255, 42, .28) !important;
+  outline: none !important;
+}
+
+html body.task-addressbook #layout-sidebar .brand-back-mail .inner,
+html body.task-calendar #layout-sidebar .brand-back-mail .inner,
+html body.task-settings #layout-sidebar .brand-back-mail .inner {
+  display: none !important;
+}
+
+html body.task-addressbook #layout-sidebar > .header .header-title,
+html body.task-calendar #layout-sidebar > .header .header-title,
+html body.task-settings #layout-sidebar > .header .header-title {
+  flex: 1 1 auto !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  color: #d7e0ea !important;
+  font-size: 13px !important;
+  font-weight: 750 !important;
+  line-height: 1.2 !important;
+  text-align: center !important;
+}
+
+html body.task-addressbook #layout-sidebar > .header .sidebar-menu,
+html body.task-calendar #layout-sidebar > .header .sidebar-menu {
+  flex: 0 0 30px !important;
+  width: 30px !important;
+  height: 30px !important;
+  margin: 0 !important;
+}
+
+/* Login should stay clean and quiet, matching the screenshot direction. */
+html body.task-login #layout,
+html:not(.dark-mode) body.task-login #layout,
+html.dark-mode body.task-login #layout {
+  background: #172126 !important;
+}
+
+html body.task-login #layout-content,
+html:not(.dark-mode) body.task-login #layout-content,
+html.dark-mode body.task-login #layout-content {
+  gap: 24px !important;
+  width: min(380px, calc(100vw - 32px)) !important;
+  transform: none !important;
+}
+
+html body.task-login #login-form,
+html:not(.dark-mode) body.task-login #login-form,
+html.dark-mode body.task-login #login-form {
+  padding: 0 !important;
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+}
+
+html body.task-login .form-control,
+html:not(.dark-mode) body.task-login .form-control,
+html.dark-mode body.task-login .form-control {
+  min-height: 52px !important;
+  color: #eef5fb !important;
+  background: #202b39 !important;
+  border-color: #354255 !important;
+  box-shadow: none !important;
+}
+
+html body.task-login .button.mainaction,
+html:not(.dark-mode) body.task-login .button.mainaction,
+html.dark-mode body.task-login .button.mainaction {
+  min-height: 52px !important;
+  background: linear-gradient(135deg, #8068f2 0%, #ff5c72 100%) !important;
+  box-shadow: 0 14px 28px rgba(0, 0, 0, .22) !important;
+}
+
+/* Keep mail rows readable after the shell sidebar width changes. */
+html body.task-mail.action-none #messagelist {
+  width: 100% !important;
+  table-layout: fixed !important;
+}
+
+html body.task-mail.action-none #messagelist tr.message {
+  height: 58px !important;
+}
+
+html body.task-mail.action-none #messagelist td.selection {
+  width: 34px !important;
+  min-width: 34px !important;
+  max-width: 34px !important;
+}
+
+html body.task-mail.action-none #messagelist td.subject {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) auto !important;
+  grid-template-rows: 24px 24px !important;
+  column-gap: 12px !important;
+  width: auto !important;
+  min-width: 0 !important;
+  padding: 5px 8px !important;
+  overflow: hidden !important;
+}
+
+html body.task-mail.action-none #messagelist td.subject span.fromto,
+html body.task-mail.action-none #messagelist td.subject span.date,
+html body.task-mail.action-none #messagelist td.subject span.subject,
+html body.task-mail.action-none #messagelist td.subject span.subject a,
+html body.task-mail.action-none #messagelist td.subject span.subject span {
+  min-width: 0 !important;
+  max-width: 100% !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+html body.task-mail.action-none #messagelist td.subject span.fromto {
+  grid-column: 1 !important;
+  grid-row: 1 !important;
+  width: auto !important;
+  padding-right: 0 !important;
+}
+
+html body.task-mail.action-none #messagelist td.subject span.date {
+  grid-column: 2 !important;
+  grid-row: 1 !important;
+  justify-self: end !important;
+  display: block !important;
+  width: auto !important;
+  padding-right: 0 !important;
+  line-height: 24px !important;
+}
+
+html body.task-mail.action-none #messagelist td.subject span.subject {
+  grid-column: 1 / 3 !important;
+  grid-row: 2 !important;
+  display: block !important;
+  width: auto !important;
+  padding-right: 0 !important;
+  line-height: 24px !important;
+}
+
+html body.task-mail.action-none #messagelist td.subject span.subject a {
+  display: inline-block !important;
+}
+
+html body.task-mail.action-none #messagelist tr:hover td.subject span.date {
+  display: block !important;
+}
+
+html body.task-mail.action-none #messagelist td.flags {
+  width: 34px !important;
+  min-width: 34px !important;
+  max-width: 34px !important;
+  padding: 0 !important;
+  text-align: center !important;
+}
+
+html body.task-mail.action-none #messagelist td.flags > span {
+  margin-left: 0 !important;
+}
+
+/* Secondary app polish: make Contacts, Calendar, and Settings feel like the mail shell. */
+html body.task-addressbook,
+html body.task-calendar,
+html body.task-settings {
+  background: var(--brand-paper) !important;
+}
+
+html body.task-addressbook #layout,
+html body.task-calendar #layout,
+html body.task-settings #layout {
+  gap: 0 !important;
+  background: var(--brand-paper) !important;
+}
+
+html body.task-addressbook #layout > #layout-sidebar,
+html body.task-calendar #layout > #layout-sidebar,
+html body.task-settings #layout > #layout-sidebar {
+  width: 246px !important;
+  min-width: 246px !important;
+  max-width: 246px !important;
+  color: #edf4f8 !important;
+  background: #172126 !important;
+  border-right: 1px solid rgba(255, 255, 255, .08) !important;
+  box-shadow: none !important;
+}
+
+html body.task-addressbook #layout > #layout-list,
+html body.task-settings #layout > #layout-list {
+  width: 336px !important;
+  min-width: 336px !important;
+  max-width: 336px !important;
+  background: var(--brand-paper) !important;
+  border-right: 1px solid var(--brand-line) !important;
+}
+
+html body.task-addressbook #layout > #layout-content,
+html body.task-calendar #layout > #layout-content,
+html body.task-settings #layout > #layout-content {
+  position: relative !important;
+  background: var(--brand-paper) !important;
+  border-left: 0 !important;
+}
+
+html body.task-addressbook #layout-sidebar > .header,
+html body.task-calendar #layout-sidebar > .header,
+html body.task-settings #layout-sidebar > .header {
+  min-height: 58px !important;
+  height: 58px !important;
+  padding: 10px 12px !important;
+  background: #172126 !important;
+  border-bottom-color: rgba(255, 255, 255, .09) !important;
+}
+
+html body.task-addressbook #layout-sidebar > .header .header-title,
+html body.task-calendar #layout-sidebar > .header .header-title,
+html body.task-settings #layout-sidebar > .header .header-title {
+  color: #f4f8fb !important;
+  font-size: 15px !important;
+  font-weight: 800 !important;
+  text-align: left !important;
+}
+
+html body.task-addressbook #layout-sidebar .brand-back-mail,
+html body.task-calendar #layout-sidebar .brand-back-mail,
+html body.task-settings #layout-sidebar .brand-back-mail {
+  flex-basis: 36px !important;
+  width: 36px !important;
+  height: 36px !important;
+  min-height: 36px !important;
+  color: #d8e4ec !important;
+  background: rgba(255, 255, 255, .04) !important;
+  border-color: rgba(255, 255, 255, .1) !important;
+  border-radius: 8px !important;
+}
+
+html body.task-addressbook #layout-sidebar .brand-back-mail:hover,
+html body.task-addressbook #layout-sidebar .brand-back-mail:focus,
+html body.task-calendar #layout-sidebar .brand-back-mail:hover,
+html body.task-calendar #layout-sidebar .brand-back-mail:focus,
+html body.task-settings #layout-sidebar .brand-back-mail:hover,
+html body.task-settings #layout-sidebar .brand-back-mail:focus {
+  color: #142024 !important;
+  background: var(--brand-mint) !important;
+  border-color: var(--brand-mint) !important;
+}
+
+html body.task-addressbook #directorylist,
+html body.task-addressbook #savedsearchlist,
+html body.task-calendar #calendars-content,
+html body.task-calendar #calendarslist,
+html body.task-settings #settings-menu {
+  padding: 12px 10px !important;
+}
+
+html body.task-addressbook #directorylist li,
+html body.task-addressbook #savedsearchlist li,
+html body.task-calendar #calendarslist li,
+html body.task-settings #settings-menu li {
+  margin: 3px 0 !important;
+  border: 0 !important;
+  border-radius: 8px !important;
+  overflow: hidden !important;
+}
+
+html body.task-addressbook #directorylist li > a,
+html body.task-addressbook #savedsearchlist li > a,
+html body.task-calendar #calendarslist li > a,
+html body.task-settings #settings-menu li > a {
+  min-height: 38px !important;
+  padding: 9px 10px 9px 34px !important;
+  color: #dbe6ed !important;
+  border-radius: 8px !important;
+  background: transparent !important;
+}
+
+html body.task-addressbook #directorylist li.selected > a,
+html body.task-addressbook #directorylist li:hover > a,
+html body.task-addressbook #savedsearchlist li.selected > a,
+html body.task-addressbook #savedsearchlist li:hover > a,
+html body.task-calendar #calendarslist li.selected > a,
+html body.task-calendar #calendarslist li:hover > a,
+html body.task-settings #settings-menu li.selected > a,
+html body.task-settings #settings-menu li:hover > a {
+  color: #142024 !important;
+  background: var(--brand-mint) !important;
+  box-shadow: none !important;
+}
+
+html body.task-addressbook #layout-list > .header,
+html body.task-addressbook #layout-content > .header,
+html body.task-calendar #layout-content > .header,
+html body.task-settings #layout-list > .header,
+html body.task-settings #layout-content > .header {
+  min-height: 58px !important;
+  height: 58px !important;
+  padding: 10px 14px !important;
+  background: var(--brand-paper-2) !important;
+  border-bottom: 1px solid var(--brand-line) !important;
+}
+
+html body.task-addressbook #layout-list .tableheaderseb {
+  width: 100% !important;
+  height: 58px !important;
+  margin: 0 !important;
+  background: var(--brand-paper-2) !important;
+  border-bottom: 1px solid var(--brand-line) !important;
+}
+
+html body.task-addressbook #layout-list .tableheaderseb td {
+  padding: 10px 12px !important;
+  vertical-align: middle !important;
+}
+
+html body.task-addressbook #searchform,
+html body.task-calendar #searchform,
+html body.task-mail #mailsearchform {
+  min-width: 0 !important;
+}
+
+html body.task-addressbook #layout-list .searchbar,
+html body.task-calendar #layout-content .searchbar {
+  margin: 0 !important;
+}
+
+html body.task-addressbook #layout-list input,
+html body.task-calendar #layout-content input {
+  border-radius: 8px !important;
+}
+
+html body.task-addressbook #contacts-table,
+html body.task-addressbook #contacts-table tbody,
+html body.task-addressbook #contacts-table tr,
+html body.task-addressbook #contacts-table td {
+  background: transparent !important;
+}
+
+html body.task-addressbook #contacts-table {
+  width: calc(100% - 20px) !important;
+  margin: 10px !important;
+  border-collapse: separate !important;
+  border-spacing: 0 6px !important;
+}
+
+html body.task-addressbook #contacts-table tr {
+  height: 52px !important;
+  color: var(--brand-ink) !important;
+  background: var(--brand-panel) !important;
+  border-radius: 8px !important;
+  box-shadow: 0 1px 0 rgba(255, 255, 255, .04) inset !important;
+}
+
+html body.task-addressbook #contacts-table tr.selected,
+html body.task-addressbook #contacts-table tr:hover {
+  color: #fff !important;
+  background: #30435a !important;
+}
+
+html body.task-addressbook #contacts-table td {
+  padding: 8px 10px !important;
+  border: 0 !important;
+}
+
+html body.task-addressbook #contacts-table tr td:first-child {
+  border-radius: 8px 0 0 8px !important;
+}
+
+html body.task-addressbook #contacts-table tr td:last-child {
+  border-radius: 0 8px 8px 0 !important;
+}
+
+html body.task-addressbook #layout-content .iframe-wrapper,
+html body.task-settings #layout-content .iframe-wrapper {
+  width: calc(100% - 24px) !important;
+  height: calc(100% - 82px) !important;
+  margin: 12px !important;
+  background: var(--brand-panel) !important;
+  border: 1px solid var(--brand-line) !important;
+  border-radius: 8px !important;
+  overflow: hidden !important;
+  box-shadow: var(--brand-shadow) !important;
+}
+
+html.iframe body.task-addressbook .formcontent,
+html.iframe body.task-settings .formcontent,
+html.iframe body.task-addressbook .propform,
+html.iframe body.task-settings .propform,
+html.iframe body.task-addressbook #layout-content,
+html.iframe body.task-settings #layout-content {
+  color: var(--brand-ink) !important;
+  background: var(--brand-panel) !important;
+}
+
+html.iframe body.task-addressbook .formcontent,
+html.iframe body.task-settings .formcontent {
+  margin: 14px !important;
+  padding: 18px !important;
+  border: 1px solid var(--brand-line) !important;
+  border-radius: 8px !important;
+}
+
+html.iframe body.task-addressbook .contact-header {
+  display: flex !important;
+  align-items: center !important;
+  gap: 18px !important;
+  padding-bottom: 16px !important;
+  border-bottom: 1px solid var(--brand-line) !important;
+}
+
+html.iframe body.task-addressbook .contact-photo,
+html.iframe body.task-addressbook #contactpic {
+  border-radius: 8px !important;
+  background: #202b39 !important;
+}
+
+html.iframe body.task-addressbook #contacthead {
+  min-width: 0 !important;
+}
+
+html.iframe body.task-addressbook #contacttabs {
+  margin-top: 16px !important;
+}
+
+html body.task-calendar #layout > #layout-content {
+  padding: 0 !important;
+}
+
+html body.task-calendar #layout-content > .header {
+  gap: 8px !important;
+}
+
+html body.task-calendar #calendartoolbar,
+html body.task-addressbook #addressbooktoolbar {
+  display: flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+  width: 100% !important;
+  min-width: 0 !important;
+}
+
+html body.task-calendar #calendar {
+  position: absolute !important;
+  inset: 116px 12px 12px 12px !important;
+  width: auto !important;
+  height: auto !important;
+  padding: 0 !important;
+  color: var(--brand-ink) !important;
+  background: var(--brand-panel) !important;
+  border: 1px solid var(--brand-line) !important;
+  border-radius: 8px !important;
+  overflow: hidden !important;
+  box-shadow: var(--brand-shadow) !important;
+}
+
+html body.task-calendar #layout-content > .searchbar {
+  height: 58px !important;
+  padding: 10px 14px !important;
+  background: var(--brand-paper) !important;
+  border-bottom: 1px solid var(--brand-line) !important;
+}
+
+html body.task-calendar .calendar-datepicker,
+html body.task-calendar .ui-datepicker-inline {
+  width: calc(100% - 20px) !important;
+  margin: 12px 10px 10px !important;
+  padding: 8px !important;
+  color: #edf4f8 !important;
+  background: rgba(255, 255, 255, .04) !important;
+  border: 1px solid rgba(255, 255, 255, .08) !important;
+  border-radius: 8px !important;
+  overflow: hidden !important;
+}
+
+html body.task-calendar .ui-datepicker-inline a,
+html body.task-calendar .ui-datepicker-inline span {
+  color: inherit !important;
+}
+
+html body.task-calendar .ui-datepicker-inline table {
+  width: 100% !important;
+  table-layout: fixed !important;
+  font-size: 11px !important;
+}
+
+html body.task-calendar .ui-datepicker-inline th,
+html body.task-calendar .ui-datepicker-inline td {
+  padding: 2px !important;
+  text-align: center !important;
+}
+
+html body.task-calendar .ui-datepicker-inline .ui-datepicker-title {
+  display: flex !important;
+  justify-content: center !important;
+  gap: 6px !important;
+  min-width: 0 !important;
+  padding: 0 0 8px !important;
+}
+
+html body.task-calendar .ui-datepicker-inline .ui-datepicker-month,
+html body.task-calendar .ui-datepicker-inline .ui-datepicker-year {
+  min-width: 0 !important;
+  height: 34px !important;
+  color: var(--brand-ink) !important;
+  background: #f8fbfd !important;
+  border: 1px solid rgba(255, 255, 255, .22) !important;
+  border-radius: 6px !important;
+}
+
+html body.task-calendar .ui-datepicker-inline .ui-datepicker-month {
+  width: 62px !important;
+}
+
+html body.task-calendar .ui-datepicker-inline .ui-datepicker-year {
+  width: 72px !important;
+}
+
+html body.task-calendar #calendarslist li,
+html body.task-calendar #calendarslist li > div,
+html body.task-calendar #calendarslist li > div > span,
+html body.task-calendar #calendarslist li > div > a,
+html body.task-calendar #calendarslist .calname,
+html body.task-calendar #calendarslist label,
+html body.task-calendar #calendarslist a {
+  color: #dbe6ed !important;
+}
+
+html body.task-calendar #calendarslist li.selected,
+html body.task-calendar #calendarslist li:hover,
+html body.task-calendar #calendarslist li.selected > div,
+html body.task-calendar #calendarslist li:hover > div,
+html body.task-calendar #calendarslist li.selected .calname,
+html body.task-calendar #calendarslist li:hover .calname,
+html body.task-calendar #calendarslist li.selected label,
+html body.task-calendar #calendarslist li:hover label,
+html body.task-calendar #calendarslist li.selected a,
+html body.task-calendar #calendarslist li:hover a {
+  color: #142024 !important;
+}
+
+html body.task-calendar .ui-datepicker-inline .ui-datepicker-calendar td a,
+html body.task-calendar .ui-datepicker-inline .ui-datepicker-calendar td span {
+  color: #172033 !important;
+}
+
+html body.task-calendar .ui-datepicker-inline .ui-datepicker-calendar th span {
+  color: #6fd4ff !important;
+}
+
+html body.task-calendar #calendarslist li,
+html body.task-calendar #calendarslist li > div,
+html body.task-calendar #calendarslist li > div > span,
+html body.task-calendar #calendarslist li > div > a,
+html body.task-calendar #calendarslist .calname,
+html body.task-calendar #calendarslist label,
+html body.task-calendar #calendarslist a {
+  color: #dbe6ed !important;
+}
+
+html body.task-calendar .ui-datepicker-inline .ui-state-active {
+  color: #142024 !important;
+  background: var(--brand-mint) !important;
+  border-radius: 6px !important;
+}
+
+html body.task-calendar .fc-toolbar,
+html body.task-calendar .fc-header-toolbar {
+  padding: 12px 14px !important;
+  margin: 0 !important;
+  background: var(--brand-panel) !important;
+  border-bottom: 1px solid var(--brand-line) !important;
+}
+
+html body.task-calendar .fc-view-container,
+html body.task-calendar .fc-view,
+html body.task-calendar .fc-widget-content,
+html body.task-calendar .fc-widget-header {
+  color: var(--brand-ink) !important;
+  background: var(--brand-panel) !important;
+  border-color: var(--brand-line) !important;
+}
+
+html body.task-calendar .fc-day-header {
+  padding: 10px 4px !important;
+  color: var(--brand-ink-soft) !important;
+  font-size: 12px !important;
+  font-weight: 800 !important;
+  text-transform: uppercase !important;
+}
+
+html body.task-calendar .fc-day-number {
+  padding: 8px !important;
+  color: var(--brand-ink) !important;
+  font-weight: 700 !important;
+}
+
+html body.task-calendar .fc-event {
+  border-radius: 6px !important;
+  box-shadow: none !important;
+}
+
+html body.task-settings #sections-table {
+  width: calc(100% - 20px) !important;
+  margin: 10px !important;
+  border-collapse: separate !important;
+  border-spacing: 0 6px !important;
+}
+
+html body.task-settings #sections-table tr,
+html body.task-settings #sections-table li {
+  color: var(--brand-ink) !important;
+  background: var(--brand-panel) !important;
+  border-radius: 8px !important;
+}
+
+html body.task-settings #sections-table tr.selected,
+html body.task-settings #sections-table tr:hover,
+html body.task-settings #sections-table li.selected,
+html body.task-settings #sections-table li:hover {
+  color: #fff !important;
+  background: #30435a !important;
+}
+
+@media screen and (max-width: 768px) {
+  html body.task-addressbook #layout > #layout-sidebar,
+  html body.task-calendar #layout > #layout-sidebar,
+  html body.task-settings #layout > #layout-sidebar,
+  html body.task-addressbook #layout > #layout-list,
+  html body.task-settings #layout > #layout-list {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: none !important;
+  }
+
+  html body.task-calendar #calendar {
+    inset: 116px 8px 8px 8px !important;
+  }
+}
+
+html body.task-calendar #layout-sidebar #calendarslist li > div.calendar,
+html body.task-calendar #layout-sidebar #calendarslist li > div.calendar > a.calname {
+  color: #dbe6ed !important;
+}
+
+html body.task-calendar #layout-sidebar #calendarslist li.selected > div.calendar,
+html body.task-calendar #layout-sidebar #calendarslist li:hover > div.calendar {
+  background: rgba(219, 230, 237, .08) !important;
+  border-radius: 8px !important;
+}
+
+html body.task-calendar #layout-sidebar #calendarslist li.selected > div.calendar > a.calname,
+html body.task-calendar #layout-sidebar #calendarslist li:hover > div.calendar > a.calname {
+  color: #f4f8fb !important;
+}
+
+/* Mobile app shell: one active pane, compact bottom task navigation, no hidden-width leaks. */
+@media screen and (max-width: 768px) {
+  html.layout-small,
+  html.layout-small body,
+  html.layout-small body:not(.task-login) #layout {
+    width: 100vw !important;
+    max-width: 100vw !important;
+    min-width: 0 !important;
+    overflow-x: hidden !important;
+  }
+
+  html.layout-small body:not(.task-login) #layout {
+    min-height: 100vh !important;
+    min-height: 100dvh !important;
+    padding-bottom: 64px !important;
+    background: var(--brand-paper) !important;
+  }
+
+  html.layout-small body:not(.task-login) #layout > #layout-sidebar,
+  html.layout-small body:not(.task-login) #layout > #layout-list,
+  html.layout-small body:not(.task-login) #layout > #layout-content {
+    position: fixed !important;
+    inset: 0 0 calc(64px + env(safe-area-inset-bottom)) 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    top: 0 !important;
+    bottom: calc(64px + env(safe-area-inset-bottom)) !important;
+    display: flex !important;
+    flex: none !important;
+    flex-basis: auto !important;
+    width: 100vw !important;
+    min-width: 0 !important;
+    max-width: 100vw !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    margin: 0 !important;
+    padding-left: 0 !important;
+    transform: none !important;
+    overflow: hidden !important;
+  }
+
+  html.layout-small body:not(.task-login) #layout > #layout-sidebar,
+  html.layout-small body:not(.task-login) #layout > #layout-list {
+    max-width: 100vw !important;
+  }
+
+  html.layout-small body:not(.task-login) #layout > #layout-sidebar.selected,
+  html.layout-small body:not(.task-login) #layout > #layout-list.selected,
+  html.layout-small body:not(.task-login) #layout > #layout-content.selected {
+    z-index: 2 !important;
+  }
+
+  html.layout-small body:not(.task-login) #layout > #layout-sidebar:not(.selected),
+  html.layout-small body:not(.task-login) #layout > #layout-list:not(.selected),
+  html.layout-small body:not(.task-login) #layout > #layout-content:not(.selected) {
+    z-index: 1 !important;
+  }
+
+  html.layout-small body:not(.task-login) #layout > .brand-taskrail {
+    display: flex !important;
+    position: fixed !important;
+    inset: auto 0 0 0 !important;
+    z-index: 3000 !important;
+    flex-direction: row !important;
+    left: 0 !important;
+    right: 0 !important;
+    top: auto !important;
+    bottom: 0 !important;
+    width: 100vw !important;
+    height: 64px !important;
+    min-height: 64px !important;
+    padding: 6px 8px calc(6px + env(safe-area-inset-bottom)) !important;
+    color: #f4f8fb !important;
+    background: #172126 !important;
+    border-top: 1px solid rgba(255, 255, 255, .1) !important;
+    border-right: 0 !important;
+    box-shadow: 0 -12px 28px rgba(0, 0, 0, .2) !important;
+    pointer-events: auto !important;
+  }
+
+  html.layout-small body:not(.task-login) #layout > .brand-taskrail .menu {
+    display: flex !important;
+    flex-direction: row !important;
+    flex: 1 1 auto !important;
+    align-items: center !important;
+    justify-content: space-around !important;
+    width: 100% !important;
+    height: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: transparent !important;
+  }
+
+  html.layout-small body:not(.task-login) #layout > .brand-taskrail .brand-taskrail-bottom,
+  html.layout-small body:not(.task-login) #layout > .brand-taskrail a.compose,
+  html.layout-small body:not(.task-login) #layout > .brand-taskrail a.theme,
+  html.layout-small body:not(.task-login) #layout > .brand-taskrail a.about,
+  html.layout-small body:not(.task-login) #layout > .brand-taskrail a.logout,
+  html.layout-small body:not(.task-login) #layout > .brand-taskrail .quota-widget {
+    display: none !important;
+  }
+
+  html.layout-small body:not(.task-login) #layout > .brand-taskrail a {
+    display: inline-flex !important;
+    flex: 1 1 0 !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 3px !important;
+    min-width: 0 !important;
+    width: auto !important;
+    max-width: none !important;
+    min-height: 0 !important;
+    max-height: 52px !important;
+    height: 52px !important;
+    margin: 0 2px !important;
+    padding: 4px 2px !important;
+    color: #dbe6ed !important;
+    font-size: 10px !important;
+    font-weight: 800 !important;
+    line-height: 1.1 !important;
+    background: transparent !important;
+    border: 0 !important;
+    border-left: 0 !important;
+    border-radius: 8px !important;
+    text-decoration: none !important;
+  }
+
+  html.layout-small body:not(.task-login) #layout > .brand-taskrail a:before {
+    margin: 0 !important;
+    font-family: Icons !important;
+    font-size: 19px !important;
+    line-height: 1 !important;
+  }
+
+  html.layout-small body:not(.task-login) #layout > .brand-taskrail a .inner {
+    display: block !important;
+    max-width: 100% !important;
+    color: inherit !important;
+    font-size: 10px !important;
+    font-weight: 800 !important;
+    line-height: 1.1 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+
+  html.layout-small body:not(.task-login) #layout > .brand-taskrail a.selected,
+  html.layout-small body:not(.task-login) #layout > .brand-taskrail a:hover,
+  html.layout-small body:not(.task-login) #layout > .brand-taskrail a:focus {
+    color: #142024 !important;
+    background: var(--brand-mint) !important;
+  }
+
+  html.layout-small body:not(.task-login) #layout > #layout-sidebar.hidden,
+  html.layout-small body:not(.task-login) #layout > #layout-list.hidden,
+  html.layout-small body:not(.task-login) #layout > #layout-content.hidden {
+    display: none !important;
+    width: 0 !important;
+    min-width: 0 !important;
+    max-width: 0 !important;
+    height: 0 !important;
+    overflow: hidden !important;
+  }
+
+  html.layout-small body:not(.task-login) #layout > #layout-sidebar.selected,
+  html.layout-small body:not(.task-login) #layout > #layout-list.selected,
+  html.layout-small body:not(.task-login) #layout > #layout-content.selected,
+  html.layout-small body.task-calendar #layout > #layout-content {
+    display: flex !important;
+    position: fixed !important;
+    left: 0 !important;
+    right: auto !important;
+    width: 100vw !important;
+    min-width: 0 !important;
+    max-width: 100vw !important;
+    height: calc(100vh - 64px) !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    overflow: hidden !important;
+    transform: none !important;
+  }
+
+  html.layout-small body.task-mail.action-none #layout > #layout-sidebar.hidden {
+    display: none !important;
+  }
+
+  html.layout-small body.task-mail.action-none #layout > #layout-list.selected {
+    border-right: 0 !important;
+  }
+
+  html.layout-small body.task-mail.action-none #messagelist {
+    width: 100% !important;
+  }
+
+  html.layout-small body.task-mail.action-none .floating-action-buttons {
+    position: fixed !important;
+    z-index: 2500 !important;
+    right: 16px !important;
+    bottom: calc(78px + env(safe-area-inset-bottom)) !important;
+    display: block !important;
+    width: 56px !important;
+    height: 56px !important;
+  }
+
+  html.layout-small body.task-mail.action-none .floating-action-buttons a.compose.button {
+    position: static !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 56px !important;
+    height: 56px !important;
+    margin: 0 !important;
+    border-radius: 50% !important;
+  }
+
+  html.layout-small body.task-mail.action-none .floating-action-buttons a.compose.button:not(:first-child) {
+    display: none !important;
+  }
+
+  html.layout-small body.task-addressbook #layout-list .tableheaderseb,
+  html.layout-small body.task-calendar #layout-content > .header,
+  html.layout-small body.task-calendar #layout-content > .searchbar,
+  html.layout-small body.task-settings #layout-sidebar > .header,
+  html.layout-small body.task-addressbook #layout-sidebar > .header {
+    min-height: 56px !important;
+    height: 56px !important;
+  }
+
+  html.layout-small body.task-addressbook #layout-list .task-menu-button,
+  html.layout-small body.task-calendar #layout-content .task-menu-button {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 42px !important;
+    height: 42px !important;
+    margin: 0 !important;
+    color: var(--brand-blue) !important;
+    text-decoration: none !important;
+  }
+
+  html.layout-small body.task-addressbook #layout-list .task-menu-button:before,
+  html.layout-small body.task-calendar #layout-content .task-menu-button:before {
+    font-size: 23px !important;
+    line-height: 1 !important;
+  }
+
+  html.layout-small body.task-addressbook #layout-content .iframe-wrapper,
+  html.layout-small body.task-settings #layout-content .iframe-wrapper {
+    width: calc(100vw - 16px) !important;
+    height: calc(100% - 72px) !important;
+    margin: 8px !important;
+  }
+
+  html.layout-small body.task-calendar #calendar {
+    inset: 112px 8px 72px 8px !important;
+    width: auto !important;
+    min-width: 0 !important;
+    max-width: none !important;
+  }
+
+  html.layout-small body.task-calendar .fc-view,
+  html.layout-small body.task-calendar .fc-view > table,
+  html.layout-small body.task-calendar .fc-view-container {
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  html.layout-small body.task-calendar .fc-toolbar,
+  html.layout-small body.task-calendar .fc-header-toolbar {
+    padding: 8px !important;
+  }
+
+  html.layout-small body.task-calendar .fc-day-header {
+    font-size: 10px !important;
+  }
+
+  html.layout-small body.task-calendar .fc-day-number {
+    padding: 5px !important;
+    font-size: 12px !important;
+  }
+
+  html.layout-small body.task-calendar #calendartoolbar {
+    justify-content: flex-end !important;
+    overflow: hidden !important;
+  }
+
+  html.layout-small body.task-calendar #calendartoolbar > :not(.create) {
+    display: none !important;
+  }
+
+  html.layout-small body.task-calendar #calendartoolbar .create {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 46px !important;
+    min-width: 46px !important;
+    height: 46px !important;
+    margin-left: auto !important;
+    padding: 0 !important;
+    border-radius: 8px !important;
+  }
+
+  html.layout-small body.task-calendar #calendartoolbar .create .inner {
+    display: none !important;
+  }
 }

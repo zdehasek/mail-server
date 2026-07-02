@@ -1,0 +1,1096 @@
+:root {
+  --brand-ink: #121927;
+  --brand-ink-soft: #243246;
+  --brand-paper: #fff7e8;
+  --brand-paper-2: #fffdf7;
+  --brand-line: #eadfcb;
+  --brand-coral: #ff5c42;
+  --brand-coral-dark: #d93a2e;
+  --brand-amber: #ffd65a;
+  --brand-mint: #2aa876;
+  --brand-focus: #ff8a5b;
+  --brand-shadow: 0 16px 44px rgba(36, 29, 15, .12);
+}
+
+html:not(.dark-mode),
+html:not(.dark-mode) body {
+  color: var(--brand-ink);
+  background: var(--brand-paper);
+}
+
+html:not(.dark-mode) #layout,
+html:not(.dark-mode) #layout-content,
+html:not(.dark-mode) #layout-list,
+html:not(.dark-mode) #layout-sidebar,
+html:not(.dark-mode) .listbox,
+html:not(.dark-mode) .scroller,
+html:not(.dark-mode) .iframe-wrapper {
+  background-color: var(--brand-paper);
+}
+
+html:not(.dark-mode) .header,
+html:not(.dark-mode) #messagelist-header,
+html:not(.dark-mode) .footer,
+html:not(.dark-mode) .popupmenu,
+html:not(.dark-mode) .popover,
+html:not(.dark-mode) .ui-dialog,
+html:not(.dark-mode) .formcontent,
+html:not(.dark-mode) .propform {
+  color: var(--brand-ink);
+  background-color: var(--brand-paper-2);
+  border-color: var(--brand-line);
+}
+
+html:not(.dark-mode) #layout-menu,
+html:not(.dark-mode) #taskmenu,
+html:not(.dark-mode) #layout-sidebar {
+  background: #142033;
+  color: #fff8eb;
+}
+
+html:not(.dark-mode) #layout-sidebar .header,
+html:not(.dark-mode) #layout-sidebar .scroller,
+html:not(.dark-mode) #layout-sidebar .listing,
+html:not(.dark-mode) #layout-sidebar .listing li,
+html:not(.dark-mode) #layout-sidebar .listing li > a,
+html:not(.dark-mode) #layout-sidebar .listing li > div > a,
+html:not(.dark-mode) #layout-sidebar .listing li > div > span,
+html:not(.dark-mode) #layout-sidebar .footer {
+  background: transparent;
+  color: #fff8eb;
+  border-color: rgba(255, 248, 235, .12);
+}
+
+html:not(.dark-mode) .brand-sidebar-logo,
+html.dark-mode .brand-sidebar-logo {
+  width: 100%;
+  height: 92px;
+  margin: 10px 0 4px;
+  background: url(../images/logo-ai.png) center / 118px auto no-repeat;
+  filter: drop-shadow(0 14px 22px rgba(0, 0, 0, .22));
+}
+
+html:not(.dark-mode) .sidebar-product,
+html.dark-mode .sidebar-product {
+  color: rgba(255, 248, 235, .68);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0;
+}
+
+html:not(.dark-mode) #layout-sidebar .listing li.selected > a,
+html:not(.dark-mode) #layout-sidebar .listing li.selected > div > *,
+html:not(.dark-mode) #layout-sidebar .listing li:hover > a,
+html:not(.dark-mode) #layout-sidebar .listing li:hover > div > * {
+  color: #142033;
+  background: var(--brand-amber);
+}
+
+html:not(.dark-mode) a,
+html:not(.dark-mode) .button,
+html:not(.dark-mode) .btn-link {
+  color: var(--brand-coral-dark);
+}
+
+html:not(.dark-mode) .btn-primary,
+html:not(.dark-mode) button.mainaction,
+html:not(.dark-mode) .button.mainaction,
+html:not(.dark-mode) a.compose.button,
+html:not(.dark-mode) .toolbar a.button.create,
+html:not(.dark-mode) .fc button.fc-state-active,
+html:not(.dark-mode) .fc button.fc-state-hover {
+  color: #fff8eb;
+  background: var(--brand-coral);
+  border-color: var(--brand-coral);
+}
+
+html:not(.dark-mode) .btn-primary:hover,
+html:not(.dark-mode) button.mainaction:hover,
+html:not(.dark-mode) .button.mainaction:hover,
+html:not(.dark-mode) a.compose.button:hover {
+  background: var(--brand-coral-dark);
+  border-color: var(--brand-coral-dark);
+}
+
+html:not(.dark-mode) input,
+html:not(.dark-mode) textarea,
+html:not(.dark-mode) select,
+html:not(.dark-mode) .form-control,
+html:not(.dark-mode) .custom-select,
+html:not(.dark-mode) .input-group-text {
+  color: var(--brand-ink);
+  background: #fffefa;
+  border-color: var(--brand-line);
+}
+
+html:not(.dark-mode) input:focus,
+html:not(.dark-mode) textarea:focus,
+html:not(.dark-mode) select:focus,
+html:not(.dark-mode) .form-control:focus {
+  border-color: var(--brand-focus);
+  box-shadow: 0 0 0 .18rem rgba(255, 92, 66, .18);
+}
+
+html:not(.dark-mode) #login-form {
+  width: min(440px, calc(100vw - 32px));
+  padding: 0;
+  color: var(--brand-ink);
+}
+
+html:not(.dark-mode) body.task-login #layout {
+  display: grid;
+  place-items: center;
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at 20% 12%, rgba(255, 214, 90, .35), transparent 34%),
+    radial-gradient(circle at 84% 18%, rgba(255, 92, 66, .18), transparent 30%),
+    linear-gradient(135deg, #fffdf7 0%, #fff2d4 100%);
+}
+
+html:not(.dark-mode) body.task-login #layout-content {
+  display: grid;
+  justify-items: center;
+  gap: 18px;
+  background: transparent;
+  transform: translateY(-4vh);
+}
+
+html:not(.dark-mode) body.task-login #logo {
+  width: 174px;
+  height: auto;
+  margin: 0 0 10px;
+  filter: drop-shadow(0 20px 34px rgba(20, 32, 51, .2));
+}
+
+html:not(.dark-mode) body.task-login table,
+html:not(.dark-mode) body.task-login tbody {
+  display: block !important;
+  width: 100% !important;
+}
+
+html:not(.dark-mode) body.task-login tr {
+  display: block !important;
+  width: 100% !important;
+  margin-bottom: 14px;
+}
+
+html:not(.dark-mode) body.task-login td.title {
+  display: none !important;
+}
+
+html:not(.dark-mode) body.task-login td.input {
+  display: block !important;
+  width: 100% !important;
+  min-width: 0;
+  padding: 0;
+}
+
+html:not(.dark-mode) body.task-login .form-control {
+  width: 100% !important;
+  max-width: none !important;
+  min-height: 48px;
+  box-sizing: border-box;
+  border-radius: 8px;
+  box-shadow: 0 8px 22px rgba(36, 29, 15, .06);
+}
+
+html:not(.dark-mode) body.task-login .brand-login-fields {
+  display: grid;
+  gap: 14px;
+}
+
+html:not(.dark-mode) body.task-login .formbuttons {
+  margin-top: 4px;
+}
+
+html:not(.dark-mode) body.task-login .button.mainaction {
+  width: 100%;
+  min-height: 48px;
+  border-radius: 8px;
+  font-weight: 800;
+  box-shadow: 0 10px 22px rgba(217, 58, 46, .22);
+}
+
+html:not(.dark-mode) .messagelist tr,
+html:not(.dark-mode) .listing li,
+html:not(.dark-mode) .fc-unthemed td,
+html:not(.dark-mode) .fc-unthemed th {
+  border-color: var(--brand-line);
+}
+
+html:not(.dark-mode) .messagelist tr:hover,
+html:not(.dark-mode) .messagelist tr.focused,
+html:not(.dark-mode) .messagelist tr.selected,
+html:not(.dark-mode) .listing li.selected,
+html:not(.dark-mode) .listing li.selected > div > *,
+html:not(.dark-mode) .fc-highlight {
+  color: var(--brand-ink);
+  background: #fff0bd;
+}
+
+html:not(.dark-mode) .fc .fc-toolbar,
+html:not(.dark-mode) .fc .fc-header-toolbar,
+html:not(.dark-mode) .fc-view,
+html:not(.dark-mode) .fc-unthemed .fc-popover,
+html:not(.dark-mode) .ui-datepicker-inline {
+  background: var(--brand-paper-2);
+  border-color: var(--brand-line);
+}
+
+html:not(.dark-mode) .fc-event,
+html:not(.dark-mode) .fc-event-dot,
+html:not(.dark-mode) .calendar-agenda-preview .event-row:before {
+  background: var(--brand-coral);
+  border-color: var(--brand-coral-dark);
+}
+
+html:not(.dark-mode) .fc-today,
+html:not(.dark-mode) body.task-calendar .ui-datepicker-inline .ui-datepicker-today a {
+  background: rgba(255, 214, 90, .32) !important;
+}
+
+html:not(.dark-mode) .watermark {
+  background-color: var(--brand-paper-2);
+  background-image: url(../images/logo-ai.png);
+  background-size: 172px;
+  background-blend-mode: normal;
+}
+
+html:not(.dark-mode) .watermark:before {
+  background: rgba(255, 247, 232, .78);
+}
+
+html.dark-mode {
+  --brand-coral: #ff7357;
+  --brand-amber: #ffd65a;
+}
+
+html.dark-mode #logo {
+  filter: drop-shadow(0 12px 24px rgba(0, 0, 0, .3));
+}
+
+html.dark-mode .fc-event,
+html.dark-mode .fc-event-dot {
+  background: var(--brand-coral);
+  border-color: #ff9b82;
+}
+
+/* 66c Mail refresh: HEY-inspired dark slate, tuned for both saved light/dark prefs. */
+:root,
+html.dark-mode {
+  --brand-ink: #f4f6fb;
+  --brand-ink-soft: #aeb8c8;
+  --brand-paper: #252d3b;
+  --brand-paper-2: #202836;
+  --brand-panel: #2b3445;
+  --brand-panel-hot: #314057;
+  --brand-line: #3a4659;
+  --brand-coral: #ff5c72;
+  --brand-coral-dark: #ef435c;
+  --brand-amber: #ffbe62;
+  --brand-mint: #b8d7d0;
+  --brand-mint-strong: #7fb7ad;
+  --brand-success: #3f9f8b;
+  --brand-success-soft: #8fd6c5;
+  --brand-focus: #7f68f2;
+  --brand-blue: #6fd4ff;
+  --brand-purple: #8068f2;
+  --brand-shadow: 0 18px 44px rgba(0, 0, 0, .28);
+}
+
+html,
+html body,
+html.dark-mode,
+html.dark-mode body {
+  color: var(--brand-ink);
+  background: var(--brand-paper);
+}
+
+html #layout,
+html #layout-content,
+html #layout-list,
+html #layout-sidebar,
+html .listbox,
+html .scroller,
+html .iframe-wrapper,
+html.dark-mode #layout,
+html.dark-mode #layout-content,
+html.dark-mode #layout-list,
+html.dark-mode #layout-sidebar,
+html.dark-mode .listbox,
+html.dark-mode .scroller,
+html.dark-mode .iframe-wrapper {
+  color: var(--brand-ink);
+  background-color: var(--brand-paper);
+}
+
+html .header,
+html #messagelist-header,
+html .footer,
+html .popupmenu,
+html .popover,
+html .ui-dialog,
+html .formcontent,
+html .propform,
+html.dark-mode .header,
+html.dark-mode #messagelist-header,
+html.dark-mode .footer,
+html.dark-mode .popupmenu,
+html.dark-mode .popover,
+html.dark-mode .ui-dialog,
+html.dark-mode .formcontent,
+html.dark-mode .propform {
+  color: var(--brand-ink);
+  background-color: var(--brand-paper-2);
+  border-color: var(--brand-line);
+}
+
+html #layout-menu,
+html #taskmenu,
+html #layout-sidebar,
+html.dark-mode #layout-menu,
+html.dark-mode #taskmenu,
+html.dark-mode #layout-sidebar {
+  background: #1b2230;
+  color: var(--brand-ink);
+}
+
+html #layout-sidebar .header,
+html #layout-sidebar .scroller,
+html #layout-sidebar .listing,
+html #layout-sidebar .listing li,
+html #layout-sidebar .listing li > a,
+html #layout-sidebar .listing li > div > a,
+html #layout-sidebar .listing li > div > span,
+html #layout-sidebar .footer,
+html.dark-mode #layout-sidebar .header,
+html.dark-mode #layout-sidebar .scroller,
+html.dark-mode #layout-sidebar .listing,
+html.dark-mode #layout-sidebar .listing li,
+html.dark-mode #layout-sidebar .listing li > a,
+html.dark-mode #layout-sidebar .listing li > div > a,
+html.dark-mode #layout-sidebar .listing li > div > span,
+html.dark-mode #layout-sidebar .footer {
+  background: transparent;
+  color: var(--brand-ink);
+  border-color: rgba(244, 246, 251, .11);
+}
+
+html #layout-sidebar .listing li.selected > a,
+html #layout-sidebar .listing li.selected > div > *,
+html #layout-sidebar .listing li:hover > a,
+html #layout-sidebar .listing li:hover > div > *,
+html.dark-mode #layout-sidebar .listing li.selected > a,
+html.dark-mode #layout-sidebar .listing li.selected > div > *,
+html.dark-mode #layout-sidebar .listing li:hover > a,
+html.dark-mode #layout-sidebar .listing li:hover > div > * {
+  color: #111826;
+  background: var(--brand-mint);
+}
+
+html #layout-sidebar .listing li.selected > a,
+html #layout-sidebar .listing li.selected > div > *,
+html.dark-mode #layout-sidebar .listing li.selected > a,
+html.dark-mode #layout-sidebar .listing li.selected > div > * {
+  border-color: var(--brand-mint-strong);
+  box-shadow: inset 4px 0 0 var(--brand-mint-strong);
+}
+
+html a,
+html .button,
+html .btn-link,
+html.dark-mode a,
+html.dark-mode .button,
+html.dark-mode .btn-link {
+  color: var(--brand-blue);
+}
+
+html .btn-primary,
+html button.mainaction,
+html .button.mainaction,
+html a.compose.button,
+html .toolbar a.button.create,
+html .fc button.fc-state-active,
+html .fc button.fc-state-hover,
+html.dark-mode .btn-primary,
+html.dark-mode button.mainaction,
+html.dark-mode .button.mainaction,
+html.dark-mode a.compose.button,
+html.dark-mode .toolbar a.button.create,
+html.dark-mode .fc button.fc-state-active,
+html.dark-mode .fc button.fc-state-hover {
+  color: #fff;
+  background: var(--brand-purple);
+  border-color: var(--brand-purple);
+}
+
+html .btn-primary:hover,
+html button.mainaction:hover,
+html .button.mainaction:hover,
+html a.compose.button:hover,
+html.dark-mode .btn-primary:hover,
+html.dark-mode button.mainaction:hover,
+html.dark-mode .button.mainaction:hover,
+html.dark-mode a.compose.button:hover {
+  background: #6a52e5;
+  border-color: #6a52e5;
+}
+
+html input,
+html textarea,
+html select,
+html .form-control,
+html .custom-select,
+html .input-group-text,
+html.dark-mode input,
+html.dark-mode textarea,
+html.dark-mode select,
+html.dark-mode .form-control,
+html.dark-mode .custom-select,
+html.dark-mode .input-group-text {
+  color: var(--brand-ink);
+  background: #1d2532;
+  border-color: var(--brand-line);
+}
+
+html input:focus,
+html textarea:focus,
+html select:focus,
+html .form-control:focus,
+html.dark-mode input:focus,
+html.dark-mode textarea:focus,
+html.dark-mode select:focus,
+html.dark-mode .form-control:focus {
+  border-color: var(--brand-focus);
+  box-shadow: 0 0 0 .18rem rgba(127, 104, 242, .24);
+}
+
+html body.task-login #layout,
+html.dark-mode body.task-login #layout {
+  display: grid;
+  place-items: center;
+  min-height: 100vh;
+  background:
+    linear-gradient(180deg, rgba(128, 104, 242, .18) 0, transparent 34%),
+    linear-gradient(135deg, #202838 0%, #252d3b 52%, #1b2230 100%) !important;
+}
+
+html body.task-login #layout-content,
+html.dark-mode body.task-login #layout-content {
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  gap: 22px;
+  width: min(430px, calc(100vw - 32px)) !important;
+  min-height: 100vh;
+  margin: 0 auto !important;
+  padding: 28px 0;
+  text-align: center;
+  background: transparent !important;
+  transform: translateY(-2vh) !important;
+}
+
+html body.task-login #logo,
+html.dark-mode body.task-login #logo {
+  position: static !important;
+  top: auto !important;
+  width: min(190px, 52vw) !important;
+  height: auto;
+  max-height: none !important;
+  margin: 0;
+  filter: drop-shadow(0 22px 34px rgba(0, 0, 0, .34));
+}
+
+html body.task-login #login-form,
+html.dark-mode body.task-login #login-form {
+  position: static !important;
+  top: auto !important;
+  width: 100% !important;
+  max-width: 430px !important;
+  padding: 18px !important;
+  color: var(--brand-ink);
+  background: rgba(31, 39, 53, .82);
+  border: 1px solid rgba(255, 255, 255, .08);
+  border-radius: 8px;
+  box-shadow: 0 22px 54px rgba(0, 0, 0, .28);
+  transform: none !important;
+  backdrop-filter: blur(14px);
+}
+
+html body.task-login .brand-login-fields,
+html.dark-mode body.task-login .brand-login-fields {
+  display: grid !important;
+  gap: 12px;
+}
+
+html body.task-login .form-control,
+html.dark-mode body.task-login .form-control {
+  width: 100% !important;
+  max-width: none !important;
+  min-height: 50px;
+  box-sizing: border-box;
+  border-radius: 8px !important;
+  background: #202838;
+  border-color: #435068;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, .18);
+}
+
+html body.task-login .form-control::placeholder,
+html.dark-mode body.task-login .form-control::placeholder {
+  color: #8f9bad;
+}
+
+html body.task-login .button.mainaction,
+html.dark-mode body.task-login .button.mainaction {
+  width: 100% !important;
+  min-height: 50px;
+  box-sizing: border-box;
+  border-radius: 8px !important;
+  font-weight: 800;
+  background: linear-gradient(135deg, #8068f2, #ff5c72);
+  border: 0;
+  box-shadow: 0 14px 28px rgba(127, 104, 242, .3);
+}
+
+html body.task-login .formbuttons,
+html.dark-mode body.task-login .formbuttons {
+  width: 100% !important;
+  margin: 14px 0 0 !important;
+}
+
+html .messagelist tr,
+html .listing li,
+html .fc-unthemed td,
+html .fc-unthemed th,
+html.dark-mode .messagelist tr,
+html.dark-mode .listing li,
+html.dark-mode .fc-unthemed td,
+html.dark-mode .fc-unthemed th {
+  color: var(--brand-ink);
+  background: var(--brand-paper);
+  border-color: var(--brand-line);
+}
+
+html .messagelist tr:nth-child(even),
+html.dark-mode .messagelist tr:nth-child(even) {
+  background: #232b39;
+}
+
+html .messagelist tr.unread,
+html.dark-mode .messagelist tr.unread {
+  color: #fff;
+  background: #273346;
+}
+
+html .messagelist tr:hover,
+html .messagelist tr.focused,
+html .messagelist tr.selected,
+html .listing li.selected,
+html .listing li.selected > div > *,
+html .fc-highlight,
+html.dark-mode .messagelist tr:hover,
+html.dark-mode .messagelist tr.focused,
+html.dark-mode .messagelist tr.selected,
+html.dark-mode .listing li.selected,
+html.dark-mode .listing li.selected > div > *,
+html.dark-mode .fc-highlight {
+  color: #fff;
+  background: #30435a;
+}
+
+html .messagelist tr.unread td.subject span.subject,
+html.dark-mode .messagelist tr.unread td.subject span.subject {
+  color: #fff;
+}
+
+html #messagelist-header,
+html .toolbar,
+html.dark-mode #messagelist-header,
+html.dark-mode .toolbar {
+  background: #202836;
+  border-color: var(--brand-line);
+}
+
+html #messagelist,
+html #messagelist-content,
+html .messagelist,
+html .messagelist tbody,
+html.dark-mode #messagelist,
+html.dark-mode #messagelist-content,
+html.dark-mode .messagelist,
+html.dark-mode .messagelist tbody {
+  color: var(--brand-ink);
+  background: var(--brand-paper);
+}
+
+html.iframe body.task-mail.action-preview #layout-content,
+html.iframe body.task-mail.action-preview .content,
+html.iframe body.task-mail.action-preview #message-content,
+html.iframe body.task-mail.action-preview #messagebody,
+html.iframe body.task-mail.action-preview .rightcol,
+html.iframe body.task-mail.action-preview .message-part {
+  color: #dbe4f0 !important;
+  background: var(--brand-paper) !important;
+}
+
+html.iframe body.task-mail.action-preview .content {
+  padding: 22px 26px !important;
+}
+
+html.iframe body.task-mail.action-preview #message-header > .subject {
+  color: #f4f6fb !important;
+  font-size: 20px;
+  font-weight: 700;
+  margin: 2px 0 14px;
+}
+
+html.iframe body.task-mail.action-preview #message-header > .header {
+  color: var(--brand-ink) !important;
+  background: #202836 !important;
+  border: 1px solid rgba(255, 255, 255, .08);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+html.iframe body.task-mail.action-preview #messagebody {
+  padding: 18px 18px 0 !important;
+}
+
+html.iframe body.task-mail.action-preview .message-part {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.65;
+}
+
+html .fc .fc-toolbar,
+html .fc .fc-header-toolbar,
+html .fc-view,
+html .fc-unthemed .fc-popover,
+html .ui-datepicker-inline,
+html.dark-mode .fc .fc-toolbar,
+html.dark-mode .fc .fc-header-toolbar,
+html.dark-mode .fc-view,
+html.dark-mode .fc-unthemed .fc-popover,
+html.dark-mode .ui-datepicker-inline {
+  color: var(--brand-ink);
+  background: var(--brand-panel);
+  border-color: var(--brand-line);
+}
+
+html .fc-event,
+html .fc-event-dot,
+html .calendar-agenda-preview .event-row:before,
+html.dark-mode .fc-event,
+html.dark-mode .fc-event-dot,
+html.dark-mode .calendar-agenda-preview .event-row:before {
+  background: var(--brand-coral);
+  border-color: var(--brand-coral-dark);
+}
+
+html .fc-today,
+html body.task-calendar .ui-datepicker-inline .ui-datepicker-today a,
+html.dark-mode .fc-today,
+html.dark-mode body.task-calendar .ui-datepicker-inline .ui-datepicker-today a {
+  color: #111826 !important;
+  background: var(--brand-mint) !important;
+}
+
+html .ui.alert.alert-success > i.icon:before,
+html .ui.alert.boxconfirmation i.icon:before,
+html.dark-mode .ui.alert.alert-success > i.icon:before,
+html.dark-mode .ui.alert.boxconfirmation i.icon:before {
+  color: var(--brand-success-soft) !important;
+}
+
+html #messagestack .alert-success,
+html .ui.alert.boxconfirmation,
+html #swipe-action.horizontal.swipe-compose,
+html #swipe-action.horizontal.swipe-success,
+html #swipe-action.vertical > .swipe-container.swipe-compose,
+html #swipe-action.vertical > .swipe-container.swipe-success,
+html.dark-mode #messagestack .alert-success,
+html.dark-mode .ui.alert.boxconfirmation,
+html.dark-mode #swipe-action.horizontal.swipe-compose,
+html.dark-mode #swipe-action.horizontal.swipe-success,
+html.dark-mode #swipe-action.vertical > .swipe-container.swipe-compose,
+html.dark-mode #swipe-action.vertical > .swipe-container.swipe-success {
+  color: #fff !important;
+  background-color: var(--brand-success) !important;
+  border-color: var(--brand-success) !important;
+}
+
+html .watermark,
+html.dark-mode .watermark {
+  background-color: var(--brand-paper);
+  background-image: url(../images/logo-ai.png);
+  background-size: 180px;
+}
+
+html .watermark:before,
+html.dark-mode .watermark:before {
+  background: rgba(37, 45, 59, .82);
+}
+
+@media (max-width: 560px) {
+  html body.task-login #layout-content,
+  html.dark-mode body.task-login #layout-content {
+    width: min(390px, calc(100vw - 28px)) !important;
+    gap: 18px;
+    transform: none !important;
+  }
+
+  html body.task-login #logo,
+  html.dark-mode body.task-login #logo {
+    width: min(164px, 52vw) !important;
+  }
+}
+
+body.task-login #login-form table,
+body.task-login #login-form tbody,
+body.task-login #login-form tr,
+body.task-login #login-form td.input {
+  display: block !important;
+  width: 100% !important;
+}
+
+body.task-login #login-form td.title {
+  position: absolute !important;
+  left: -9999px !important;
+  width: 0 !important;
+  height: 0 !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  overflow: hidden !important;
+  opacity: 0 !important;
+}
+
+body.task-login #login-form .form-control {
+  width: 100% !important;
+  max-width: none !important;
+  border-radius: 8px !important;
+}
+
+@media screen and (max-width: 480px) {
+  html:not(.dark-mode) body.task-login #layout-content {
+    transform: translateY(-2vh);
+  }
+
+  html:not(.dark-mode) body.task-login #logo {
+    width: 158px;
+  }
+}
+
+/* Left rail and real light/dark modes for the 66c skin. */
+html:not(.dark-mode) {
+  --brand-ink: #172033;
+  --brand-ink-soft: #526071;
+  --brand-paper: #f5f7fb;
+  --brand-paper-2: #ffffff;
+  --brand-panel: #ffffff;
+  --brand-panel-hot: #eef3f8;
+  --brand-line: #d8e0ea;
+  --brand-coral: #d95268;
+  --brand-coral-dark: #be3e53;
+  --brand-amber: #f2b95d;
+  --brand-mint: #cfe5df;
+  --brand-mint-strong: #7baea5;
+  --brand-success: #5a9c8e;
+  --brand-success-soft: #cfe5df;
+  --brand-focus: #6b5fe8;
+  --brand-blue: #236ea3;
+  --brand-purple: #6b5fe8;
+  --brand-shadow: 0 18px 44px rgba(22, 32, 51, .12);
+}
+
+html.dark-mode {
+  --brand-ink: #f4f6fb;
+  --brand-ink-soft: #aeb8c8;
+  --brand-paper: #252d3b;
+  --brand-paper-2: #202836;
+  --brand-panel: #2b3445;
+  --brand-panel-hot: #314057;
+  --brand-line: #3a4659;
+  --brand-coral: #ff5c72;
+  --brand-coral-dark: #ef435c;
+  --brand-amber: #ffbe62;
+  --brand-mint: #b8d7d0;
+  --brand-mint-strong: #7fb7ad;
+  --brand-success: #3f9f8b;
+  --brand-success-soft: #8fd6c5;
+  --brand-focus: #7f68f2;
+  --brand-blue: #6fd4ff;
+  --brand-purple: #8068f2;
+  --brand-shadow: 0 18px 44px rgba(0, 0, 0, .28);
+}
+
+html:not(.dark-mode) body,
+html:not(.dark-mode) #layout,
+html:not(.dark-mode) #layout-content,
+html:not(.dark-mode) #layout-list,
+html:not(.dark-mode) #layout-sidebar,
+html:not(.dark-mode) .listbox,
+html:not(.dark-mode) .scroller,
+html:not(.dark-mode) .iframe-wrapper {
+  color: var(--brand-ink) !important;
+  background-color: var(--brand-paper) !important;
+}
+
+html:not(.dark-mode) .header,
+html:not(.dark-mode) #messagelist-header,
+html:not(.dark-mode) .footer,
+html:not(.dark-mode) .popupmenu,
+html:not(.dark-mode) .popover,
+html:not(.dark-mode) .ui-dialog,
+html:not(.dark-mode) .formcontent,
+html:not(.dark-mode) .propform,
+html:not(.dark-mode) .toolbar {
+  color: var(--brand-ink) !important;
+  background-color: var(--brand-paper-2) !important;
+  border-color: var(--brand-line) !important;
+}
+
+html:not(.dark-mode) .messagelist tr,
+html:not(.dark-mode) .listing li,
+html:not(.dark-mode) .fc-unthemed td,
+html:not(.dark-mode) .fc-unthemed th {
+  color: var(--brand-ink) !important;
+  background: var(--brand-panel) !important;
+  border-color: var(--brand-line) !important;
+}
+
+html:not(.dark-mode) .messagelist tr:nth-child(even) {
+  background: #f0f4f8 !important;
+}
+
+html:not(.dark-mode) .messagelist tr.unread {
+  color: #111827 !important;
+  background: #e9f0f7 !important;
+}
+
+html:not(.dark-mode) .messagelist tr:hover,
+html:not(.dark-mode) .messagelist tr.focused,
+html:not(.dark-mode) .messagelist tr.selected,
+html:not(.dark-mode) .listing li.selected,
+html:not(.dark-mode) .listing li.selected > div > *,
+html:not(.dark-mode) .fc-highlight {
+  color: #111827 !important;
+  background: #dde8f2 !important;
+}
+
+html:not(.dark-mode) input,
+html:not(.dark-mode) textarea,
+html:not(.dark-mode) select,
+html:not(.dark-mode) .form-control,
+html:not(.dark-mode) .custom-select,
+html:not(.dark-mode) .input-group-text {
+  color: var(--brand-ink) !important;
+  background: #ffffff !important;
+  border-color: var(--brand-line) !important;
+}
+
+html:not(.dark-mode) a,
+html:not(.dark-mode) .button,
+html:not(.dark-mode) .btn-link {
+  color: var(--brand-blue) !important;
+}
+
+html:not(.dark-mode) body.task-login #layout {
+  background:
+    linear-gradient(180deg, rgba(107, 95, 232, .08) 0, transparent 34%),
+    linear-gradient(135deg, #ffffff 0%, #f2f6fa 52%, #e9eff5 100%) !important;
+}
+
+html:not(.dark-mode) body.task-login #login-form {
+  color: var(--brand-ink) !important;
+  background: rgba(255, 255, 255, .9) !important;
+  border-color: rgba(23, 32, 51, .1) !important;
+  box-shadow: 0 22px 54px rgba(22, 32, 51, .16) !important;
+}
+
+html:not(.dark-mode) body.task-login .form-control {
+  background: #ffffff !important;
+  border-color: #d7e0ea !important;
+  box-shadow: 0 10px 24px rgba(22, 32, 51, .08) !important;
+}
+
+html:not(.dark-mode) body.task-login .button.mainaction {
+  background: linear-gradient(135deg, #6b5fe8, #d95268) !important;
+}
+
+html:not(.dark-mode) .watermark {
+  background-color: var(--brand-paper) !important;
+}
+
+html:not(.dark-mode) .watermark:before {
+  background: rgba(245, 247, 251, .76) !important;
+}
+
+html:not(.dark-mode).iframe body.task-mail.action-preview #layout-content,
+html:not(.dark-mode).iframe body.task-mail.action-preview .content,
+html:not(.dark-mode).iframe body.task-mail.action-preview #message-content,
+html:not(.dark-mode).iframe body.task-mail.action-preview #messagebody,
+html:not(.dark-mode).iframe body.task-mail.action-preview .rightcol,
+html:not(.dark-mode).iframe body.task-mail.action-preview .message-part {
+  color: var(--brand-ink) !important;
+  background: var(--brand-paper-2) !important;
+}
+
+html:not(.dark-mode).iframe body.task-mail.action-preview #message-header > .subject {
+  color: var(--brand-ink) !important;
+}
+
+html:not(.dark-mode).iframe body.task-mail.action-preview #message-header > .header {
+  color: var(--brand-ink) !important;
+  background: var(--brand-paper-2) !important;
+  border-color: var(--brand-line) !important;
+}
+
+#layout-sidebar {
+  position: relative !important;
+}
+
+#layout-sidebar > .brand-taskrail {
+  margin-left: 0 !important;
+}
+
+#layout-sidebar > :not(.brand-taskrail) {
+  margin-left: 84px !important;
+  width: calc(100% - 84px) !important;
+  max-width: calc(100% - 84px) !important;
+  box-sizing: border-box;
+}
+
+body.task-mail #layout-sidebar > .brand-sidebar-logo,
+body.task-mail #layout-sidebar > .header:first-of-type {
+  display: none !important;
+}
+
+.brand-taskrail {
+  position: absolute !important;
+  inset: 0 auto 0 0 !important;
+  z-index: 30;
+  display: flex !important;
+  flex-direction: column;
+  width: 84px !important;
+  min-width: 84px !important;
+  padding: 14px 0 12px;
+  color: #dbe7ef;
+  background: #1d282d !important;
+  border-right: 1px solid rgba(255, 255, 255, .12);
+}
+
+.brand-taskrail .menu {
+  display: flex !important;
+  flex-direction: column;
+  align-items: stretch;
+  width: 100% !important;
+  background: transparent !important;
+}
+
+.brand-taskrail-bottom {
+  margin-top: auto;
+}
+
+.brand-taskrail a {
+  display: flex !important;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 84px !important;
+  min-height: 58px;
+  padding: 7px 4px !important;
+  color: #dbe7ef !important;
+  line-height: 1.15;
+  text-align: center !important;
+  text-decoration: none !important;
+  border: 0 !important;
+  border-left: 3px solid transparent !important;
+  border-radius: 0 !important;
+  box-sizing: border-box;
+}
+
+.brand-taskrail a:before {
+  display: block !important;
+  width: auto !important;
+  height: 25px !important;
+  margin: 0 0 5px !important;
+  color: inherit !important;
+  font-family: Icons;
+  font-size: 20px !important;
+  line-height: 25px !important;
+  text-align: center !important;
+}
+
+.brand-taskrail a .inner {
+  display: block !important;
+  max-width: 76px;
+  color: inherit !important;
+  font-size: 12px !important;
+  font-weight: 500;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+
+.brand-taskrail a.compose:before { content: "\f044"; }
+.brand-taskrail a.mail:before { content: "\f0e0"; }
+.brand-taskrail a.contacts:before { content: "\f0c0"; }
+.brand-taskrail a.calendar:before,
+.brand-taskrail a.button-calendar:before { content: "\f073"; }
+.brand-taskrail a.settings:before { content: "\f013"; }
+.brand-taskrail a.theme.light:before { content: "\f185"; }
+.brand-taskrail a.theme.dark:before { content: "\f186"; }
+.brand-taskrail a.about:before { content: "\f128"; }
+.brand-taskrail a.logout:before { content: "\f011"; }
+
+.brand-taskrail a.selected,
+.brand-taskrail a:hover,
+.brand-taskrail a:focus {
+  color: #ffffff !important;
+  background: rgba(255, 255, 255, .08) !important;
+  border-left-color: #6fd4ff !important;
+  outline: none;
+}
+
+.brand-taskrail a.compose {
+  color: #6fd4ff !important;
+}
+
+.brand-taskrail a.logout {
+  color: #ff6d7f !important;
+}
+
+.brand-taskrail .quota-widget {
+  display: none !important;
+}
+
+#settings-menu li.about {
+  display: none !important;
+}
+
+html:not(.dark-mode) #layout-sidebar .header,
+html:not(.dark-mode) #layout-sidebar .scroller,
+html:not(.dark-mode) #layout-sidebar .listing,
+html:not(.dark-mode) #layout-sidebar .listing li,
+html:not(.dark-mode) #layout-sidebar .listing li > a,
+html:not(.dark-mode) #layout-sidebar .listing li > div > a,
+html:not(.dark-mode) #layout-sidebar .listing li > div > span,
+html:not(.dark-mode) #layout-sidebar .footer {
+  color: var(--brand-ink) !important;
+  background: transparent !important;
+  border-color: var(--brand-line) !important;
+}
+
+html.dark-mode #layout-sidebar .header,
+html.dark-mode #layout-sidebar .scroller,
+html.dark-mode #layout-sidebar .listing,
+html.dark-mode #layout-sidebar .listing li,
+html.dark-mode #layout-sidebar .listing li > a,
+html.dark-mode #layout-sidebar .listing li > div > a,
+html.dark-mode #layout-sidebar .listing li > div > span,
+html.dark-mode #layout-sidebar .footer {
+  color: var(--brand-ink) !important;
+  background: transparent !important;
+  border-color: rgba(244, 246, 251, .11) !important;
+}

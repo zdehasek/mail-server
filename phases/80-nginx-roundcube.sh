@@ -70,6 +70,24 @@ install_roundcube_skin() {
   rm -rf "$archive_dir"
 }
 
+apply_roundcube_skin_overrides() {
+  local overrides_dir skin_dir
+
+  overrides_dir="$ROOT_DIR/templates/roundcube/$ROUNDCUBE_SKIN"
+  skin_dir="/opt/roundcube/current/skins/$ROUNDCUBE_SKIN"
+
+  [[ -d "$overrides_dir" ]] || return 0
+
+  if [[ "$DRY_RUN" == "true" ]]; then
+    info "Would apply Roundcube skin overrides from $overrides_dir"
+    return 0
+  fi
+
+  cp -a "$overrides_dir/." "$skin_dir/"
+  find "$skin_dir" -type d -exec chmod 0755 {} +
+  find "$skin_dir" -type f -exec chmod 0644 {} +
+}
+
 install_roundcube_calendar_plugins() {
   if [[ "${ROUNDCUBE_ENABLE_CALENDAR:-true}" != "true" ]]; then
     return 0
@@ -178,6 +196,7 @@ PHP
 }
 
 install_roundcube_skin
+apply_roundcube_skin_overrides
 install_roundcube_calendar_plugins
 
 render_template "$ROOT_DIR/templates/roundcube/config.inc.php.tmpl" /opt/roundcube/current/config/config.inc.php

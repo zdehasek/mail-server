@@ -1383,59 +1383,23 @@ html #greydiv.fadeoff70create {
   pointer-events: auto !important;
 }
 
-/* 66c QA pass: one late app-shell layer for all Roundcube tasks. */
+/* 66c shell fix: keep the primary rail outside task sidebars. */
 html {
-  --brand-shell-bg: #111926;
-  --brand-shell-panel: #1f2938;
-  --brand-shell-panel-2: #263244;
-  --brand-shell-panel-3: #304058;
-  --brand-shell-line: #3b485b;
-  --brand-shell-text: #f5f7fb;
-  --brand-shell-muted: #b6c0cf;
-  --brand-shell-accent: #6fd4ff;
-  --brand-shell-danger: #ff6d7f;
+  --brand-nav-w: 84px;
+  --brand-dark-bg: #111926;
+  --brand-dark-panel: #1f2938;
+  --brand-dark-panel-2: #263244;
+  --brand-dark-line: #354255;
+  --brand-dark-text: #f5f7fb;
+  --brand-dark-muted: #b7c2d0;
+  --brand-light-bg: #f4f7fb;
+  --brand-light-panel: #ffffff;
+  --brand-light-panel-2: #eef3f8;
+  --brand-light-line: #d6e0ea;
+  --brand-light-text: #172033;
+  --brand-light-muted: #526071;
+  --brand-accent-blue: #6fd4ff;
   --brand-folder-green: #c8ff2a;
-  --brand-folder-green-bg: #303a20;
-  --brand-folder-green-ink: #c8ff2a;
-}
-
-html:not(.dark-mode) {
-  --brand-shell-bg: #eef3f8;
-  --brand-shell-panel: #ffffff;
-  --brand-shell-panel-2: #f6f9fc;
-  --brand-shell-panel-3: #e8f0f7;
-  --brand-shell-line: #d6e0ea;
-  --brand-shell-text: #172033;
-  --brand-shell-muted: #607084;
-  --brand-shell-accent: #236ea3;
-  --brand-shell-danger: #d95268;
-  --brand-folder-green-bg: #efffd0;
-  --brand-folder-green-ink: #314b00;
-}
-
-html body:not(.task-login),
-html body:not(.task-login) #layout,
-html body:not(.task-login) #layout-content,
-html body:not(.task-login) #layout-list,
-html body:not(.task-login) .listbox,
-html body:not(.task-login) .scroller,
-html body:not(.task-login) .iframe-wrapper {
-  color: var(--brand-shell-text) !important;
-  background: var(--brand-shell-bg) !important;
-}
-
-html body:not(.task-login) #layout-sidebar {
-  position: relative !important;
-  box-sizing: border-box !important;
-  padding-left: 0 !important;
-  color: var(--brand-shell-text) !important;
-  background: var(--brand-shell-panel) !important;
-  border-right: 1px solid var(--brand-shell-line) !important;
-  overflow: hidden !important;
-}
-
-html body:not(.task-login) #layout-sidebar > .brand-taskrail {
-  display: none !important;
 }
 
 html body:not(.task-login) #layout > .brand-taskrail {
@@ -1444,21 +1408,19 @@ html body:not(.task-login) #layout > .brand-taskrail {
   z-index: 40 !important;
   display: flex !important;
   flex-direction: column !important;
-  width: 84px !important;
-  min-width: 84px !important;
+  width: var(--brand-nav-w) !important;
+  min-width: var(--brand-nav-w) !important;
   padding: 12px 0 !important;
-  margin: 0 !important;
   color: #dbe7ef !important;
   background: #172126 !important;
-  border-right: 1px solid rgba(255, 255, 255, .12) !important;
-  box-shadow: none !important;
+  border-right: 1px solid rgba(255, 255, 255, .1) !important;
   pointer-events: none !important;
 }
 
 html:not(.dark-mode) body:not(.task-login) #layout > .brand-taskrail {
-  color: #263345 !important;
+  color: #243246 !important;
   background: #f8fbfd !important;
-  border-right-color: var(--brand-shell-line) !important;
+  border-right-color: var(--brand-light-line) !important;
 }
 
 html body:not(.task-login) #layout > .brand-taskrail .menu {
@@ -1468,16 +1430,16 @@ html body:not(.task-login) #layout > .brand-taskrail .menu {
   background: transparent !important;
 }
 
-html body:not(.task-login) .brand-taskrail-bottom {
+html body:not(.task-login) #layout > .brand-taskrail .brand-taskrail-bottom {
   margin-top: auto !important;
 }
 
-html body:not(.task-login) .brand-taskrail a {
+html body:not(.task-login) #layout > .brand-taskrail a {
   display: flex !important;
   flex-direction: column !important;
   align-items: center !important;
   justify-content: center !important;
-  width: 84px !important;
+  width: var(--brand-nav-w) !important;
   min-height: 58px !important;
   padding: 7px 4px !important;
   color: inherit !important;
@@ -1487,14 +1449,11 @@ html body:not(.task-login) .brand-taskrail a {
   border: 0 !important;
   border-left: 3px solid transparent !important;
   border-radius: 0 !important;
-  box-sizing: border-box !important;
-  opacity: 1 !important;
   pointer-events: auto !important;
 }
 
-html body:not(.task-login) .brand-taskrail a:before {
+html body:not(.task-login) #layout > .brand-taskrail a:before {
   display: block !important;
-  width: auto !important;
   height: 24px !important;
   margin: 0 0 5px !important;
   color: inherit !important;
@@ -1502,52 +1461,67 @@ html body:not(.task-login) .brand-taskrail a:before {
   font-size: 20px !important;
   font-weight: normal !important;
   line-height: 24px !important;
-  text-align: center !important;
 }
 
-html body:not(.task-login) .brand-taskrail a .inner {
+html body:not(.task-login) #layout > .brand-taskrail a .inner {
   display: block !important;
   max-width: 76px !important;
   color: inherit !important;
   font-size: 12px !important;
   font-weight: 650 !important;
   line-height: 1.2 !important;
-  overflow-wrap: anywhere !important;
 }
 
-html body:not(.task-login) .brand-taskrail a.selected,
-html body:not(.task-login) .brand-taskrail a:hover,
-html body:not(.task-login) .brand-taskrail a:focus {
-  color: #ffffff !important;
+html body:not(.task-login) #layout > .brand-taskrail a.selected,
+html body:not(.task-login) #layout > .brand-taskrail a:hover,
+html body:not(.task-login) #layout > .brand-taskrail a:focus {
+  color: #fff !important;
   background: rgba(111, 212, 255, .12) !important;
-  border-left-color: var(--brand-shell-accent) !important;
+  border-left-color: var(--brand-accent-blue) !important;
 }
 
-html:not(.dark-mode) body:not(.task-login) .brand-taskrail a.selected,
-html:not(.dark-mode) body:not(.task-login) .brand-taskrail a:hover,
-html:not(.dark-mode) body:not(.task-login) .brand-taskrail a:focus {
-  color: #172033 !important;
+html:not(.dark-mode) body:not(.task-login) #layout > .brand-taskrail a.selected,
+html:not(.dark-mode) body:not(.task-login) #layout > .brand-taskrail a:hover,
+html:not(.dark-mode) body:not(.task-login) #layout > .brand-taskrail a:focus {
+  color: var(--brand-light-text) !important;
   background: #e7eff6 !important;
 }
 
-html body:not(.task-login) .brand-taskrail a.compose {
-  color: var(--brand-shell-accent) !important;
+html body:not(.task-login) #layout > .brand-taskrail a.compose {
+  color: var(--brand-accent-blue) !important;
 }
 
-html body:not(.task-login) .brand-taskrail a.logout {
-  color: var(--brand-shell-danger) !important;
+html body:not(.task-login) #layout > .brand-taskrail a.logout {
+  color: #ff6d7f !important;
 }
 
-html body:not(.task-login) #layout-sidebar > :not(.brand-taskrail):not(.column-resizer) {
-  position: relative !important;
-  z-index: 2 !important;
-  display: block !important;
-  width: 100% !important;
-  max-width: 100% !important;
+html body:not(.task-login) #layout-sidebar > .brand-taskrail {
+  display: none !important;
+}
+
+html body:not(.task-login) #layout > #layout-sidebar {
+  margin-left: var(--brand-nav-w) !important;
+  padding-left: 0 !important;
+}
+
+html body:not(.task-login) #layout > #layout-list,
+html body:not(.task-login) #layout > #layout-content {
+  margin-left: var(--brand-nav-w) !important;
+}
+
+html body.task-mail #layout > #layout-list,
+html body.task-mail #layout > #layout-content,
+html body.task-calendar #layout > #layout-content {
   margin-left: 0 !important;
-  box-sizing: border-box !important;
-  opacity: 1 !important;
-  visibility: visible !important;
+}
+
+html body.task-mail.action-compose #layout > #layout-content {
+  margin-left: var(--brand-nav-w) !important;
+}
+
+html body.task-mail.action-compose #layout > #layout-sidebar.sidebar-right {
+  margin-left: 0 !important;
+  padding-left: 0 !important;
 }
 
 html body:not(.task-login) #layout-sidebar > .column-resizer {
@@ -1556,234 +1530,9 @@ html body:not(.task-login) #layout-sidebar > .column-resizer {
   right: -3px !important;
   left: auto !important;
   z-index: 10 !important;
-  display: block !important;
   width: 6px !important;
   height: 100% !important;
-  margin: 0 !important;
-  padding: 0 !important;
   pointer-events: auto !important;
-}
-
-html body:not(.task-login) #layout > #layout-sidebar,
-html body:not(.task-login) #layout > #layout-list,
-html body:not(.task-login) #layout > #layout-content {
-  margin-left: 84px !important;
-}
-
-html body.task-mail #layout > #layout-list,
-html body.task-mail #layout > #layout-content {
-  margin-left: 0 !important;
-}
-
-html body.task-mail.action-compose #layout > #layout-content {
-  margin-left: 84px !important;
-}
-
-html body.task-mail.action-compose #layout > #layout-sidebar.sidebar-right {
-  margin-left: 0 !important;
-  padding-left: 0 !important;
-}
-
-html body.task-mail #layout-sidebar > .brand-sidebar-logo,
-html body.task-mail #layout-sidebar > .header {
-  display: none !important;
-}
-
-html body.task-mail #folderlist-content,
-html body.task-mail #mailboxlist {
-  display: block !important;
-  width: 100% !important;
-  min-width: 0 !important;
-  height: auto !important;
-  margin: 0 !important;
-  padding: 12px 10px !important;
-  color: var(--brand-shell-text) !important;
-  background: transparent !important;
-  opacity: 1 !important;
-  visibility: visible !important;
-  pointer-events: auto !important;
-}
-
-html body.task-mail #mailboxlist li,
-html body.task-settings #settings-menu li,
-html body.task-addressbook #directorylist li,
-html body.task-calendar #calendars-content li {
-  color: var(--brand-shell-text) !important;
-  background: transparent !important;
-  border-color: transparent !important;
-}
-
-html body.task-mail #mailboxlist a,
-html body.task-settings #settings-menu a,
-html body.task-addressbook #directorylist a,
-html body.task-calendar #calendars-content a {
-  position: relative !important;
-  z-index: 3 !important;
-  display: flex !important;
-  align-items: center !important;
-  min-height: 36px !important;
-  padding: 8px 10px !important;
-  color: var(--brand-shell-muted) !important;
-  background: transparent !important;
-  border: 1px solid transparent !important;
-  border-radius: 8px !important;
-  text-decoration: none !important;
-  opacity: 1 !important;
-  visibility: visible !important;
-  pointer-events: auto !important;
-  cursor: pointer !important;
-}
-
-html body.task-mail #mailboxlist a:before,
-html body.task-settings #settings-menu a:before,
-html body.task-addressbook #directorylist a:before,
-html body.task-calendar #calendars-content a:before {
-  color: inherit !important;
-}
-
-html body.task-mail #mailboxlist li.mailbox.selected > a,
-html body.task-mail #mailboxlist li.mailbox:hover > a,
-html body.task-mail #mailboxlist li.mailbox.focused > a {
-  color: var(--brand-folder-green-ink) !important;
-  background: var(--brand-folder-green-bg) !important;
-  border-color: rgba(200, 255, 42, .42) !important;
-  box-shadow: inset 4px 0 0 var(--brand-folder-green) !important;
-}
-
-html body.task-settings #settings-menu li.selected > a,
-html body.task-settings #settings-menu li:hover > a,
-html body.task-addressbook #directorylist li.selected > a,
-html body.task-addressbook #directorylist li:hover > a,
-html body.task-calendar #calendars-content li.selected > a,
-html body.task-calendar #calendars-content li:hover > a {
-  color: var(--brand-shell-text) !important;
-  background: var(--brand-shell-panel-3) !important;
-  border-color: var(--brand-shell-line) !important;
-}
-
-html body:not(.task-login) .header,
-html body:not(.task-login) #messagelist-header,
-html body:not(.task-login) .footer,
-html body:not(.task-login) .toolbar,
-html body:not(.task-login) .popupmenu,
-html body:not(.task-login) .popover,
-html body:not(.task-login) .ui-dialog,
-html body:not(.task-login) .formcontent,
-html body:not(.task-login) .propform,
-html body:not(.task-login) .boxcontent,
-html body:not(.task-login) .content,
-html body:not(.task-login) .records-table,
-html body:not(.task-login) .ui-tabs,
-html body:not(.task-login) .tab-content {
-  color: var(--brand-shell-text) !important;
-  background: var(--brand-shell-panel) !important;
-  border-color: var(--brand-shell-line) !important;
-}
-
-html body:not(.task-login) input,
-html body:not(.task-login) textarea,
-html body:not(.task-login) select,
-html body:not(.task-login) .form-control,
-html body:not(.task-login) .custom-select,
-html body:not(.task-login) .input-group-text,
-html body:not(.task-login) .select-menu,
-html body:not(.task-login) .tox-tinymce,
-html body:not(.task-login) iframe {
-  color: var(--brand-shell-text) !important;
-  background-color: var(--brand-shell-panel-2) !important;
-  border-color: var(--brand-shell-line) !important;
-}
-
-html:not(.dark-mode) body:not(.task-login) input,
-html:not(.dark-mode) body:not(.task-login) textarea,
-html:not(.dark-mode) body:not(.task-login) select,
-html:not(.dark-mode) body:not(.task-login) .form-control,
-html:not(.dark-mode) body:not(.task-login) .custom-select,
-html:not(.dark-mode) body:not(.task-login) .input-group-text,
-html:not(.dark-mode) body:not(.task-login) .select-menu,
-html:not(.dark-mode) body:not(.task-login) .tox-tinymce,
-html:not(.dark-mode) body:not(.task-login) iframe {
-  background-color: #ffffff !important;
-}
-
-html body.task-mail.action-compose #layout-content,
-html body.task-mail.action-compose #compose-content,
-html body.task-mail.action-compose .compose-headers,
-html body.task-mail.action-compose #compose-options,
-html body.task-settings #layout-content,
-html body.task-addressbook #layout-content,
-html body.task-calendar #layout-content {
-  color: var(--brand-shell-text) !important;
-  background: var(--brand-shell-panel) !important;
-}
-
-html body:not(.task-login) .button,
-html body:not(.task-login) button,
-html body:not(.task-login) .btn {
-  border-radius: 8px !important;
-}
-
-html body:not(.task-login) .button.mainaction,
-html body:not(.task-login) button.mainaction,
-html body:not(.task-login) .btn-primary,
-html body:not(.task-login) .toolbar a.button.create {
-  color: #ffffff !important;
-  background: #6658df !important;
-  border-color: #6658df !important;
-}
-
-html body:not(.task-login) .messagelist tr,
-html body:not(.task-login) .records-table tr,
-html body:not(.task-login) .listing li {
-  color: var(--brand-shell-text) !important;
-  border-color: var(--brand-shell-line) !important;
-}
-
-html body.task-mail .messagelist tr,
-html body.task-addressbook .records-table tr,
-html body.task-settings .records-table tr {
-  background: var(--brand-shell-panel) !important;
-}
-
-html body.task-mail .messagelist tr:nth-child(even),
-html body.task-addressbook .records-table tr:nth-child(even),
-html body.task-settings .records-table tr:nth-child(even) {
-  background: var(--brand-shell-panel-2) !important;
-}
-
-html body.task-mail .messagelist tr:hover,
-html body.task-mail .messagelist tr.focused,
-html body.task-mail .messagelist tr.selected,
-html body.task-addressbook .records-table tr:hover,
-html body.task-addressbook .records-table tr.selected,
-html body.task-settings .records-table tr:hover,
-html body.task-settings .records-table tr.selected {
-  color: var(--brand-shell-text) !important;
-  background: var(--brand-shell-panel-3) !important;
-}
-
-html body.task-calendar .fc,
-html body.task-calendar .fc-toolbar,
-html body.task-calendar .fc-view,
-html body.task-calendar .fc-unthemed td,
-html body.task-calendar .fc-unthemed th,
-html body.task-calendar .ui-datepicker-inline {
-  color: var(--brand-shell-text) !important;
-  background: var(--brand-shell-panel) !important;
-  border-color: var(--brand-shell-line) !important;
-}
-
-html body.task-calendar .fc-event,
-html body.task-calendar .fc-event-dot {
-  color: #ffffff !important;
-  background: #6658df !important;
-  border-color: #6658df !important;
-}
-
-html body.task-calendar .fc-today,
-html body.task-calendar .ui-datepicker-today a {
-  color: var(--brand-folder-green-ink) !important;
-  background: var(--brand-folder-green-bg) !important;
 }
 
 html body.task-mail.action-none #layout-sidebar > .brand-sidebar-logo,
@@ -1791,14 +1540,65 @@ html body.task-mail.action-none #layout-sidebar > .header-title,
 html body.task-mail.action-none #layout-sidebar > .header,
 html body.task-mail.action-none #layout-sidebar > #aria-label-folderlist {
   display: none !important;
-  width: 0 !important;
-  height: 0 !important;
-  margin: 0 !important;
-  padding: 0 !important;
-  overflow: hidden !important;
 }
 
-html body.task-mail.action-none #folderlist-content {
-  height: 100% !important;
-  padding-top: 14px !important;
+html body.task-mail.action-none #folderlist-content,
+html body.task-mail.action-none #mailboxlist {
+  display: block !important;
+  width: 100% !important;
+  margin: 0 !important;
+  padding: 12px 10px !important;
+  background: transparent !important;
+  pointer-events: auto !important;
+}
+
+html body.task-mail.action-none #mailboxlist li.mailbox {
+  margin: 0 0 8px !important;
+  background: transparent !important;
+  border: 0 !important;
+}
+
+html body.task-mail.action-none #mailboxlist li.mailbox > a {
+  position: relative !important;
+  z-index: 3 !important;
+  display: flex !important;
+  align-items: center !important;
+  min-height: 40px !important;
+  padding: 9px 12px !important;
+  color: var(--brand-dark-muted) !important;
+  background: rgba(255, 255, 255, .035) !important;
+  border: 1px solid rgba(255, 255, 255, .08) !important;
+  border-radius: 8px !important;
+  box-shadow: none !important;
+  pointer-events: auto !important;
+}
+
+html:not(.dark-mode) body.task-mail.action-none #mailboxlist li.mailbox > a {
+  color: var(--brand-light-muted) !important;
+  background: #ffffff !important;
+  border-color: var(--brand-light-line) !important;
+}
+
+html body.task-mail.action-none #mailboxlist li.mailbox.selected > a,
+html body.task-mail.action-none #mailboxlist li.mailbox:hover > a,
+html body.task-mail.action-none #mailboxlist li.mailbox.focused > a {
+  color: var(--brand-folder-green) !important;
+  background: #303a20 !important;
+  border-color: rgba(200, 255, 42, .4) !important;
+  box-shadow: inset 4px 0 0 var(--brand-folder-green) !important;
+}
+
+html:not(.dark-mode) body.task-mail.action-none #mailboxlist li.mailbox.selected > a,
+html:not(.dark-mode) body.task-mail.action-none #mailboxlist li.mailbox:hover > a,
+html:not(.dark-mode) body.task-mail.action-none #mailboxlist li.mailbox.focused > a {
+  color: #314b00 !important;
+  background: #efffd0 !important;
+  border-color: rgba(92, 126, 0, .34) !important;
+}
+
+html body.task-settings #settings-menu li > a,
+html body.task-addressbook #directorylist li > a,
+html body.task-calendar #calendars-content li > a,
+html body.task-calendar #calendarslist li > a {
+  border-radius: 8px !important;
 }

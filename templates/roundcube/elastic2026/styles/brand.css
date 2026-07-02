@@ -2645,6 +2645,13 @@ html body.task-calendar #layout-sidebar #calendarslist li:hover > div.calendar >
   html.layout-small body:not(.task-login) #layout > #layout-list:not(.selected),
   html.layout-small body:not(.task-login) #layout > #layout-content:not(.selected) {
     z-index: 1 !important;
+    pointer-events: none !important;
+  }
+
+  html.layout-small body:not(.task-login) #layout > #layout-sidebar.selected,
+  html.layout-small body:not(.task-login) #layout > #layout-list.selected,
+  html.layout-small body:not(.task-login) #layout > #layout-content.selected {
+    pointer-events: auto !important;
   }
 
   html.layout-small body:not(.task-login) #layout > .brand-taskrail {
@@ -2778,6 +2785,30 @@ html body.task-calendar #layout-sidebar #calendarslist li:hover > div.calendar >
 
   html.layout-small body.task-mail.action-none #layout > #layout-list.selected {
     border-right: 0 !important;
+  }
+
+  html.layout-small body.task-mail.action-none #layout > #layout-list,
+  html.layout-small body.task-mail.action-none #messagelist-content,
+  html.layout-small body.task-mail.action-none #messagelist,
+  html.layout-small body.task-mail.action-none #messagelist tr.message,
+  html.layout-small body.task-mail.action-none #messagelist td.subject,
+  html.layout-small body.task-mail.action-none #messagelist td.subject span.subject,
+  html.layout-small body.task-mail.action-none #messagelist td.subject span.subject a {
+    pointer-events: auto !important;
+  }
+
+  html.layout-small body.task-mail.action-none #layout > #layout-content:not(.selected),
+  html.layout-small body.task-mail.action-none #layout > #layout-sidebar:not(.selected) {
+    visibility: hidden !important;
+    pointer-events: none !important;
+  }
+
+  html.layout-small body.task-mail:not(.action-none) #layout > #layout-content,
+  html.layout-small body.task-mail.action-preview #layout > #layout-content,
+  html.layout-small body.task-mail.action-show #layout > #layout-content {
+    visibility: visible !important;
+    z-index: 2 !important;
+    pointer-events: auto !important;
   }
 
   html.layout-small body.task-mail.action-none #messagelist {

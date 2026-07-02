@@ -963,7 +963,7 @@ html:not(.dark-mode).iframe body.task-mail.action-preview #message-header > .hea
 }
 
 body.task-mail #layout-sidebar > .brand-sidebar-logo,
-body.task-mail #layout-sidebar > .header:first-of-type {
+body.task-mail #layout-sidebar > .header {
   display: none !important;
 }
 

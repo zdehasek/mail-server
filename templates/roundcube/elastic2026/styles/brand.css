@@ -2602,7 +2602,7 @@ html body.task-calendar #layout-sidebar #calendarslist li:hover > div.calendar >
   html.layout-small body:not(.task-login) #layout {
     min-height: 100vh !important;
     min-height: 100dvh !important;
-    padding-bottom: 64px !important;
+    padding-bottom: calc(64px + env(safe-area-inset-bottom)) !important;
     background: var(--brand-paper) !important;
   }
 
@@ -2665,8 +2665,9 @@ html body.task-calendar #layout-sidebar #calendarslist li:hover > div.calendar >
     top: auto !important;
     bottom: 0 !important;
     width: 100vw !important;
-    height: 64px !important;
-    min-height: 64px !important;
+    height: calc(64px + env(safe-area-inset-bottom)) !important;
+    min-height: calc(64px + env(safe-area-inset-bottom)) !important;
+    box-sizing: border-box !important;
     padding: 6px 8px calc(6px + env(safe-area-inset-bottom)) !important;
     color: #f4f8fb !important;
     background: #172126 !important;
@@ -2772,7 +2773,8 @@ html body.task-calendar #layout-sidebar #calendarslist li:hover > div.calendar >
     width: 100vw !important;
     min-width: 0 !important;
     max-width: 100vw !important;
-    height: calc(100vh - 64px) !important;
+    height: calc(100vh - 64px - env(safe-area-inset-bottom)) !important;
+    height: calc(100dvh - 64px - env(safe-area-inset-bottom)) !important;
     min-height: 0 !important;
     margin: 0 !important;
     overflow: hidden !important;
@@ -2881,6 +2883,10 @@ html body.task-calendar #layout-sidebar #calendarslist li:hover > div.calendar >
     max-width: none !important;
   }
 
+  html.layout-small body.task-calendar .content-frame-navigation {
+    display: none !important;
+  }
+
   html.layout-small body.task-calendar .fc-view,
   html.layout-small body.task-calendar .fc-view > table,
   html.layout-small body.task-calendar .fc-view-container {
@@ -2890,7 +2896,97 @@ html body.task-calendar #layout-sidebar #calendarslist li:hover > div.calendar >
 
   html.layout-small body.task-calendar .fc-toolbar,
   html.layout-small body.task-calendar .fc-header-toolbar {
-    padding: 8px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 6px !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    padding: 6px 8px !important;
+    overflow: visible !important;
+  }
+
+  html.layout-small body.task-calendar .fc-toolbar .fc-left,
+  html.layout-small body.task-calendar .fc-toolbar .fc-right,
+  html.layout-small body.task-calendar .fc-toolbar .fc-center,
+  html.layout-small body.task-calendar .fc-header-toolbar .fc-left,
+  html.layout-small body.task-calendar .fc-header-toolbar .fc-right,
+  html.layout-small body.task-calendar .fc-header-toolbar .fc-center {
+    display: flex !important;
+    float: none !important;
+    clear: none !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    gap: 6px !important;
+    align-items: stretch !important;
+    justify-content: space-between !important;
+  }
+
+  html.layout-small body.task-calendar .fc-toolbar .fc-center,
+  html.layout-small body.task-calendar .fc-header-toolbar .fc-center {
+    display: none !important;
+  }
+
+  html.layout-small body.task-calendar .fc-toolbar .fc-left,
+  html.layout-small body.task-calendar .fc-header-toolbar .fc-left {
+    order: 2 !important;
+  }
+
+  html.layout-small body.task-calendar .fc-toolbar .fc-right,
+  html.layout-small body.task-calendar .fc-header-toolbar .fc-right {
+    order: 1 !important;
+  }
+
+  html.layout-small body.task-calendar .fc-toolbar .fc-button-group,
+  html.layout-small body.task-calendar .fc-toolbar .btn-group,
+  html.layout-small body.task-calendar .fc-header-toolbar .fc-button-group,
+  html.layout-small body.task-calendar .fc-header-toolbar .btn-group {
+    display: flex !important;
+    flex: 1 1 0 !important;
+    min-width: 0 !important;
+    gap: 4px !important;
+  }
+
+  html.layout-small body.task-calendar .fc-toolbar .fc-left > .fc-button-group,
+  html.layout-small body.task-calendar .fc-toolbar .fc-right > .fc-button-group,
+  html.layout-small body.task-calendar .fc-header-toolbar .fc-left > .fc-button-group,
+  html.layout-small body.task-calendar .fc-header-toolbar .fc-right > .fc-button-group {
+    display: none !important;
+  }
+
+  html.layout-small body.task-calendar .fc-toolbar .fc-right .btn-group,
+  html.layout-small body.task-calendar .fc-header-toolbar .fc-right .btn-group {
+    width: 100% !important;
+  }
+
+  html.layout-small body.task-calendar .fc-toolbar button,
+  html.layout-small body.task-calendar .fc-toolbar .fc-button,
+  html.layout-small body.task-calendar .fc-header-toolbar button,
+  html.layout-small body.task-calendar .fc-header-toolbar .fc-button {
+    flex: 1 1 0 !important;
+    min-width: 0 !important;
+    height: 36px !important;
+    margin: 0 !important;
+    padding: 0 6px !important;
+    border-radius: 7px !important;
+    font-size: 12px !important;
+    line-height: 34px !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    box-shadow: none !important;
+  }
+
+  html.layout-small body.task-calendar .fc-toolbar .fc-prev-button,
+  html.layout-small body.task-calendar .fc-toolbar .fc-next-button,
+  html.layout-small body.task-calendar .fc-header-toolbar .fc-prev-button,
+  html.layout-small body.task-calendar .fc-header-toolbar .fc-next-button {
+    flex: 0 0 42px !important;
+    width: 42px !important;
+    max-width: 42px !important;
+    padding: 0 !important;
   }
 
   html.layout-small body.task-calendar .fc-day-header {

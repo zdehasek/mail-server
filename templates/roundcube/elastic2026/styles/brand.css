@@ -542,6 +542,7 @@ html.dark-mode body.task-login .form-control::placeholder {
 
 html body.task-login .button.mainaction,
 html.dark-mode body.task-login .button.mainaction {
+  color: #ffffff !important;
   width: 100% !important;
   min-height: 50px;
   box-sizing: border-box;
@@ -1108,4 +1109,230 @@ body.task-mail #mailboxlist li.mailbox.selected > a:before,
 body.task-mail #mailboxlist li.mailbox:hover > a:before,
 body.task-mail #mailboxlist li.mailbox.focused > a:before {
   color: #c8ff2a !important;
+}
+
+/* Final 66c skin polish: keep the rail and light mode on one coherent palette. */
+html:not(.dark-mode) {
+  --brand-ink: #172033;
+  --brand-ink-soft: #5a687a;
+  --brand-paper: #f4f7fb;
+  --brand-paper-2: #ffffff;
+  --brand-panel: #ffffff;
+  --brand-panel-hot: #eaf1f7;
+  --brand-line: #d7e1eb;
+  --brand-rail: #f8fbfd;
+  --brand-rail-ink: #263345;
+  --brand-rail-muted: #607084;
+  --brand-rail-hot: #e7eff6;
+  --brand-blue: #236ea3;
+  --brand-purple: #6658df;
+  --brand-folder-green: #c8ff2a;
+  --brand-folder-green-ink: #314b00;
+  --brand-folder-green-bg: #efffd0;
+  --brand-folder-green-line: rgba(92, 126, 0, .34);
+}
+
+html.dark-mode {
+  --brand-ink: #f4f6fb;
+  --brand-ink-soft: #aeb8c8;
+  --brand-paper: #252d3b;
+  --brand-paper-2: #202836;
+  --brand-panel: #2b3445;
+  --brand-panel-hot: #314057;
+  --brand-line: #3a4659;
+  --brand-rail: #172126;
+  --brand-rail-ink: #dbe7ef;
+  --brand-rail-muted: #98a8b7;
+  --brand-rail-hot: rgba(255, 255, 255, .08);
+  --brand-blue: #6fd4ff;
+  --brand-purple: #8068f2;
+  --brand-folder-green: #c8ff2a;
+  --brand-folder-green-ink: #c8ff2a;
+  --brand-folder-green-bg: #303a20;
+  --brand-folder-green-line: rgba(200, 255, 42, .45);
+}
+
+html body,
+html #layout,
+html #layout-content,
+html #layout-list,
+html #layout-sidebar,
+html .listbox,
+html .scroller,
+html .iframe-wrapper {
+  color: var(--brand-ink) !important;
+  background-color: var(--brand-paper) !important;
+}
+
+html .header,
+html #messagelist-header,
+html .footer,
+html .toolbar,
+html .popupmenu,
+html .popover,
+html .ui-dialog,
+html .formcontent,
+html .propform,
+html .boxcontent,
+html .content,
+html .records-table {
+  color: var(--brand-ink) !important;
+  background-color: var(--brand-paper-2) !important;
+  border-color: var(--brand-line) !important;
+}
+
+html .messagelist tr,
+html .listing li,
+html .listing li > a,
+html .listing li > div > a,
+html .listing li > div > span,
+html .fc-unthemed td,
+html .fc-unthemed th {
+  color: var(--brand-ink) !important;
+  border-color: var(--brand-line) !important;
+}
+
+html:not(.dark-mode) .messagelist tr,
+html:not(.dark-mode) .listing li {
+  background: var(--brand-panel) !important;
+}
+
+html:not(.dark-mode) .messagelist tr:nth-child(even) {
+  background: #f0f4f8 !important;
+}
+
+html:not(.dark-mode) .messagelist tr.unread,
+html:not(.dark-mode) .messagelist tr:hover,
+html:not(.dark-mode) .messagelist tr.focused,
+html:not(.dark-mode) .messagelist tr.selected,
+html:not(.dark-mode) .listing li.selected {
+  color: #101827 !important;
+  background: var(--brand-panel-hot) !important;
+}
+
+html.dark-mode .messagelist tr,
+html.dark-mode .listing li {
+  background: var(--brand-paper) !important;
+}
+
+html.dark-mode .messagelist tr:nth-child(even) {
+  background: #232b39 !important;
+}
+
+html.dark-mode .messagelist tr.unread,
+html.dark-mode .messagelist tr:hover,
+html.dark-mode .messagelist tr.focused,
+html.dark-mode .messagelist tr.selected,
+html.dark-mode .listing li.selected {
+  color: #ffffff !important;
+  background: var(--brand-panel-hot) !important;
+}
+
+html input,
+html textarea,
+html select,
+html .form-control,
+html .custom-select,
+html .input-group-text {
+  color: var(--brand-ink) !important;
+  background: var(--brand-paper-2) !important;
+  border-color: var(--brand-line) !important;
+}
+
+html input::placeholder,
+html textarea::placeholder {
+  color: var(--brand-ink-soft) !important;
+  opacity: 1;
+}
+
+html #layout-sidebar > .brand-taskrail {
+  margin-left: 0 !important;
+  background:
+    linear-gradient(180deg, rgba(111, 212, 255, .08), transparent 34%),
+    var(--brand-rail) !important;
+  border-right: 1px solid var(--brand-line) !important;
+  box-shadow: 12px 0 32px rgba(0, 0, 0, .08);
+}
+
+html .brand-taskrail,
+html .brand-taskrail .menu {
+  color: var(--brand-rail-ink) !important;
+}
+
+html .brand-taskrail a {
+  color: var(--brand-rail-ink) !important;
+  min-height: 60px;
+  gap: 3px;
+}
+
+html .brand-taskrail a:before {
+  color: inherit !important;
+  opacity: .96;
+}
+
+html .brand-taskrail a .inner {
+  color: inherit !important;
+  font-weight: 650;
+}
+
+html .brand-taskrail a.selected,
+html .brand-taskrail a:hover,
+html .brand-taskrail a:focus {
+  color: var(--brand-rail-ink) !important;
+  background: var(--brand-rail-hot) !important;
+  border-left-color: var(--brand-blue) !important;
+}
+
+html.dark-mode .brand-taskrail a.selected,
+html.dark-mode .brand-taskrail a:hover,
+html.dark-mode .brand-taskrail a:focus {
+  color: #ffffff !important;
+}
+
+html .brand-taskrail a.compose {
+  color: var(--brand-blue) !important;
+}
+
+html .brand-taskrail a.logout {
+  color: #d95268 !important;
+}
+
+html.dark-mode .brand-taskrail a.logout {
+  color: #ff6d7f !important;
+}
+
+html .brand-taskrail a.theme {
+  color: var(--brand-rail-muted) !important;
+}
+
+body.task-mail #mailboxlist li.mailbox.selected > a,
+body.task-mail #mailboxlist li.mailbox:hover > a,
+body.task-mail #mailboxlist li.mailbox.focused > a {
+  color: var(--brand-folder-green-ink) !important;
+  background: var(--brand-folder-green-bg) !important;
+  border-color: var(--brand-folder-green-line) !important;
+  box-shadow: inset 4px 0 0 var(--brand-folder-green) !important;
+}
+
+body.task-mail #mailboxlist li.mailbox.selected > a:before,
+body.task-mail #mailboxlist li.mailbox:hover > a:before,
+body.task-mail #mailboxlist li.mailbox.focused > a:before {
+  color: var(--brand-folder-green) !important;
+}
+
+html.iframe body.task-mail.action-preview #layout-content,
+html.iframe body.task-mail.action-preview .content,
+html.iframe body.task-mail.action-preview #message-content,
+html.iframe body.task-mail.action-preview #messagebody,
+html.iframe body.task-mail.action-preview .rightcol,
+html.iframe body.task-mail.action-preview .message-part {
+  color: var(--brand-ink) !important;
+  background: var(--brand-paper-2) !important;
+}
+
+html.iframe body.task-mail.action-preview #message-header > .subject,
+html.iframe body.task-mail.action-preview #message-header > .header {
+  color: var(--brand-ink) !important;
+  background: var(--brand-paper-2) !important;
+  border-color: var(--brand-line) !important;
 }

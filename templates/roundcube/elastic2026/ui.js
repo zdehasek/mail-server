@@ -593,16 +593,21 @@ if(rcmail.env.action=="preview")
 			
 
         if (layout.list.length || layout.content.length) {
-            var fabuttons = [];
+            var fabuttons = [],
+                seen_fabuttons = {};
 
             $('[data-fab]').each(function() {
                 var button = $(this),
                     task = button.data('fab-task') || '*',
-                    action = button.data('fab-action') || '*';
+                    action = button.data('fab-action') || '*',
+                    command = (button.attr('data-command') || button.attr('rel') || button.attr('class') || button.text()).replace(/\s+/g, ' ').trim(),
+                    fabkey = task + ':' + action + ':' + command;
 
                 if ((task == '*' || task == rcmail.env.task)
                     && (action == '*' || action == rcmail.env.action || (action == 'none' && !rcmail.env.action))
+                    && !seen_fabuttons[fabkey]
                 ) {
+                    seen_fabuttons[fabkey] = true;
                     fabuttons.push(create_cloned_button(button, false, false, true));
                 }
             });

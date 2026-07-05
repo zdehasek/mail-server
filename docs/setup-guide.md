@@ -76,7 +76,7 @@ Requirements:
 - Static public IPv4.
 - Provider allows inbound and outbound TCP/25.
 - Ports available from the internet: `25`, `80`, `443`, `587`, `993`.
-- DNS control for `PRIMARY_DOMAIN`.
+- DNS control for `PRIMARY_DOMAIN` and every configured `SECONDARY_DOMAINS` entry.
 - Provider control for PTR/rDNS.
 
 If an existing web server already uses `80`/`443`, keep it running only if it is
@@ -118,6 +118,7 @@ changes, but it is not the normal install path.
 ```bash
 MAIL_HOSTNAME=mail.example.com
 PRIMARY_DOMAIN=example.com
+SECONDARY_DOMAINS=
 ADMIN_EMAIL=admin@example.com
 WEBMAIL_HOSTNAME=mail.example.com
 DAV_HOSTNAME=dav.example.com
@@ -125,6 +126,7 @@ DAV_HOSTNAME=dav.example.com
 
 - `MAIL_HOSTNAME`: SMTP, IMAP TLS certificate name, and MX target.
 - `PRIMARY_DOMAIN`: domain that receives mail.
+- `SECONDARY_DOMAINS`: optional space-separated extra domains served by the same mail host, for example `nocni.club zdehasek.com`.
 - `ADMIN_EMAIL`: Let's Encrypt registration and operational contact.
 - `WEBMAIL_HOSTNAME`: Roundcube HTTPS hostname.
 - `DAV_HOSTNAME`: Radicale CalDAV/CardDAV HTTPS hostname.
@@ -140,7 +142,7 @@ TIMEZONE=Europe/Prague
 ```
 
 - `SERVER_PUBLIC_IPV4`: public IPv4 that DNS A records must return.
-- `SERVER_PUBLIC_IPV6`: optional public IPv6 for AAAA records.
+- `SERVER_PUBLIC_IPV6`: optional public IPv6 for AAAA records and IPv6 PTR/rDNS checks.
 - `TIMEZONE`: system timezone to set during install.
 
 ### Mail Storage
@@ -160,7 +162,8 @@ MAIL_DB_PATH=/etc/mailserver/mail.sqlite
 
 ### Roundcube Release Pin
 
-Leave these values unchanged unless intentionally upgrading Roundcube:
+Roundcube is the supported default webmail in the install flow. Leave these
+values unchanged unless intentionally upgrading Roundcube:
 
 ```bash
 ROUNDCUBE_VERSION=1.7.1
@@ -213,7 +216,9 @@ ENABLE_CLAMAV=false
 - `UFW_RESET_RULES`: set `false` on a server with existing firewall rules.
 - `ENABLE_FAIL2BAN`: install mail-oriented Fail2ban jail config.
 - `ENABLE_SSH_HARDENING`: keep `false` until SSH users are verified.
-- `ENABLE_RSPAMD`: spam filtering and milter integration.
+- `ENABLE_RSPAMD`: spam filtering and milter integration. If set to `false`,
+  Postfix is rendered without the Rspamd milter and mail continues without this
+  spam-filtering layer.
 - `ENABLE_CLAMAV`: disabled by default because it needs more RAM.
 
 ### SSH Hardening
@@ -250,7 +255,8 @@ DKIM_SELECTOR=default
 
 `POSTMASTER_ADDRESS` and `ABUSE_ADDRESS` must exist as mailboxes or aliases
 after setup. `DKIM_SELECTOR` becomes the DNS name
-`default._domainkey.example.com`.
+`default._domainkey.example.com`. DKIM keys and DNS records are generated for
+`PRIMARY_DOMAIN` and every domain listed in `SECONDARY_DOMAINS`.
 
 ### Primary Mailbox And Default Aliases
 
@@ -277,6 +283,10 @@ PRIMARY_ALIAS_ADDRESSES="postmaster@example.com abuse@example.com dmarc@example.
 If `PRIMARY_MAILBOX` is empty, setup skips this step. If the mailbox already
 exists, setup updates the password hash and keeps it active. If an alias already
 exists, setup leaves it in place.
+
+Use `sudo mailserver add-domain --domain example.net` to activate another domain
+after setup. It seeds the domain database, refreshes DKIM tables, reloads mail
+services, and prints the DNS records to publish.
 
 ## 4. Publish DNS Before Installing
 
@@ -348,14 +358,15 @@ TTL: Auto
 
 Provider-side PTR/rDNS is not a DNS-zone record. Set it at the provider that
 owns the server IP address, for example in Hetzner Cloud Console under the
-server's public IPv4 networking settings. The reverse record must point from the
-server IP back to `MAIL_HOSTNAME`:
+server's public networking settings. Each public mail server IP reverse record
+must point back to `MAIL_HOSTNAME`:
 
 ```text
 203.0.113.10 -> mail.example.com
+2001:db8::10 -> mail.example.com
 ```
 
-For Hetzner, open the server, go to `Networking`, find the public IPv4 address,
+For Hetzner, open the server, go to `Networking`, find the public IP address,
 edit `Reverse DNS` / `rDNS`, and set it to `mail.example.com`.
 
 DKIM is generated during installation. Publish it after `sudo mailserver setup`
@@ -469,6 +480,14 @@ Additional mailboxes can still be created manually:
 
 ```bash
 sudo mailserver add-user --user user@example.com
+```
+
+Additional domains must be configured before creating mailboxes or aliases for
+them:
+
+```bash
+sudo mailserver add-domain --domain nocni.club
+sudo mailserver add-user --user tipy@nocni.club
 ```
 
 Install recurring backups:
@@ -608,4 +627,5 @@ PTR/rDNS at the server/IP provider, not in Cloudflare DNS:
 
 ```text
 46.225.176.230 -> mail.66c.dev
+2a01:4f8:c0c:810b::1 -> mail.66c.dev
 ```

@@ -32,7 +32,7 @@ smtpd_recipient_restrictions =
 
 milter_protocol = 6
 milter_default_action = accept
-smtpd_milters = inet:127.0.0.1:8891, inet:127.0.0.1:8893, inet:127.0.0.1:11332
+smtpd_milters = inet:127.0.0.1:8891, inet:127.0.0.1:8893__RSPAMD_MILTER__
 non_smtpd_milters = $smtpd_milters
 
 mailbox_size_limit = 0

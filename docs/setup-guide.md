@@ -174,12 +174,29 @@ ROUNDCUBE_SHA256=1e0382bcefd627ab0b6285d3181ddfba5b444fdcf6d49f33f5ea15fbf97864e
 ### Radicale Calendar Defaults
 
 These values control calendar URLs and the default calendar created for each
-mailbox. Roundcube does not use a bundled calendar plugin.
+mailbox. By default, Roundcube also installs a browser calendar plugin and uses
+the local Radicale service as its CalDAV backend.
 
 ```bash
 RADICALE_CALDAV_BASE_URL=https://dav.example.com/
 RADICALE_DEFAULT_CALENDAR_NAME=default
 RADICALE_DEFAULT_CALENDAR_DISPLAY_NAME=Default
+```
+
+### Roundcube Skin And Calendar
+
+The installer defaults to the public Elastic2026 skin and enables the Roundcube
+calendar plugin stack.
+
+```bash
+ROUNDCUBE_SKIN=elastic2026
+ROUNDCUBE_SKINS_ALLOWED="'elastic2026', 'elastic'"
+ROUNDCUBE_SKIN_URL=https://github.com/zdehasek/Elastic2026/archive/refs/heads/main.zip
+ROUNDCUBE_SKIN_LOGO=/images/logo-ai.png
+ROUNDCUBE_ENABLE_CALENDAR=true
+ROUNDCUBE_CALDAV_SERVER=http://127.0.0.1:5232/
+ROUNDCUBE_CALDAV_URL=http://127.0.0.1:5232/%u/%n/
+ROUNDCUBE_DEFAULT_CALENDAR_NAME=default
 ```
 
 ### Install Features

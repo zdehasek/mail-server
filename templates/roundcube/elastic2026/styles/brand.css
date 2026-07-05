@@ -3585,6 +3585,18 @@ html body.task-calendar #calendarslist li > div.calendar.cal-__bdays__ > a.calna
   color: #dbe6ed !important;
 }
 
+html body.task-calendar #calendarslist li > div.calendar .calname,
+html body.task-calendar #calendarslist li > div.calendar .actions,
+html body.task-calendar #calendarslist li > div.calendar .handle {
+  box-shadow: none !important;
+}
+
+html body.task-calendar #calendarslist .custom-switch {
+  background: transparent !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+}
+
 html body.task-calendar #calendarslist .custom-switch .custom-control-label:before {
   background: #556474 !important;
   border-color: #556474 !important;

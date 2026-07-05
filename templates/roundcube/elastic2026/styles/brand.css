@@ -3502,3 +3502,125 @@ html body.task-calendar .ui-dialog .ui-dialog-title,
 html body.task-calendar .ui-dialog .ui-dialog-titlebar-close {
   color: var(--brand-calendar-text) !important;
 }
+
+/* Calendar color cleanup: keep the sidebar controls on one quiet dark palette. */
+html body.task-calendar .calendar-datepicker,
+html body.task-calendar .ui-datepicker-inline {
+  color: #dbe6ed !important;
+  background: rgba(255, 255, 255, .025) !important;
+  border-color: rgba(219, 230, 237, .09) !important;
+  box-shadow: none !important;
+}
+
+html body.task-calendar .ui-datepicker-inline .ui-datepicker-calendar,
+html body.task-calendar .ui-datepicker-inline .ui-datepicker-calendar tbody,
+html body.task-calendar .ui-datepicker-inline .ui-datepicker-calendar tr,
+html body.task-calendar .ui-datepicker-inline .ui-datepicker-calendar td {
+  color: #dbe6ed !important;
+  background: transparent !important;
+  border-color: transparent !important;
+}
+
+html body.task-calendar .ui-datepicker-inline .ui-datepicker-calendar td a,
+html body.task-calendar .ui-datepicker-inline .ui-datepicker-calendar td span {
+  color: #dbe6ed !important;
+  background: transparent !important;
+  border: 1px solid transparent !important;
+  border-radius: 7px !important;
+}
+
+html body.task-calendar .ui-datepicker-inline .ui-datepicker-calendar td.ui-datepicker-other-month a,
+html body.task-calendar .ui-datepicker-inline .ui-datepicker-calendar td.ui-datepicker-other-month span {
+  color: rgba(219, 230, 237, .42) !important;
+}
+
+html body.task-calendar .ui-datepicker-inline .ui-datepicker-calendar td a:hover,
+html body.task-calendar .ui-datepicker-inline .ui-datepicker-calendar td a.ui-state-active {
+  color: #f4f8fb !important;
+  background: rgba(111, 212, 255, .18) !important;
+  border-color: rgba(111, 212, 255, .28) !important;
+}
+
+html body.task-calendar .ui-datepicker-inline .ui-datepicker-calendar .ui-datepicker-today a {
+  color: #ffffff !important;
+  background: rgba(111, 212, 255, .28) !important;
+  border-color: rgba(111, 212, 255, .5) !important;
+}
+
+html body.task-calendar .ui-datepicker-inline .ui-datepicker-month,
+html body.task-calendar .ui-datepicker-inline .ui-datepicker-year {
+  color: #172033 !important;
+  background: #eef3f8 !important;
+  border-color: rgba(219, 230, 237, .18) !important;
+}
+
+html body.task-calendar #calendarslist li > div.calendar {
+  color: #dbe6ed !important;
+  background: transparent !important;
+  border: 1px solid transparent !important;
+  border-left-color: rgba(111, 212, 255, .28) !important;
+  box-shadow: none !important;
+}
+
+html body.task-calendar #calendarslist li.selected > div.calendar,
+html body.task-calendar #calendarslist li:hover > div.calendar {
+  color: #f4f8fb !important;
+  background: rgba(111, 212, 255, .08) !important;
+  border-color: rgba(111, 212, 255, .2) !important;
+  border-left-color: rgba(111, 212, 255, .54) !important;
+}
+
+html body.task-calendar #calendarslist li > div.calendar > a.calname,
+html body.task-calendar #calendarslist li.selected > div.calendar > a.calname,
+html body.task-calendar #calendarslist li:hover > div.calendar > a.calname {
+  color: #f4f8fb !important;
+}
+
+html body.task-calendar #calendarslist li > div.calendar .calname:before,
+html body.task-calendar #calendarslist li > div.calendar.cal-__bdays__ .calname:before {
+  color: #6fd4ff !important;
+}
+
+html body.task-calendar #calendarslist li > div.calendar.cal-__bdays__ > a.calname {
+  color: #dbe6ed !important;
+}
+
+html body.task-calendar #calendarslist .custom-switch .custom-control-label:before {
+  background: #556474 !important;
+  border-color: #556474 !important;
+  box-shadow: none !important;
+}
+
+html body.task-calendar #calendarslist .custom-switch .custom-control-label:after {
+  background: #dbe6ed !important;
+  box-shadow: none !important;
+}
+
+html body.task-calendar #calendarslist .custom-switch .custom-control-input:checked ~ .custom-control-label:before {
+  background: #405466 !important;
+  border-color: #6fd4ff !important;
+}
+
+html body.task-calendar #calendarslist .custom-switch .custom-control-input:checked ~ .custom-control-label:after {
+  background: #6fd4ff !important;
+}
+
+html body.task-calendar .fc-toolbar button,
+html body.task-calendar .fc-header-toolbar button,
+html body.task-calendar .fc-toolbar .fc-button,
+html body.task-calendar .fc-header-toolbar .fc-button {
+  color: #e9f1f6 !important;
+  background: #405060 !important;
+  border-color: rgba(219, 230, 237, .18) !important;
+  text-shadow: none !important;
+  box-shadow: none !important;
+}
+
+html body.task-calendar .fc-toolbar button.fc-state-active,
+html body.task-calendar .fc-header-toolbar button.fc-state-active,
+html body.task-calendar .fc-toolbar button:hover,
+html body.task-calendar .fc-header-toolbar button:hover {
+  color: #ffffff !important;
+  background: #516575 !important;
+  border-color: rgba(111, 212, 255, .28) !important;
+}

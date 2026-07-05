@@ -2374,6 +2374,22 @@ html body.task-addressbook #addressbooktoolbar {
   min-width: 0 !important;
 }
 
+html body.task-calendar #calendartoolbar > a.button.edit.disabled,
+html body.task-calendar #calendartoolbar > a.button.delete.disabled {
+  display: none !important;
+}
+
+html body.task-calendar #calendartoolbar > a.button.edit,
+html body.task-calendar #calendartoolbar > a.button.delete {
+  display: inline-flex !important;
+  align-items: center !important;
+  min-height: 34px !important;
+  padding: 0 10px !important;
+  color: var(--brand-blue) !important;
+  background: transparent !important;
+  border-radius: 6px !important;
+}
+
 html body.task-calendar #calendar {
   position: absolute !important;
   inset: 116px 12px 12px 12px !important;
@@ -2436,10 +2452,16 @@ html body.task-calendar .ui-datepicker-inline .ui-datepicker-month,
 html body.task-calendar .ui-datepicker-inline .ui-datepicker-year {
   min-width: 0 !important;
   height: 34px !important;
-  color: var(--brand-ink) !important;
+  color: #172033 !important;
   background: #f8fbfd !important;
   border: 1px solid rgba(255, 255, 255, .22) !important;
   border-radius: 6px !important;
+}
+
+html body.task-calendar .ui-datepicker-inline .ui-datepicker-month option,
+html body.task-calendar .ui-datepicker-inline .ui-datepicker-year option {
+  color: #172033 !important;
+  background: #f8fbfd !important;
 }
 
 html body.task-calendar .ui-datepicker-inline .ui-datepicker-month {

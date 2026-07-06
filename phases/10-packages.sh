@@ -2,15 +2,16 @@
 
 packages=(
   ca-certificates curl gnupg lsb-release dnsutils netcat-openbsd openssl sqlite3 tar unzip cron
-  postfix postfix-sqlite postfix-policyd-spf-python
-  dovecot-core dovecot-imapd dovecot-lmtpd dovecot-sieve dovecot-managesieved dovecot-sqlite
-  nginx certbot apache2-utils radicale
-  php-fpm php-cli php-curl php-xml php-mbstring php-zip php-intl php-gd php-sqlite3 php-ldap
-  composer opendkim opendkim-tools opendmarc rspamd fail2ban ufw
+  postgresql postgresql-client
+  postfix postfix-pgsql postfix-policyd-spf-python
+  dovecot-core dovecot-imapd dovecot-lmtpd dovecot-sieve dovecot-managesieved dovecot-pgsql
+  nginx certbot apache2-utils
+  sogo sogo-activesync memcached
+  opendkim opendkim-tools opendmarc rspamd fail2ban ufw
 )
 
 if [[ "$DRY_RUN" == "true" ]]; then
-  info "Would preseed Roundcube package prompts for non-interactive SQLite-managed install"
+  info "Would install PostgreSQL-backed mail and SOGo packages"
 else
   printf '%s\n' \
     'opendmarc opendmarc/dbconfig-install boolean false' | debconf-set-selections

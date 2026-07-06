@@ -32,7 +32,7 @@ check_resources() {
   local mem_kb disk_kb
   mem_kb="$(awk '/MemTotal/ {print $2}' /proc/meminfo)"
   disk_kb="$(df -Pk / | awk 'NR==2 {print $4}')"
-  (( mem_kb >= 900000 )) || warn "Less than 1 GB RAM detected; Roundcube/Radicale/Rspamd may be tight."
+  (( mem_kb >= 900000 )) || warn "Less than 1 GB RAM detected; SOGo/Rspamd/PostgreSQL may be tight."
   (( disk_kb >= 10000000 )) || warn "Less than 10 GB free disk detected."
 }
 

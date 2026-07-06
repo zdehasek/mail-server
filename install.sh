@@ -22,8 +22,7 @@ phases=(
   50-dovecot
   60-postfix
   70-dkim-dmarc-rspamd
-  80-nginx-roundcube
-  90-radicale
+  80-sogo
   92-primary-mailbox
   95-security
   99-verify

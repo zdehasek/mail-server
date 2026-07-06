@@ -17,15 +17,15 @@ ssl_server_key_file = /etc/letsencrypt/live/__MAIL_HOSTNAME__/privkey.pem
 
 auth_allow_cleartext = no
 auth_mechanisms = plain login
-sql_driver = sqlite
-sqlite_path = __MAIL_DB_PATH__
+sql_driver = pgsql
+__DOVECOT_SQL_CONNECTION_BLOCK__
 
 passdb sql {
-  query = SELECT email AS user, password_hash AS password FROM users WHERE email = '%{user}' AND active = 1
+  query = SELECT email AS user, password_hash AS password FROM users WHERE email = '%{user}' AND active = true
 }
 
 userdb sql {
-  query = SELECT home, __VMAIL_UID__ AS uid, __VMAIL_GID__ AS gid FROM users WHERE email = '%{user}' AND active = 1
+  query = SELECT home, __VMAIL_UID__ AS uid, __VMAIL_GID__ AS gid FROM users WHERE email = '%{user}' AND active = true
 }
 
 service auth {

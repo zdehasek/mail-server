@@ -23,7 +23,7 @@ for check in "${checks[@]}"; do
   bash -c "$check"
 done
 
-services=(postfix dovecot nginx radicale opendkim opendmarc)
+services=(postgresql postfix dovecot nginx memcached sogo opendkim opendmarc)
 [[ "${ENABLE_RSPAMD:-true}" == "true" ]] && services+=(rspamd)
 
 for service in "${services[@]}"; do
@@ -31,9 +31,26 @@ for service in "${services[@]}"; do
   info "Service active: $service"
 done
 
-if ! systemctl list-units --type=service --state=active 'php*-fpm.service' | grep -q 'php.*-fpm.service'; then
-  die "No active PHP-FPM service found."
-fi
-info "Service active: PHP-FPM"
+check_web_asset_content_type() {
+  local url="$1"
+  local expected_prefixes="$2"
+  local content_type expected_prefix
+  content_type="$(
+    curl -k -sSI --max-time 15 "$url" \
+      | awk 'tolower($0) ~ /^content-type:/ {print $2; exit}' \
+      | tr -d '\r'
+  )" || true
+  IFS='|' read -r -a expected_prefix_list <<< "$expected_prefixes"
+  for expected_prefix in "${expected_prefix_list[@]}"; do
+    if [[ "$content_type" == "$expected_prefix"* ]]; then
+      info "Web asset OK: $url returns $content_type"
+      return
+    fi
+  done
+  die "$url returned content-type ${content_type:-<none>}, expected $expected_prefixes"
+}
+
+check_web_asset_content_type "https://$WEBMAIL_HOSTNAME/SOGo/WebServerResources/css/theme-default.css" "text/css"
+check_web_asset_content_type "https://$WEBMAIL_HOSTNAME/SOGo/WebServerResources/js/Common.js" "text/javascript|application/javascript"
 
 info "Verification completed. Run external SMTP/TLS and delivery tests from docs/operations.md."

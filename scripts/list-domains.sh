@@ -12,9 +12,9 @@ require_root
 load_config
 
 primary_q="$(sql_quote "$(normalize_domain "$PRIMARY_DOMAIN")")"
-sqlite3 -header -column "$MAIL_DB_PATH" <<SQL
+psql_mail <<SQL
 SELECT
-  CASE d.active WHEN 1 THEN 'active' ELSE 'inactive' END AS status,
+  CASE d.active WHEN true THEN 'active' ELSE 'inactive' END AS status,
   CASE d.name WHEN '$primary_q' THEN 'yes' ELSE '' END AS primary_domain,
   d.name AS domain,
   COALESCE(u.mailboxes, 0) AS mailboxes,
@@ -23,13 +23,13 @@ FROM domains d
 LEFT JOIN (
   SELECT domain_id, COUNT(*) AS mailboxes
   FROM users
-  WHERE active=1
+  WHERE active=true
   GROUP BY domain_id
 ) u ON u.domain_id = d.id
 LEFT JOIN (
   SELECT domain_id, COUNT(*) AS aliases
   FROM aliases
-  WHERE active=1
+  WHERE active=true
   GROUP BY domain_id
 ) a ON a.domain_id = d.id
 ORDER BY d.active DESC, d.name;

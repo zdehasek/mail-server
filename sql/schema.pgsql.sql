@@ -1,32 +1,28 @@
-PRAGMA foreign_keys = ON;
-
 CREATE TABLE IF NOT EXISTS domains (
-  id INTEGER PRIMARY KEY,
+  id BIGSERIAL PRIMARY KEY,
   name TEXT NOT NULL UNIQUE,
-  active INTEGER NOT NULL DEFAULT 1
+  active BOOLEAN NOT NULL DEFAULT true
 );
 
 CREATE TABLE IF NOT EXISTS users (
-  id INTEGER PRIMARY KEY,
-  domain_id INTEGER NOT NULL,
+  id BIGSERIAL PRIMARY KEY,
+  domain_id BIGINT REFERENCES domains(id),
   email TEXT NOT NULL UNIQUE,
   username TEXT NOT NULL,
   full_name TEXT NOT NULL DEFAULT '',
   password_hash TEXT NOT NULL,
   home TEXT NOT NULL,
   maildir TEXT NOT NULL,
-  active INTEGER NOT NULL DEFAULT 1,
-  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY(domain_id) REFERENCES domains(id)
+  active BOOLEAN NOT NULL DEFAULT true,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
 CREATE TABLE IF NOT EXISTS aliases (
-  id INTEGER PRIMARY KEY,
-  domain_id INTEGER NOT NULL,
+  id BIGSERIAL PRIMARY KEY,
+  domain_id BIGINT REFERENCES domains(id),
   source TEXT NOT NULL,
   destination TEXT NOT NULL,
-  active INTEGER NOT NULL DEFAULT 1,
-  FOREIGN KEY(domain_id) REFERENCES domains(id),
+  active BOOLEAN NOT NULL DEFAULT true,
   UNIQUE(source, destination)
 );
 

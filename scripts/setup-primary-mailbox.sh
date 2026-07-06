@@ -70,21 +70,15 @@ hash_q="$(sql_quote "$hash")"
 home_q="$(sql_quote "$VMAIL_ROOT/$domain/$localpart")"
 maildir_q="$(sql_quote "$domain/$localpart/Maildir/")"
 
-sqlite3 "$MAIL_DB_PATH" <<SQL
-PRAGMA foreign_keys = ON;
-INSERT INTO domains(name, active) VALUES('$domain_q', 1)
-ON CONFLICT(name) DO UPDATE SET active=1;
+psql_mail <<SQL
+INSERT INTO domains(name, active) VALUES('$domain_q', true)
+ON CONFLICT(name) DO UPDATE SET active=true;
 INSERT INTO users(domain_id, email, username, full_name, password_hash, home, maildir, active)
-VALUES((SELECT id FROM domains WHERE name='$domain_q'), '$email_q', '$local_q', '$name_q', '$hash_q', '$home_q', '$maildir_q', 1)
-ON CONFLICT(email) DO UPDATE SET password_hash=excluded.password_hash, full_name=excluded.full_name, active=1;
+VALUES((SELECT id FROM domains WHERE name='$domain_q'), '$email_q', '$local_q', '$name_q', '$hash_q', '$home_q', '$maildir_q', true)
+ON CONFLICT(email) DO UPDATE SET password_hash=excluded.password_hash, full_name=excluded.full_name, active=true;
 SQL
 
 install -d -o vmail -g vmail -m 0700 "$VMAIL_ROOT/$domain/$localpart/Maildir"
-touch /etc/radicale/users
-htpasswd -B -b /etc/radicale/users "$email" "$password" >/dev/null
-chown radicale:radicale /etc/radicale/users
-chmod 0640 /etc/radicale/users
-provision_radicale_calendar "$email" "$password"
 
 for alias_addr in "${primary_alias_addresses[@]}"; do
   [[ -n "$alias_addr" ]] || continue
@@ -94,13 +88,12 @@ for alias_addr in "${primary_alias_addresses[@]}"; do
   alias_domain_q="$(sql_quote "$alias_domain")"
   alias_q="$(sql_quote "$alias_addr")"
   dest_q="$(sql_quote "$email")"
-  sqlite3 "$MAIL_DB_PATH" <<SQL
-PRAGMA foreign_keys = ON;
-INSERT INTO domains(name, active) VALUES('$alias_domain_q', 1)
-ON CONFLICT(name) DO UPDATE SET active=1;
+  psql_mail <<SQL
+INSERT INTO domains(name, active) VALUES('$alias_domain_q', true)
+ON CONFLICT(name) DO UPDATE SET active=true;
 INSERT INTO aliases(domain_id, source, destination, active)
-VALUES((SELECT id FROM domains WHERE name='$alias_domain_q'), '$alias_q', '$dest_q', 1)
-ON CONFLICT(source, destination) DO UPDATE SET active=1;
+VALUES((SELECT id FROM domains WHERE name='$alias_domain_q'), '$alias_q', '$dest_q', true)
+ON CONFLICT(source, destination) DO UPDATE SET active=true;
 SQL
   info "Alias ready: $alias_addr -> $email"
 done

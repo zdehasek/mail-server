@@ -55,22 +55,20 @@ domain_q="$(sql_quote "$domain")"
 source_q="$(sql_quote "$source_addr")"
 dest_q="$(sql_quote "$dest_addr")"
 
-sqlite3 "$MAIL_DB_PATH" <<SQL
-PRAGMA foreign_keys = ON;
-INSERT INTO domains(name, active) VALUES('$domain_q', 1)
-ON CONFLICT(name) DO UPDATE SET active=1;
+psql_mail <<SQL
+INSERT INTO domains(name, active) VALUES('$domain_q', true)
+ON CONFLICT(name) DO UPDATE SET active=true;
 SQL
 
 refresh_opendkim_domain_maps "$domain"
 reload_or_restart opendkim
 
-sqlite3 "$MAIL_DB_PATH" <<SQL
-PRAGMA foreign_keys = ON;
+psql_mail <<SQL
 BEGIN;
-UPDATE aliases SET active=0 WHERE source='$source_q' AND active=1;
+UPDATE aliases SET active=false WHERE source='$source_q' AND active=true;
 INSERT INTO aliases(domain_id, source, destination, active)
-VALUES((SELECT id FROM domains WHERE name='$domain_q'), '$source_q', '$dest_q', 1)
-ON CONFLICT(source, destination) DO UPDATE SET domain_id=excluded.domain_id, active=1;
+VALUES((SELECT id FROM domains WHERE name='$domain_q'), '$source_q', '$dest_q', true)
+ON CONFLICT(source, destination) DO UPDATE SET domain_id=excluded.domain_id, active=true;
 COMMIT;
 SQL
 

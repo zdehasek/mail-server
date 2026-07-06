@@ -928,7 +928,6 @@ cmd_init() {
     set_config_entry "$config_tmp" "ADMIN_EMAIL" "$admin_email"
     set_config_entry "$config_tmp" "WEBMAIL_HOSTNAME" "$webmail_hostname"
     set_config_entry "$config_tmp" "DAV_HOSTNAME" "$dav_hostname"
-    set_config_entry "$config_tmp" "RADICALE_CALDAV_BASE_URL" "https://$dav_hostname/"
     set_config_entry "$config_tmp" "TIMEZONE" "$timezone"
     set_config_entry "$config_tmp" "POSTMASTER_ADDRESS" "postmaster@$domain"
     set_config_entry "$config_tmp" "ABUSE_ADDRESS" "abuse@$domain"
@@ -1047,7 +1046,6 @@ cmd_set_domain() {
   [[ -z "$webmail_hostname" ]] || set_or_append_config_entry "$config_tmp" "WEBMAIL_HOSTNAME" "$webmail_hostname"
   if [[ -n "$dav_hostname" ]]; then
     set_or_append_config_entry "$config_tmp" "DAV_HOSTNAME" "$dav_hostname"
-    set_or_append_config_entry "$config_tmp" "RADICALE_CALDAV_BASE_URL" "https://$dav_hostname/"
   fi
 
   backup="$config.bak.$(date -u +%Y%m%dT%H%M%SZ)"

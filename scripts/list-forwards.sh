@@ -24,22 +24,22 @@ done
 require_root
 load_config
 
-where_clause="a.active=1 AND u.active=1"
+where_clause="a.active=true AND u.active=true"
 if [[ -n "$domain" ]]; then
   validate_domain_or_die "$domain"
   domain_q="$(sql_quote "$domain")"
   where_clause+=" AND d.name='$domain_q'"
 fi
 
-sqlite3 -header -column "$MAIL_DB_PATH" <<SQL
+psql_mail <<SQL
 SELECT
-  CASE a.active WHEN 1 THEN 'active' ELSE 'inactive' END AS status,
+  CASE a.active WHEN true THEN 'active' ELSE 'inactive' END AS status,
   d.name AS domain,
   a.source,
   a.destination
 FROM aliases a
 JOIN domains d ON d.id = a.domain_id
-JOIN users u ON u.email = a.source AND u.active = 1
+JOIN users u ON u.email = a.source AND u.active = true
 WHERE $where_clause
 ORDER BY d.name, a.source, a.destination;
 SQL

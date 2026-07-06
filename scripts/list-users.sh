@@ -11,9 +11,9 @@ parse_config_only_args "$@" || { usage; exit 0; }
 require_root
 load_config
 
-sqlite3 -header -column "$MAIL_DB_PATH" <<'SQL'
+psql_mail <<'SQL'
 SELECT
-  CASE active WHEN 1 THEN 'active' ELSE 'inactive' END AS status,
+  CASE active WHEN true THEN 'active' ELSE 'inactive' END AS status,
   email,
   full_name,
   created_at

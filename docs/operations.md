@@ -205,12 +205,15 @@ Mail, and Thunderbird Calendar:
 mailserver client-info --user user@example.com
 ```
 
-Thunderbird autoconfig is served at:
+Thunderbird autoconfig helper XML is served on the webmail host at:
 
 ```text
 https://mail.example.com/mail/config-v1.1.xml
 https://mail.example.com/.well-known/autoconfig/mail/config-v1.1.xml
 ```
+
+Use this URL when Thunderbird automatic discovery does not find the account from
+the email domain alone.
 
 ## Health Checks
 
@@ -226,16 +229,20 @@ Run a local end-to-end delivery test without sending external email:
 sudo mailserver e2e-delivery --user user@example.com --password-file /etc/mailserver/secrets/user-password
 ```
 
-The test injects a local message through Postfix, waits until Dovecot can find
-it in INBOX, verifies SOGo DAV with the mailbox password, and removes the test
-message unless `--no-cleanup` is set.
+The test injects a local message through Postfix, logs in over IMAPS, searches
+and fetches the message from INBOX, verifies SOGo DAV with the mailbox password,
+and removes the test message unless `--no-cleanup` is set.
 
-Check whether live generated config files still match the repo templates and
-current config values:
+Check whether live SOGo/webmail generated config files still match the repo
+templates and current config values:
 
 ```bash
 sudo mailserver config-drift
 ```
+
+This command intentionally covers the generated SOGo nginx vhost, SOGo config,
+and Thunderbird autoconfig XML. It is not a full drift audit for every Postfix,
+Dovecot, DKIM, DMARC, Rspamd, Fail2ban, or SSH hardening file.
 
 Inspect Rspamd controller state:
 

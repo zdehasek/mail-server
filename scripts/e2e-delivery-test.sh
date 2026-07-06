@@ -42,6 +42,7 @@ done
 [[ -n "$account" && "$account" == *@* ]] || die "Missing or invalid test account. Use --user user@example.com."
 [[ -f "$password_file" ]] || die "Password file not found: $password_file"
 command -v doveadm >/dev/null 2>&1 || die "doveadm is required."
+command -v python3 >/dev/null 2>&1 || die "python3 is required."
 [[ -x /usr/sbin/sendmail ]] || die "/usr/sbin/sendmail is required."
 
 subject="mailserver-e2e-$(date -u +%Y%m%dT%H%M%SZ)-$$"
@@ -60,13 +61,37 @@ MAIL
 
 uid=""
 for _ in {1..20}; do
-  uid="$(doveadm search -u "$account" mailbox INBOX HEADER Message-ID "$message_id" 2>/dev/null | awk '{print $2}' | tail -n 1 || true)"
+  uid="$(python3 - "$MAIL_HOSTNAME" "$account" "$password_file" "$message_id" <<'PY' || true
+import imaplib
+import pathlib
+import ssl
+import sys
+
+host, account, password_file, message_id = sys.argv[1:5]
+password = pathlib.Path(password_file).read_text(encoding="utf-8").strip()
+context = ssl.create_default_context()
+
+with imaplib.IMAP4_SSL(host, 993, ssl_context=context) as client:
+    client.login(account, password)
+    status, _ = client.select("INBOX", readonly=True)
+    if status != "OK":
+        raise SystemExit("IMAP SELECT INBOX failed")
+    status, data = client.uid("SEARCH", "HEADER", "Message-ID", message_id)
+    if status != "OK" or not data or not data[0]:
+        raise SystemExit(1)
+    uid = data[0].split()[-1].decode("ascii")
+    status, fetched = client.uid("FETCH", uid, "(RFC822.HEADER)")
+    if status != "OK" or not fetched:
+        raise SystemExit("IMAP FETCH failed")
+    print(uid)
+PY
+)"
   [[ -n "$uid" ]] && break
   sleep 1
 done
 
-[[ -n "$uid" ]] || die "Message was not found in $account INBOX via Dovecot."
-info "Dovecot IMAP storage OK: UID $uid"
+[[ -n "$uid" ]] || die "Message was not found in $account INBOX via IMAPS."
+info "IMAPS login/search/fetch OK: UID $uid"
 
 password="$(<"$password_file")"
 dav_url="https://$WEBMAIL_HOSTNAME/SOGo/dav/$account/"

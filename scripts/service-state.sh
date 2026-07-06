@@ -82,9 +82,11 @@ check_http() {
   local url="$1"
   local expected="$2"
   local code
-  code="$(curl -k -sS -o /dev/null -w '%{http_code}' --max-time 15 "$url" || true)"
+  code="$(curl -sS -o /dev/null -w '%{http_code}' --max-time 15 "$url" || true)"
   if [[ "$code" == "$expected" ]]; then
     ok_state "$url returns HTTP $code"
+  elif [[ -z "$code" || "$code" == "000" ]]; then
+    fail_state "$url was not reachable with a valid TLS certificate"
   else
     warn_state "$url returned HTTP ${code:-<none>}, expected $expected"
   fi
@@ -96,7 +98,7 @@ check_content_type() {
   local label="$3"
   local content_type
   content_type="$(
-    curl -k -sSI --max-time 15 "$url" \
+    curl -sSI --max-time 15 "$url" \
       | awk 'tolower($0) ~ /^content-type:/ {print $2; exit}' \
       | tr -d '\r'
   )" || true

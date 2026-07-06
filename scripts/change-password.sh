@@ -28,9 +28,8 @@ printf '\n'
 hash="$(doveadm pw -s SHA512-CRYPT -p "$password")"
 email_q="$(sql_quote "$email")"
 hash_q="$(sql_quote "$hash")"
-sqlite3 "$MAIL_DB_PATH" "UPDATE users SET password_hash='$hash_q' WHERE email='$email_q' AND active=1;"
-htpasswd -B -b /etc/radicale/users "$email" "$password" >/dev/null
-chown radicale:radicale /etc/radicale/users
-chmod 0640 /etc/radicale/users
-provision_radicale_calendar "$email" "$password"
+changes="$(psql_mail_scalar -c "WITH updated AS (UPDATE users SET password_hash='$hash_q' WHERE email='$email_q' AND active=true RETURNING 1) SELECT COUNT(*) FROM updated;")"
+if [[ "$changes" -eq 0 ]]; then
+  die "Active mailbox not found: $email"
+fi
 info "Password changed for $email"

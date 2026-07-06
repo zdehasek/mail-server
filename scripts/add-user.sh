@@ -40,18 +40,13 @@ maildir_q="$(sql_quote "$domain/$localpart/Maildir/")"
 refresh_opendkim_domain_maps "$domain"
 reload_or_restart opendkim
 
-sqlite3 "$MAIL_DB_PATH" <<SQL
-PRAGMA foreign_keys = ON;
-INSERT INTO domains(name, active) VALUES('$domain_q', 1)
-ON CONFLICT(name) DO UPDATE SET active=1;
+psql_mail <<SQL
+INSERT INTO domains(name, active) VALUES('$domain_q', true)
+ON CONFLICT(name) DO UPDATE SET active=true;
 INSERT INTO users(domain_id, email, username, full_name, password_hash, home, maildir, active)
-VALUES((SELECT id FROM domains WHERE name='$domain_q'), '$email_q', '$local_q', '$name_q', '$hash_q', '$home_q', '$maildir_q', 1)
-ON CONFLICT(email) DO UPDATE SET password_hash=excluded.password_hash, full_name=excluded.full_name, active=1;
+VALUES((SELECT id FROM domains WHERE name='$domain_q'), '$email_q', '$local_q', '$name_q', '$hash_q', '$home_q', '$maildir_q', true)
+ON CONFLICT(email) DO UPDATE SET password_hash=excluded.password_hash, full_name=excluded.full_name, active=true;
 SQL
 
 install -d -o vmail -g vmail -m 0700 "$VMAIL_ROOT/$domain/$localpart/Maildir"
-htpasswd -B -b /etc/radicale/users "$email" "$password" >/dev/null
-chown radicale:radicale /etc/radicale/users
-chmod 0640 /etc/radicale/users
-provision_radicale_calendar "$email" "$password"
 info "Mailbox ready: $email"

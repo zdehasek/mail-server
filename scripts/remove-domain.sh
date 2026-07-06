@@ -26,22 +26,25 @@ if [[ "$DRY_RUN" == "true" ]]; then
 fi
 
 domain_q="$(sql_quote "$domain")"
-changes="$(sqlite3 "$MAIL_DB_PATH" <<SQL
-PRAGMA foreign_keys = ON;
-UPDATE users
-SET active=0
-WHERE domain_id=(SELECT id FROM domains WHERE name='$domain_q') AND active=1;
-SELECT changes();
-UPDATE aliases
-SET active=0
-WHERE domain_id=(SELECT id FROM domains WHERE name='$domain_q') AND active=1;
-SELECT changes();
-UPDATE domains SET active=0 WHERE name='$domain_q' AND active=1;
-SELECT changes();
+domain_changes="$(psql_mail_scalar <<SQL
+WITH deactivated_users AS (
+  UPDATE users
+  SET active=false
+  WHERE domain_id=(SELECT id FROM domains WHERE name='$domain_q') AND active=true
+  RETURNING 1
+),
+deactivated_aliases AS (
+  UPDATE aliases
+  SET active=false
+  WHERE domain_id=(SELECT id FROM domains WHERE name='$domain_q') AND active=true
+  RETURNING 1
+),
+deactivated_domain AS (
+  UPDATE domains SET active=false WHERE name='$domain_q' AND active=true RETURNING 1
+)
+SELECT COUNT(*) FROM deactivated_domain;
 SQL
 )"
-
-domain_changes="$(printf '%s\n' "$changes" | tail -n 1)"
 if [[ "$domain_changes" -eq 0 ]]; then
   die "Active mail domain not found: $domain"
 fi

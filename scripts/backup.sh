@@ -30,11 +30,9 @@ paths=(
   /etc/opendkim
   /etc/opendmarc.conf
   /etc/rspamd
-  /etc/radicale
+  /etc/sogo
   /etc/nginx/sites-available
   /etc/nginx/sites-enabled
-  /var/lib/roundcube
-  /var/lib/radicale
   "$VMAIL_ROOT"
 )
 
@@ -47,25 +45,18 @@ done
 
 if [[ "$DRY_RUN" == "true" ]]; then
   info "Would write backup to $backup_path"
-  [[ -f "$MAIL_DB_PATH" ]] && info "Would create consistent SQLite backup for $MAIL_DB_PATH"
-  [[ -f /var/lib/roundcube/roundcube.sqlite ]] && info "Would create consistent SQLite backup for /var/lib/roundcube/roundcube.sqlite"
+  info "Would create PostgreSQL dump for $MAIL_DB_NAME"
   printf 'DRY-RUN: tar -czf %q' "$backup_path"
   printf ' %q' "${existing[@]}"
-  printf ' -C <staging> sqlite'
+  printf ' -C <staging> postgresql'
   printf '\n'
 else
   staging_dir="$(mktemp -d)"
-  mkdir -p "$staging_dir/sqlite"
+  mkdir -p "$staging_dir/postgresql"
+  ensure_mail_db_password
+  PGPASSWORD="$MAIL_DB_PASSWORD" pg_dump -h "$MAIL_DB_HOST" -U "$MAIL_DB_USER" "$MAIL_DB_NAME" > "$staging_dir/postgresql/$MAIL_DB_NAME.sql"
 
-  if [[ -f "$MAIL_DB_PATH" ]]; then
-    sqlite3 "$MAIL_DB_PATH" ".backup '$staging_dir/sqlite/mail.sqlite'"
-  fi
-
-  if [[ -f /var/lib/roundcube/roundcube.sqlite ]]; then
-    sqlite3 /var/lib/roundcube/roundcube.sqlite ".backup '$staging_dir/sqlite/roundcube.sqlite'"
-  fi
-
-  tar -czf "$backup_path" --absolute-names "${existing[@]}" -C "$staging_dir" sqlite
+  tar -czf "$backup_path" --absolute-names "${existing[@]}" -C "$staging_dir" postgresql
   chmod 0600 "$backup_path"
   find "$BACKUP_DIR" -maxdepth 1 -type f -name 'mailserver-*.tar.gz' -mtime "+$BACKUP_RETENTION_DAYS" -delete
 fi

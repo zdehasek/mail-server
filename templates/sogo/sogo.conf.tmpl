@@ -1,0 +1,54 @@
+{
+  SOGoProfileURL = "postgresql://__MAIL_DB_USER__:__MAIL_DB_PASSWORD__@__MAIL_DB_HOST__:5432/__MAIL_DB_NAME__/sogo_user_profile";
+  OCSFolderInfoURL = "postgresql://__MAIL_DB_USER__:__MAIL_DB_PASSWORD__@__MAIL_DB_HOST__:5432/__MAIL_DB_NAME__/sogo_folder_info";
+  OCSSessionsFolderURL = "postgresql://__MAIL_DB_USER__:__MAIL_DB_PASSWORD__@__MAIL_DB_HOST__:5432/__MAIL_DB_NAME__/sogo_sessions_folder";
+  OCSAdminURL = "postgresql://__MAIL_DB_USER__:__MAIL_DB_PASSWORD__@__MAIL_DB_HOST__:5432/__MAIL_DB_NAME__/sogo_admin";
+  OCSStoreURL = "postgresql://__MAIL_DB_USER__:__MAIL_DB_PASSWORD__@__MAIL_DB_HOST__:5432/__MAIL_DB_NAME__/sogo_store";
+  OCSAclURL = "postgresql://__MAIL_DB_USER__:__MAIL_DB_PASSWORD__@__MAIL_DB_HOST__:5432/__MAIL_DB_NAME__/sogo_acl";
+  OCSCacheFolderURL = "postgresql://__MAIL_DB_USER__:__MAIL_DB_PASSWORD__@__MAIL_DB_HOST__:5432/__MAIL_DB_NAME__/sogo_cache_folder";
+
+  SOGoUserSources = (
+    {
+      type = sql;
+      id = users;
+      viewURL = "postgresql://__MAIL_DB_USER__:__MAIL_DB_PASSWORD__@__MAIL_DB_HOST__:5432/__MAIL_DB_NAME__/sogo_users";
+      canAuthenticate = YES;
+      displayName = "Shared Addresses";
+      isAddressBook = YES;
+      userPasswordAlgorithm = crypt;
+      CNFieldName = c_cn;
+      IDFieldName = c_uid;
+      UIDFieldName = c_uid;
+      IMAPLoginFieldName = c_uid;
+      LoginFieldNames = (c_uid, mail);
+    }
+  );
+
+  SOGoLanguage = English;
+  SOGoTimeZone = "__TIMEZONE__";
+  SOGoMailDomain = "__PRIMARY_DOMAIN__";
+  SOGoIMAPServer = "imap://127.0.0.1:143/?tls=YES";
+  SOGoSieveServer = "sieve://127.0.0.1:4190/?tls=NO";
+  SOGoDraftsFolderName = Drafts;
+  SOGoSentFolderName = Sent;
+  SOGoTrashFolderName = Trash;
+  SOGoJunkFolderName = Junk;
+  SOGoMailingMechanism = smtp;
+  SOGoSMTPServer = "smtp://127.0.0.1:587/?tls=YES";
+  SOGoSMTPAuthenticationType = PLAIN;
+  SOGoForceExternalLoginWithEmail = YES;
+  SOGoAppointmentSendEMailNotifications = YES;
+  SOGoFoldersSendEMailNotifications = YES;
+  SOGoACLsSendEMailNotifications = YES;
+  SOGoMemcachedHost = 127.0.0.1;
+  SOGoMaximumMessageSizeLimit = 50;
+  SOGoVacationEnabled = YES;
+  SOGoForwardEnabled = YES;
+  SOGoSieveScriptsEnabled = YES;
+  SOGoPageTitle = "66c Mail";
+  SOGoFirstDayOfWeek = 1;
+
+  WOWorkersCount = 2;
+  WOPort = "127.0.0.1:20000";
+  WOLogFile = /var/log/sogo/sogo.log;
+}

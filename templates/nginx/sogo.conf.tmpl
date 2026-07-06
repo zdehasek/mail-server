@@ -1,0 +1,84 @@
+server {
+  listen 80;
+  listen [::]:80;
+  server_name __SOGO_SERVER_NAMES__;
+
+  location /.well-known/acme-challenge/ {
+    root /var/www/letsencrypt;
+  }
+
+  location / {
+    return 301 https://$host$request_uri;
+  }
+}
+
+server {
+  listen 443 ssl;
+  listen [::]:443 ssl;
+  http2 on;
+  server_name __SOGO_SERVER_NAMES__;
+
+  ssl_certificate /etc/letsencrypt/live/__MAIL_HOSTNAME__/fullchain.pem;
+  ssl_certificate_key /etc/letsencrypt/live/__MAIL_HOSTNAME__/privkey.pem;
+
+  client_max_body_size 50m;
+
+  proxy_read_timeout 360;
+  proxy_send_timeout 360;
+  proxy_connect_timeout 75;
+  proxy_buffer_size 8k;
+  proxy_buffers 4 32k;
+  proxy_busy_buffers_size 64k;
+  proxy_temp_file_write_size 64k;
+
+  location = / {
+    return 302 /SOGo/;
+  }
+
+  location = /.well-known/caldav {
+    return 301 /SOGo/dav;
+  }
+
+  location = /.well-known/carddav {
+    return 301 /SOGo/dav;
+  }
+
+  location ^~ /SOGo {
+    proxy_pass http://127.0.0.1:20000;
+    proxy_redirect http://127.0.0.1:20000 default;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto https;
+    proxy_set_header x-webobjects-server-protocol HTTP/1.0;
+    proxy_set_header x-webobjects-remote-host $remote_addr;
+    proxy_set_header x-webobjects-server-name $server_name;
+    proxy_set_header x-webobjects-server-url https://$host;
+    proxy_set_header x-webobjects-server-port 443;
+  }
+
+  location /SOGo.woa/WebServerResources/ {
+    alias /usr/share/GNUstep/SOGo/WebServerResources/;
+    access_log off;
+    expires 7d;
+  }
+
+  location /SOGo/WebServerResources/ {
+    alias /usr/share/GNUstep/SOGo/WebServerResources/;
+    access_log off;
+    expires 7d;
+  }
+
+  location /Microsoft-Server-ActiveSync {
+    proxy_pass http://127.0.0.1:20000/SOGo/Microsoft-Server-ActiveSync;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto https;
+    proxy_set_header x-webobjects-server-protocol HTTP/1.0;
+    proxy_set_header x-webobjects-remote-host $remote_addr;
+    proxy_set_header x-webobjects-server-name $server_name;
+    proxy_set_header x-webobjects-server-url https://$host;
+    proxy_set_header x-webobjects-server-port 443;
+  }
+}

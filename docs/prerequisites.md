@@ -15,7 +15,7 @@ Required before production install:
 
 Recommended resources:
 
-- 1 GB RAM minimum for Roundcube, Radicale, and Rspamd.
+- 1 GB RAM minimum for PostgreSQL, SOGo, and Rspamd.
 - 4 GB RAM if ClamAV is enabled.
 - 20 GB disk minimum.
 
@@ -28,7 +28,7 @@ When `ENABLE_UFW=true`, the installer sets the firewall to deny incoming traffic
 - `SSH_PORT` TCP, default `22`, for administration.
 - `25/tcp` for inbound SMTP.
 - `80/tcp` for Let's Encrypt HTTP validation and redirects.
-- `443/tcp` for Roundcube and Radicale over HTTPS.
+- `443/tcp` for SOGo webmail, CalDAV/CardDAV, and ActiveSync over HTTPS.
 - `587/tcp` for authenticated mail submission.
 - `993/tcp` for IMAPS.
 

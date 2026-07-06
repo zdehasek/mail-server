@@ -82,9 +82,11 @@ check_http() {
   local url="$1"
   local expected="$2"
   local code
-  code="$(curl -k -sS -o /dev/null -w '%{http_code}' --max-time 15 "$url" || true)"
+  code="$(curl -sS -o /dev/null -w '%{http_code}' --max-time 15 "$url" || true)"
   if [[ "$code" == "$expected" ]]; then
     ok_state "$url returns HTTP $code"
+  elif [[ -z "$code" || "$code" == "000" ]]; then
+    fail_state "$url was not reachable with a valid TLS certificate"
   else
     warn_state "$url returned HTTP ${code:-<none>}, expected $expected"
   fi
@@ -96,7 +98,7 @@ check_content_type() {
   local label="$3"
   local content_type
   content_type="$(
-    curl -k -sSI --max-time 15 "$url" \
+    curl -sSI --max-time 15 "$url" \
       | awk 'tolower($0) ~ /^content-type:/ {print $2; exit}' \
       | tr -d '\r'
   )" || true
@@ -135,17 +137,11 @@ check_svg_content_type() {
 
 printf 'Service state for %s\n\n' "$PRIMARY_DOMAIN"
 
-services=(postfix dovecot nginx radicale opendkim opendmarc fail2ban)
+services=(postgresql postfix dovecot nginx memcached sogo opendkim opendmarc fail2ban)
 [[ "${ENABLE_RSPAMD:-true}" == "true" ]] && services+=(rspamd)
 for service in "${services[@]}"; do
   check_service "$service"
 done
-
-if systemctl is-active --quiet 'php*-fpm.service'; then
-  ok_state "service active: PHP-FPM"
-else
-  fail_state "no active PHP-FPM service found"
-fi
 
 check_port 25 "SMTP"
 check_port 80 "HTTP / Let's Encrypt"
@@ -154,6 +150,7 @@ check_port 587 "SMTP submission"
 check_port 993 "IMAPS"
 check_port 8891 "OpenDKIM milter"
 check_port 8893 "OpenDMARC milter"
+check_port 20000 "SOGo"
 [[ "${ENABLE_RSPAMD:-true}" == "true" ]] && check_port 11332 "Rspamd milter"
 
 printf '\nExternal IPv4 reachability\n'
@@ -163,11 +160,11 @@ check_external_port 443 "HTTPS"
 check_external_port 587 "SMTP submission"
 check_external_port 993 "IMAPS"
 
-check_http "https://$WEBMAIL_HOSTNAME/" "200"
-check_http "https://$DAV_HOSTNAME/" "302"
-check_css_content_type "https://$WEBMAIL_HOSTNAME/static.php/skins/elastic/styles/styles.min.css" "Roundcube CSS"
-check_javascript_content_type "https://$WEBMAIL_HOSTNAME/static.php/program/js/app.min.js" "Roundcube JavaScript"
-check_svg_content_type "https://$WEBMAIL_HOSTNAME/static.php/skins/elastic/images/logo.svg" "Roundcube logo"
+check_http "https://$WEBMAIL_HOSTNAME/" "302"
+check_http "https://$WEBMAIL_HOSTNAME/SOGo/" "200"
+check_css_content_type "https://$WEBMAIL_HOSTNAME/SOGo/WebServerResources/css/theme-default.css" "SOGo theme CSS"
+check_javascript_content_type "https://$WEBMAIL_HOSTNAME/SOGo/WebServerResources/js/Common.js" "SOGo Common.js"
+check_http "https://$DAV_HOSTNAME/SOGo/dav/" "401"
 
 printf '\nSummary: %d failure(s), %d warning(s)\n' "$failures" "$warnings"
 [[ "$failures" -eq 0 ]]

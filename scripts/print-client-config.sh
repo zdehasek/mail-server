@@ -36,10 +36,8 @@ load_config
 
 account="${account:-$PRIMARY_MAILBOX}"
 account="${account:-user@$PRIMARY_DOMAIN}"
-calendar_name="${RADICALE_DEFAULT_CALENDAR_NAME:-default}"
-caldav_base="${RADICALE_CALDAV_BASE_URL%/}"
-caldav_account_url="$caldav_base/$account/"
-caldav_calendar_url="$caldav_account_url$calendar_name/"
+sogo_base="https://$WEBMAIL_HOSTNAME/SOGo"
+caldav_account_url="$sogo_base/dav/$account/"
 
 cat <<CONFIG
 Client configuration for $account
@@ -79,21 +77,23 @@ Calendar (CalDAV)
   Username: $account
   Password: mailbox password
   Account URL: $caldav_account_url
-  Calendar URL: $caldav_calendar_url
 
 Apple Calendar
   Add Account -> Other CalDAV Account -> Manual
-  Server Address: $DAV_HOSTNAME
+  Server Address: $WEBMAIL_HOSTNAME
   User Name: $account
   Advanced Account URL: $caldav_account_url
 
 Thunderbird Calendar
   New Calendar -> On the Network -> CalDAV
   Username: $account
-  Location: $caldav_calendar_url
+  Location: $caldav_account_url
+
+Mobile Sync
+  Exchange/ActiveSync URL: $sogo_base/Microsoft-Server-ActiveSync
 
 Webmail
-  URL: https://$WEBMAIL_HOSTNAME/
+  URL: $sogo_base/
 CONFIG
 
 if [[ "$account" == "$PRIMARY_MAILBOX" && -n "${PRIMARY_MAILBOX_PASSWORD_FILE:-}" ]]; then

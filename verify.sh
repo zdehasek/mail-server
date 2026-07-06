@@ -36,7 +36,7 @@ check_web_asset_content_type() {
   local expected_prefixes="$2"
   local content_type expected_prefix
   content_type="$(
-    curl -k -sSI --max-time 15 "$url" \
+    curl -sSI --max-time 15 "$url" \
       | awk 'tolower($0) ~ /^content-type:/ {print $2; exit}' \
       | tr -d '\r'
   )" || true
@@ -53,4 +53,4 @@ check_web_asset_content_type() {
 check_web_asset_content_type "https://$WEBMAIL_HOSTNAME/SOGo/WebServerResources/css/theme-default.css" "text/css"
 check_web_asset_content_type "https://$WEBMAIL_HOSTNAME/SOGo/WebServerResources/js/Common.js" "text/javascript|application/javascript"
 
-info "Verification completed. Run external SMTP/TLS and delivery tests from docs/operations.md."
+info "Verification completed. Run mailserver check and mailserver e2e-delivery for external/TLS and delivery coverage."

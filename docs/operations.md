@@ -157,6 +157,19 @@ Create an on-demand backup:
 sudo mailserver backup
 ```
 
+List, validate, inspect, or safely extract a backup:
+
+```bash
+sudo mailserver restore --list
+sudo mailserver restore --validate /var/backups/mailserver-data/mailserver-YYYYmmddTHHMMSSZ.tar.gz
+sudo mailserver restore --inspect /var/backups/mailserver-data/mailserver-YYYYmmddTHHMMSSZ.tar.gz
+sudo mailserver restore --extract /var/backups/mailserver-data/mailserver-YYYYmmddTHHMMSSZ.tar.gz --target /root/mailserver-restore-review
+```
+
+`restore --extract` is intentionally non-destructive. It unpacks into a staging
+directory so an operator can review PostgreSQL dumps, config files, certificates,
+and maildirs before copying anything back into production paths.
+
 Install the recurring backup cron job:
 
 ```bash
@@ -192,6 +205,55 @@ Mail, and Thunderbird Calendar:
 mailserver client-info --user user@example.com
 ```
 
+Thunderbird autoconfig is served at:
+
+```text
+https://mail.example.com/mail/config-v1.1.xml
+https://mail.example.com/.well-known/autoconfig/mail/config-v1.1.xml
+```
+
+## Health Checks
+
+Run the broad check suite:
+
+```bash
+sudo mailserver check
+```
+
+Run a local end-to-end delivery test without sending external email:
+
+```bash
+sudo mailserver e2e-delivery --user user@example.com --password-file /etc/mailserver/secrets/user-password
+```
+
+The test injects a local message through Postfix, waits until Dovecot can find
+it in INBOX, verifies SOGo DAV with the mailbox password, and removes the test
+message unless `--no-cleanup` is set.
+
+Check whether live generated config files still match the repo templates and
+current config values:
+
+```bash
+sudo mailserver config-drift
+```
+
+Inspect Rspamd controller state:
+
+```bash
+sudo mailserver rspamd-state
+sudo mailserver rspamd-state counters
+```
+
+Check optional TLS policy records:
+
+```bash
+mailserver tls-policy-state
+mailserver tls-policy-state --domain example.com
+```
+
+Missing MTA-STS, SMTP TLS reporting, or DANE records are warnings by default.
+They are useful hardening steps, not required for a working personal mailserver.
+
 ## Sent Copies
 
 Outbound messages submitted through SMTP submission are copied into the sender's
@@ -219,3 +281,14 @@ Backups are written to `BACKUP_DIR`, default `/var/backups/mailserver-data`, as 
 Retention is controlled by `BACKUP_RETENTION_DAYS`, default `14`. The cron schedule is controlled by `BACKUP_CRON_SCHEDULE`, default `17 3 * * *`.
 
 Backups stay on the same machine by default. For production, copy them to separate storage.
+
+Disaster-recovery drill:
+
+1. Copy the backup archive to a clean host or staging directory.
+2. Run `sudo mailserver restore --validate ARCHIVE`.
+3. Run `sudo mailserver restore --extract ARCHIVE --target /root/mailserver-restore-review`.
+4. Review `postgresql/*.sql`, `etc/`, and maildirs under the extracted tree.
+5. Stop affected services before manually restoring production files.
+6. Restore PostgreSQL with `psql` only after confirming the dump target database.
+7. Restore maildirs with ownership preserved for `vmail:vmail`.
+8. Run `sudo mailserver verify`, `sudo mailserver check`, and a client login test.

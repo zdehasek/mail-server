@@ -72,6 +72,7 @@ Thunderbird Mail
   Incoming: IMAP, $MAIL_HOSTNAME, 993, SSL/TLS, Normal password
   Outgoing: SMTP, $MAIL_HOSTNAME, 587, STARTTLS, Normal password
   Username: $account
+  Autoconfig: https://$WEBMAIL_HOSTNAME/mail/config-v1.1.xml
 
 Calendar (CalDAV)
   Username: $account

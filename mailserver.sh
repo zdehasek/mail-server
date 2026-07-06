@@ -149,6 +149,10 @@ Health checks:
   dns-state                    Check A/AAAA, MX, SPF, DMARC, PTR, DKIM
   check-ssl                    Check HTTPS, IMAPS, and SMTP TLS certs
   service-state                Check services, ports, and web endpoints
+  config-drift                 Compare live generated configs with templates
+  e2e-delivery                 Inject local test mail, fetch via IMAP, check SOGo DAV
+  tls-policy-state             Check MTA-STS, TLS reporting, and DANE DNS state
+  rspamd-state                 Show Rspamd controller status or counters
   print-dns                    Print DNS records, including generated DKIM
 
 Client configuration:
@@ -187,6 +191,7 @@ Mailbox operations:
 
 Backup:
   backup
+  restore --list|--inspect ARCHIVE|--validate ARCHIVE|--extract ARCHIVE --target DIR
   install-backup-cron
 
 Examples:
@@ -231,6 +236,18 @@ show_command_help() {
     print-dns|dns-state)
       printf 'Usage: mailserver %s [--domain example.com] [--config PATH]\n' "$1"
       ;;
+    config-drift)
+      printf 'Usage: mailserver config-drift [--config PATH]\n'
+      ;;
+    e2e-delivery)
+      printf 'Usage: mailserver e2e-delivery [--user user@example.com] [--password-file PATH] [--no-cleanup] [--config PATH]\n'
+      ;;
+    tls-policy-state)
+      printf 'Usage: mailserver tls-policy-state [--domain example.com] [--config PATH]\n'
+      ;;
+    rspamd-state)
+      printf 'Usage: mailserver rspamd-state [status|counters|commands] [--config PATH]\n'
+      ;;
     list-domains)
       printf 'Usage: mailserver domains ls [--config PATH]\n'
       ;;
@@ -260,6 +277,9 @@ show_command_help() {
       ;;
     client-info|client-config)
       printf 'Usage: mailserver %s [--user user@example.com] [--config PATH]\n' "$1"
+      ;;
+    restore)
+      printf 'Usage: mailserver restore --list|--inspect ARCHIVE|--validate ARCHIVE|--extract ARCHIVE --target DIR [--config PATH]\n'
       ;;
     init)
       printf 'Usage: mailserver init [--domain DOMAIN] [--admin-email EMAIL] [--mail-hostname HOST] [--webmail-hostname HOST] [--dav-hostname HOST] [--public-ipv4 IP] [--public-ipv6 IP] [--timezone TZ] [--non-interactive] [--config PATH]\n'
@@ -1191,6 +1211,10 @@ cmd_check() {
   "$ROOT_DIR/scripts/check-ssl.sh" --config "$config" || status=$?
   printf '\n'
   "$ROOT_DIR/scripts/service-state.sh" --config "$config" || status=$?
+  printf '\n'
+  "$ROOT_DIR/scripts/config-drift.sh" --config "$config" || status=$?
+  printf '\n'
+  "$ROOT_DIR/scripts/tls-policy-state.sh" --config "$config" || status=$?
   return "$status"
 }
 
@@ -1360,6 +1384,10 @@ main() {
     dns-state) cmd_option_script scripts/dns-state.sh false "${COMMAND_ARGS[@]}" ;;
     check-ssl) cmd_simple_script scripts/check-ssl.sh false "${COMMAND_ARGS[@]}" ;;
     service-state) cmd_simple_script scripts/service-state.sh false "${COMMAND_ARGS[@]}" ;;
+    config-drift) cmd_simple_script scripts/config-drift.sh false "${COMMAND_ARGS[@]}" ;;
+    e2e-delivery) cmd_option_script scripts/e2e-delivery-test.sh true "${COMMAND_ARGS[@]}" ;;
+    tls-policy-state) cmd_option_script scripts/tls-policy-state.sh false "${COMMAND_ARGS[@]}" ;;
+    rspamd-state) cmd_option_script scripts/rspamd-state.sh true "${COMMAND_ARGS[@]}" ;;
     list-domains) cmd_simple_script scripts/list-domains.sh true "${COMMAND_ARGS[@]}" ;;
     list-aliases) cmd_option_script scripts/list-aliases.sh true "${COMMAND_ARGS[@]}" ;;
     list-forwards) cmd_option_script scripts/list-forwards.sh true "${COMMAND_ARGS[@]}" ;;
@@ -1368,6 +1396,7 @@ main() {
     list-users) cmd_simple_script scripts/list-users.sh true "${COMMAND_ARGS[@]}" ;;
     setup-primary-mailbox) cmd_simple_script scripts/setup-primary-mailbox.sh true "${COMMAND_ARGS[@]}" ;;
     backup) cmd_simple_script scripts/backup.sh true "${COMMAND_ARGS[@]}" ;;
+    restore) cmd_option_script scripts/restore.sh true "${COMMAND_ARGS[@]}" ;;
     install-backup-cron) cmd_simple_script scripts/install-backup-cron.sh true "${COMMAND_ARGS[@]}" ;;
     client-info|client-config) cmd_client_info "${COMMAND_ARGS[@]}" ;;
     add-user) cmd_user_arg scripts/add-user.sh "${COMMAND_ARGS[@]}" ;;

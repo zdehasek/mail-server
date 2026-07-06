@@ -85,6 +85,11 @@ validate_archive() {
   tar -tzf "$archive" >/dev/null
   listing="$(tar -tzf "$archive")"
   grep -qx 'postgresql/' <<< "$listing" || die "Backup is missing PostgreSQL dump directory."
+  grep -qx "postgresql/$MAIL_DB_NAME.sql" <<< "$listing" || die "Backup is missing PostgreSQL dump: postgresql/$MAIL_DB_NAME.sql"
+  grep -qx '/etc/mailserver/' <<< "$listing" || die "Backup is missing /etc/mailserver."
+  grep -qx '/etc/postfix/' <<< "$listing" || die "Backup is missing /etc/postfix."
+  grep -qx '/etc/dovecot/' <<< "$listing" || die "Backup is missing /etc/dovecot."
+  grep -qx "${VMAIL_ROOT%/}/" <<< "$listing" || die "Backup is missing mail storage root: $VMAIL_ROOT"
   info "Backup archive is readable: $archive"
 }
 

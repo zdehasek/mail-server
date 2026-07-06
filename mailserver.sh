@@ -149,7 +149,7 @@ Health checks:
   dns-state                    Check A/AAAA, MX, SPF, DMARC, PTR, DKIM
   check-ssl                    Check HTTPS, IMAPS, and SMTP TLS certs
   service-state                Check services, ports, and web endpoints
-  config-drift                 Compare live generated configs with templates
+  config-drift                 Compare live SOGo/autoconfig files with templates
   e2e-delivery                 Inject local test mail, fetch via IMAP, check SOGo DAV
   tls-policy-state             Check MTA-STS, TLS reporting, and DANE DNS state
   rspamd-state                 Show Rspamd controller status or counters

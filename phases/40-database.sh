@@ -32,7 +32,7 @@ psql_mail -c "CREATE OR REPLACE VIEW sogo_users AS
     email AS c_uid,
     email AS c_name,
     email AS mail,
-    full_name AS cn,
+    full_name AS c_cn,
     password_hash AS c_password
   FROM users
   WHERE active = true;"

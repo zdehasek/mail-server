@@ -160,6 +160,8 @@ check_external_port 993 "IMAPS"
 
 check_http "https://$WEBMAIL_HOSTNAME/" "302"
 check_http "https://$WEBMAIL_HOSTNAME/SOGo/" "200"
+check_css_content_type "https://$WEBMAIL_HOSTNAME/SOGo/WebServerResources/css/theme-default.css" "SOGo theme CSS"
+check_javascript_content_type "https://$WEBMAIL_HOSTNAME/SOGo/WebServerResources/js/Common.js" "SOGo Common.js"
 check_http "https://$DAV_HOSTNAME/SOGo/dav/" "401"
 
 printf '\nSummary: %d failure(s), %d warning(s)\n' "$failures" "$warnings"

@@ -72,6 +72,14 @@ elif [[ "$mailbox_exists" -eq 0 ]]; then
   fi
 else
   info "Primary mailbox $email already exists; preserving existing password hash."
+  if [[ -f "$PRIMARY_MAILBOX_PASSWORD_FILE" ]]; then
+    existing_hash="$(psql_mail_scalar -c "SELECT password_hash FROM users WHERE email='$email_q' AND active=true;")"
+    if [[ -n "$existing_hash" ]]; then
+      if ! doveadm pw -t "$existing_hash" -p "$(<"$PRIMARY_MAILBOX_PASSWORD_FILE")" >/dev/null 2>&1; then
+        die "Primary mailbox password file does not match the existing mailbox password: $PRIMARY_MAILBOX_PASSWORD_FILE"
+      fi
+    fi
+  fi
 fi
 
 psql_mail <<SQL

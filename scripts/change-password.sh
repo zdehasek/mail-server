@@ -28,5 +28,8 @@ printf '\n'
 hash="$(doveadm pw -s SHA512-CRYPT -p "$password")"
 email_q="$(sql_quote "$email")"
 hash_q="$(sql_quote "$hash")"
-psql_mail -c "UPDATE users SET password_hash='$hash_q' WHERE email='$email_q' AND active=true;"
+changes="$(psql_mail_scalar -c "WITH updated AS (UPDATE users SET password_hash='$hash_q' WHERE email='$email_q' AND active=true RETURNING 1) SELECT COUNT(*) FROM updated;")"
+if [[ "$changes" -eq 0 ]]; then
+  die "Active mailbox not found: $email"
+fi
 info "Password changed for $email"

@@ -247,8 +247,9 @@ PRIMARY_ALIAS_ADDRESSES="postmaster@example.com abuse@example.com dmarc@example.
   `PRIMARY_MAILBOX`.
 
 If `PRIMARY_MAILBOX` is empty, setup skips this step. If the mailbox already
-exists, setup updates the password hash and keeps it active. If an alias already
-exists, setup leaves it in place.
+exists, setup keeps it active and preserves the existing password hash unless
+`PRIMARY_MAILBOX_PASSWORD` is set explicitly. If an alias already exists, setup
+leaves it in place.
 
 Use `sudo mailserver add-domain --domain example.net` to activate another domain
 after setup. It seeds the domain database, refreshes DKIM tables, reloads mail

@@ -8,6 +8,8 @@ render_template "$ROOT_DIR/templates/dovecot/dovecot.conf.tmpl" /etc/dovecot/dov
 render_template "$ROOT_DIR/templates/dovecot/dovecot-sql.conf.ext.tmpl" /etc/dovecot/dovecot-sql.conf.ext
 run install -d -o root -g root -m 0755 /etc/dovecot/sieve/before.d
 render_template "$ROOT_DIR/templates/dovecot/sent-copies.sieve.tmpl" /etc/dovecot/sieve/before.d/sent-copies.sieve
+run chown root:dovecot /etc/dovecot/dovecot.conf
+run chmod 0640 /etc/dovecot/dovecot.conf
 run chown root:dovecot /etc/dovecot/dovecot-sql.conf.ext
 run chmod 0640 /etc/dovecot/dovecot-sql.conf.ext
 run chown root:root /etc/dovecot/sieve/before.d/sent-copies.sieve

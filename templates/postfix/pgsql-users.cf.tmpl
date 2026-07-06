@@ -1,0 +1,5 @@
+hosts = __MAIL_DB_HOST__
+user = __MAIL_DB_USER__
+password = __MAIL_DB_PASSWORD__
+dbname = __MAIL_DB_NAME__
+query = SELECT maildir FROM users WHERE email = CASE WHEN position('+' in lower('%s')) > 0 AND position('@' in lower('%s')) > position('+' in lower('%s')) THEN substring(lower('%s') from 1 for position('+' in lower('%s')) - 1) || substring(lower('%s') from position('@' in lower('%s'))) ELSE lower('%s') END AND active=true

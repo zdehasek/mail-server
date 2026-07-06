@@ -168,7 +168,7 @@ Useful logs:
 ```bash
 journalctl -u postfix
 journalctl -u dovecot
-journalctl -u radicale
+journalctl -u sogo
 journalctl -u rspamd
 tail -f /var/log/mail.log
 ```
@@ -179,10 +179,10 @@ Webmail URL:
 https://mail.example.com/
 ```
 
-Radicale CalDAV/CardDAV base URL:
+SOGo CalDAV/CardDAV base URL:
 
 ```text
-https://dav.example.com/user@example.com/
+https://mail.example.com/SOGo/dav/user@example.com/
 ```
 
 Print complete manual setup values for Apple Mail, Apple Calendar, Thunderbird
@@ -205,23 +205,16 @@ lmtp:unix:private/dovecot-lmtp`), not Postfix local delivery.
 
 ## Storage
 
-Mail accounts, domains, and aliases are stored in SQLite at `MAIL_DB_PATH`.
+Mail accounts, domains, aliases, and SOGo groupware tables are stored in PostgreSQL.
 Configure served domains with `PRIMARY_DOMAIN`, `SECONDARY_DOMAINS`, or
 `sudo mailserver add-domain --domain example.net`.
 
-Roundcube stores its application data in `/var/lib/roundcube` and uses SQLite by default.
-
-Radicale stores calendars and contacts as flat files under `/var/lib/radicale/collections`.
-
-Roundcube is installed from a pinned upstream release because the Ubuntu 26.04 package is not currently compatible with PHP 8.5. The pinned version, source URL, and SHA-256 checksum are configured in `~/.email-server/config.env`.
-
-Calendar and contact sync are provided by Radicale. Use native clients such as iPhone Calendar, macOS Calendar, Thunderbird Calendar, or DAVx5 with an Android calendar app.
+SOGo provides webmail, contacts, calendars, CalDAV/CardDAV, and ActiveSync.
+It uses Dovecot IMAP for mail access and Postfix submission for outbound mail.
 
 ## Backups
 
-Backups are written to `BACKUP_DIR`, default `/var/backups/mailserver-data`, as compressed tar archives. The backup includes mail server configuration, Let's Encrypt data, Roundcube application data, Radicale collections, and virtual mailboxes under `VMAIL_ROOT`.
-
-The backup script also creates consistent SQLite snapshots using SQLite's online `.backup` command. These are stored inside the archive under `sqlite/mail.sqlite` and `sqlite/roundcube.sqlite` when the corresponding databases exist.
+Backups are written to `BACKUP_DIR`, default `/var/backups/mailserver-data`, as compressed tar archives. The backup includes mail server configuration, Let's Encrypt data, SOGo configuration, virtual mailboxes under `VMAIL_ROOT`, and a PostgreSQL dump.
 
 Retention is controlled by `BACKUP_RETENTION_DAYS`, default `14`. The cron schedule is controlled by `BACKUP_CRON_SCHEDULE`, default `17 3 * * *`.
 

@@ -28,13 +28,12 @@ dest_q="$(sql_quote "$dest_addr")"
 refresh_opendkim_domain_maps "$domain"
 reload_or_restart opendkim
 
-sqlite3 "$MAIL_DB_PATH" <<SQL
-PRAGMA foreign_keys = ON;
-INSERT INTO domains(name, active) VALUES('$domain_q', 1)
-ON CONFLICT(name) DO UPDATE SET active=1;
+psql_mail <<SQL
+INSERT INTO domains(name, active) VALUES('$domain_q', true)
+ON CONFLICT(name) DO UPDATE SET active=true;
 INSERT INTO aliases(domain_id, source, destination, active)
-VALUES((SELECT id FROM domains WHERE name='$domain_q'), '$source_q', '$dest_q', 1)
-ON CONFLICT(source, destination) DO UPDATE SET active=1;
+VALUES((SELECT id FROM domains WHERE name='$domain_q'), '$source_q', '$dest_q', true)
+ON CONFLICT(source, destination) DO UPDATE SET active=true;
 SQL
 
 info "Alias ready: $source_addr -> $dest_addr"

@@ -61,20 +61,18 @@ reload_or_restart opendkim
 
 domain_q="$(sql_quote "$domain")"
 alias_dest_q="$(sql_quote "$alias_dest")"
-sqlite3 "$MAIL_DB_PATH" <<SQL
-PRAGMA foreign_keys = ON;
-INSERT INTO domains(name, active) VALUES('$domain_q', 1)
-ON CONFLICT(name) DO UPDATE SET active=1;
+psql_mail <<SQL
+INSERT INTO domains(name, active) VALUES('$domain_q', true)
+ON CONFLICT(name) DO UPDATE SET active=true;
 SQL
 
 if [[ "$create_default_aliases" == "true" ]]; then
   for alias_localpart in postmaster abuse dmarc; do
     alias_q="$(sql_quote "$alias_localpart@$domain")"
-    sqlite3 "$MAIL_DB_PATH" <<SQL
-PRAGMA foreign_keys = ON;
+    psql_mail <<SQL
 INSERT INTO aliases(domain_id, source, destination, active)
-VALUES((SELECT id FROM domains WHERE name='$domain_q'), '$alias_q', '$alias_dest_q', 1)
-ON CONFLICT(source, destination) DO UPDATE SET active=1;
+VALUES((SELECT id FROM domains WHERE name='$domain_q'), '$alias_q', '$alias_dest_q', true)
+ON CONFLICT(source, destination) DO UPDATE SET active=true;
 SQL
   done
 fi

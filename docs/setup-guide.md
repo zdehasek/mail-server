@@ -128,8 +128,8 @@ DAV_HOSTNAME=dav.example.com
 - `PRIMARY_DOMAIN`: domain that receives mail.
 - `SECONDARY_DOMAINS`: optional space-separated extra domains served by the same mail host, for example `nocni.club zdehasek.com`.
 - `ADMIN_EMAIL`: Let's Encrypt registration and operational contact.
-- `WEBMAIL_HOSTNAME`: Roundcube HTTPS hostname.
-- `DAV_HOSTNAME`: Radicale CalDAV/CardDAV HTTPS hostname.
+- `WEBMAIL_HOSTNAME`: SOGo HTTPS hostname.
+- `DAV_HOSTNAME`: optional CalDAV/CardDAV hostname; it can be the same as `WEBMAIL_HOSTNAME`.
 
 Using the same value for `MAIL_HOSTNAME` and `WEBMAIL_HOSTNAME` is supported.
 
@@ -154,50 +154,16 @@ VMAIL_UID=5000
 VMAIL_GID=5000
 VMAIL_ROOT=/var/vmail
 MAIL_DB_PATH=/etc/mailserver/mail.sqlite
+MAIL_DB_NAME=mailserver
+MAIL_DB_USER=mailserver
+MAIL_DB_HOST=127.0.0.1
+MAIL_DB_PASSWORD_FILE=/etc/mailserver/secrets/postgresql-mailserver-password
 ```
 
 - `VMAIL_UID` and `VMAIL_GID`: virtual mail user/group IDs.
 - `VMAIL_ROOT`: mailbox storage root.
-- `MAIL_DB_PATH`: SQLite database for domains, users, and aliases.
-
-### Roundcube Release Pin
-
-Roundcube is the supported default webmail in the install flow. Leave these
-values unchanged unless intentionally upgrading Roundcube:
-
-```bash
-ROUNDCUBE_VERSION=1.7.1
-ROUNDCUBE_URL=https://github.com/roundcube/roundcubemail/releases/download/1.7.1/roundcubemail-1.7.1-complete.tar.gz
-ROUNDCUBE_SHA256=1e0382bcefd627ab0b6285d3181ddfba5b444fdcf6d49f33f5ea15fbf97864ef
-```
-
-### Radicale Calendar Defaults
-
-These values control calendar URLs and the default calendar created for each
-mailbox. By default, Roundcube also installs a browser calendar plugin and uses
-the local Radicale service as its CalDAV backend.
-
-```bash
-RADICALE_CALDAV_BASE_URL=https://dav.example.com/
-RADICALE_DEFAULT_CALENDAR_NAME=default
-RADICALE_DEFAULT_CALENDAR_DISPLAY_NAME=Default
-```
-
-### Roundcube Skin And Calendar
-
-The installer defaults to the public Elastic2026 skin and enables the Roundcube
-calendar plugin stack.
-
-```bash
-ROUNDCUBE_SKIN=elastic2026
-ROUNDCUBE_SKINS_ALLOWED="'elastic2026', 'elastic'"
-ROUNDCUBE_SKIN_URL=https://github.com/zdehasek/Elastic2026/archive/refs/heads/main.zip
-ROUNDCUBE_SKIN_LOGO=/images/logo-ai.png
-ROUNDCUBE_ENABLE_CALENDAR=true
-ROUNDCUBE_CALDAV_SERVER=http://127.0.0.1:5232/
-ROUNDCUBE_CALDAV_URL=http://127.0.0.1:5232/%u/%n/
-ROUNDCUBE_DEFAULT_CALENDAR_NAME=default
-```
+- `MAIL_DB_PATH`: optional legacy SQLite database path used only for one-time migration during upgrades.
+- `MAIL_DB_NAME`, `MAIL_DB_USER`, `MAIL_DB_HOST`, and `MAIL_DB_PASSWORD_FILE`: PostgreSQL connection used by Postfix, Dovecot, and SOGo.
 
 ### Install Features
 
@@ -242,8 +208,8 @@ BACKUP_RETENTION_DAYS=14
 BACKUP_CRON_SCHEDULE="17 3 * * *"
 ```
 
-Backups include mail configuration, Let's Encrypt data, Roundcube data, Radicale
-collections, SQLite snapshots, and virtual mailboxes.
+Backups include mail configuration, Let's Encrypt data, a PostgreSQL dump, SOGo
+configuration, and virtual mailboxes.
 
 ### Required Aliases And DKIM
 
@@ -545,6 +511,10 @@ VMAIL_UID=5000
 VMAIL_GID=5000
 VMAIL_ROOT=/var/vmail
 MAIL_DB_PATH=/etc/mailserver/mail.sqlite
+MAIL_DB_NAME=mailserver
+MAIL_DB_USER=mailserver
+MAIL_DB_HOST=127.0.0.1
+MAIL_DB_PASSWORD_FILE=/etc/mailserver/secrets/postgresql-mailserver-password
 LETSENCRYPT_STAGING=false
 ENABLE_UFW=true
 UFW_RESET_RULES=false

@@ -20,20 +20,10 @@ if [[ "$DRY_RUN" == "true" ]]; then
 fi
 
 email_q="$(sql_quote "$email")"
-changes="$(sqlite3 "$MAIL_DB_PATH" <<SQL
-UPDATE users SET active=0 WHERE email='$email_q' AND active=1;
-SELECT changes();
-SQL
-)"
+changes="$(psql_mail_scalar -c "WITH updated AS (UPDATE users SET active=false WHERE email='$email_q' AND active=true RETURNING 1) SELECT COUNT(*) FROM updated;")"
 
 if [[ "$changes" -eq 0 ]]; then
   die "Active mailbox not found: $email"
-fi
-
-if [[ -f /etc/radicale/users ]]; then
-  htpasswd -D /etc/radicale/users "$email" >/dev/null 2>&1 || true
-  chown radicale:radicale /etc/radicale/users
-  chmod 0640 /etc/radicale/users
 fi
 
 info "Mailbox deactivated: $email"

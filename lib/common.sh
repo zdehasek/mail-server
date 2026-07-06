@@ -137,17 +137,16 @@ set_config_defaults() {
   : "${SECONDARY_DOMAINS:=}"
   : "${DKIM_ROOT:=/etc/mailserver/dkim}"
   : "${PRIMARY_ALIAS_ADDRESSES:=$POSTMASTER_ADDRESS $ABUSE_ADDRESS dmarc@$PRIMARY_DOMAIN admin@$PRIMARY_DOMAIN}"
-  : "${RADICALE_CALDAV_BASE_URL:=https://$DAV_HOSTNAME/}"
-  : "${RADICALE_DEFAULT_CALENDAR_NAME:=default}"
-  : "${RADICALE_DEFAULT_CALENDAR_DISPLAY_NAME:=Default}"
-  : "${ROUNDCUBE_SKIN:=elastic2026}"
-  : "${ROUNDCUBE_SKINS_ALLOWED:='elastic2026', 'elastic'}"
-  : "${ROUNDCUBE_SKIN_URL:=https://github.com/zdehasek/Elastic2026/archive/refs/heads/main.zip}"
-  : "${ROUNDCUBE_SKIN_LOGO:=/images/logo-ai.png}"
-  : "${ROUNDCUBE_ENABLE_CALENDAR:=true}"
-  : "${ROUNDCUBE_CALDAV_SERVER:=http://127.0.0.1:5232/}"
-  : "${ROUNDCUBE_CALDAV_URL:=http://127.0.0.1:5232/%u/%n/}"
-  : "${ROUNDCUBE_DEFAULT_CALENDAR_NAME:=$RADICALE_DEFAULT_CALENDAR_NAME}"
+  : "${MAIL_DB_PATH:=/etc/mailserver/mail.sqlite}"
+  : "${MAIL_DB_NAME:=mailserver}"
+  : "${MAIL_DB_USER:=mailserver}"
+  : "${MAIL_DB_HOST:=127.0.0.1}"
+  : "${MAIL_DB_PASSWORD_FILE:=/etc/mailserver/secrets/postgresql-mailserver-password}"
+  SOGO_SERVER_NAMES="$WEBMAIL_HOSTNAME"
+  if [[ "$DAV_HOSTNAME" != "$WEBMAIL_HOSTNAME" ]]; then
+    SOGO_SERVER_NAMES+=" $DAV_HOSTNAME"
+  fi
+  export SOGO_SERVER_NAMES
   if [[ "${ENABLE_RSPAMD:-true}" == "true" ]]; then
     RSPAMD_MILTER=", inet:127.0.0.1:11332"
   else
@@ -195,7 +194,7 @@ sync_configured_domains() {
   local domain domain_q
   while IFS= read -r domain; do
     domain_q="$(sql_quote "$domain")"
-    sqlite_mail "INSERT INTO domains(name, active) VALUES('$domain_q', 1) ON CONFLICT(name) DO UPDATE SET active=1;"
+    psql_mail -c "INSERT INTO domains(name, active) VALUES('$domain_q', true) ON CONFLICT(name) DO UPDATE SET active=true;"
   done < <(mail_domains)
 }
 
@@ -236,7 +235,7 @@ require_var() {
 validate_config() {
   local required=(
     MAIL_HOSTNAME PRIMARY_DOMAIN ADMIN_EMAIL WEBMAIL_HOSTNAME DAV_HOSTNAME SERVER_PUBLIC_IPV4
-    VMAIL_UID VMAIL_GID VMAIL_ROOT MAIL_DB_PATH ROUNDCUBE_VERSION ROUNDCUBE_URL ROUNDCUBE_SHA256
+    VMAIL_UID VMAIL_GID VMAIL_ROOT MAIL_DB_NAME MAIL_DB_USER MAIL_DB_HOST MAIL_DB_PASSWORD_FILE
     LETSENCRYPT_STAGING ENABLE_UFW ENABLE_FAIL2BAN ENABLE_RSPAMD ENABLE_CLAMAV
     POSTMASTER_ADDRESS ABUSE_ADDRESS DKIM_SELECTOR
   )
@@ -305,12 +304,10 @@ replace_tokens() {
   local content
   content="$(<"$file")"
   local vars=(
-    MAIL_HOSTNAME PRIMARY_DOMAIN ADMIN_EMAIL WEBMAIL_HOSTNAME DAV_HOSTNAME SERVER_PUBLIC_IPV4 SERVER_PUBLIC_IPV6
-    VMAIL_UID VMAIL_GID VMAIL_ROOT MAIL_DB_PATH ROUNDCUBE_VERSION ROUNDCUBE_URL ROUNDCUBE_SHA256 ROUNDCUBE_DES_KEY DKIM_SELECTOR
+    MAIL_HOSTNAME PRIMARY_DOMAIN ADMIN_EMAIL WEBMAIL_HOSTNAME DAV_HOSTNAME SOGO_SERVER_NAMES SERVER_PUBLIC_IPV4 SERVER_PUBLIC_IPV6
+    VMAIL_UID VMAIL_GID VMAIL_ROOT MAIL_DB_PATH MAIL_DB_NAME MAIL_DB_USER MAIL_DB_HOST MAIL_DB_PASSWORD MAIL_DB_PASSWORD_FILE DOVECOT_SQL_CONNECTION_BLOCK DOVECOT_SQL_CONNECT DKIM_SELECTOR
     POSTMASTER_ADDRESS ABUSE_ADDRESS TIMEZONE UFW_RESET_RULES SSH_PORT SSH_ALLOW_USERS SSH_ALLOW_USERS_DIRECTIVE
     BACKUP_DIR BACKUP_RETENTION_DAYS BACKUP_CRON_SCHEDULE
-    RADICALE_CALDAV_BASE_URL RADICALE_DEFAULT_CALENDAR_NAME RADICALE_DEFAULT_CALENDAR_DISPLAY_NAME ROUNDCUBE_PLUGINS
-    ROUNDCUBE_SKIN ROUNDCUBE_SKINS_ALLOWED ROUNDCUBE_SKIN_LOGO ROUNDCUBE_CALDAV_SERVER ROUNDCUBE_CALDAV_URL ROUNDCUBE_DEFAULT_CALENDAR_NAME
     RSPAMD_MILTER
   )
   local name value token
@@ -352,8 +349,49 @@ service_enable_now() {
   run systemctl enable --now "$1"
 }
 
-sqlite_mail() {
-  run sqlite3 "$MAIL_DB_PATH" "$@"
+ensure_mail_db_password() {
+  if [[ -n "${MAIL_DB_PASSWORD:-}" ]]; then
+    return 0
+  fi
+  if [[ "$DRY_RUN" == "true" ]]; then
+    MAIL_DB_PASSWORD="dry-run-postgresql-password"
+    export MAIL_DB_PASSWORD
+    return 0
+  fi
+  if [[ ! -f "$MAIL_DB_PASSWORD_FILE" ]]; then
+    install -d -m 0700 "$(dirname "$MAIL_DB_PASSWORD_FILE")"
+    openssl rand -hex 32 > "$MAIL_DB_PASSWORD_FILE"
+    chmod 0600 "$MAIL_DB_PASSWORD_FILE"
+  fi
+  MAIL_DB_PASSWORD="$(tr -d '\n' < "$MAIL_DB_PASSWORD_FILE")"
+  export MAIL_DB_PASSWORD
+}
+
+psql_mail() {
+  ensure_mail_db_password
+  PGPASSWORD="$MAIL_DB_PASSWORD" psql -v ON_ERROR_STOP=1 -h "$MAIL_DB_HOST" -U "$MAIL_DB_USER" -d "$MAIL_DB_NAME" "$@"
+}
+
+psql_mail_scalar() {
+  psql_mail -At "$@"
+}
+
+dovecot_sql_connection_block() {
+  ensure_mail_db_password
+  cat <<EOF
+pgsql $MAIL_DB_HOST {
+  parameters {
+    user = $MAIL_DB_USER
+    password = $MAIL_DB_PASSWORD
+    dbname = $MAIL_DB_NAME
+  }
+}
+EOF
+}
+
+dovecot_sql_connect() {
+  ensure_mail_db_password
+  printf 'host=%s dbname=%s user=%s password=%s\n' "$MAIL_DB_HOST" "$MAIL_DB_NAME" "$MAIL_DB_USER" "$MAIL_DB_PASSWORD"
 }
 
 sql_quote() {
@@ -377,9 +415,9 @@ configured_mail_domains() {
   primary="$(normalize_domain "$PRIMARY_DOMAIN")"
   {
     printf '%s\n' "$primary"
-    if [[ -f "$MAIL_DB_PATH" ]]; then
-      if ! db_domains="$(sqlite3 "$MAIL_DB_PATH" "SELECT lower(name) FROM domains WHERE active=1 ORDER BY name;" 2>&1)"; then
-        die "Could not read active mail domains from $MAIL_DB_PATH: $db_domains"
+    if command -v psql >/dev/null 2>&1; then
+      if ! db_domains="$(psql_mail_scalar -c "SELECT lower(name) FROM domains WHERE active=true ORDER BY name;" 2>&1)"; then
+        db_domains=""
       fi
       printf '%s\n' "$db_domains"
     fi
@@ -464,125 +502,6 @@ curl_config_quote() {
   value="${value//\\/\\\\}"
   value="${value//\"/\\\"}"
   printf "%s" "$value"
-}
-
-radicale_curl_status() {
-  local method="$1"
-  local url="$2"
-  local email="$3"
-  local password="$4"
-  local body_file="${5:-}"
-  local user_config
-  user_config="user = \"$(curl_config_quote "$email:$password")\""
-
-  if [[ -n "$body_file" ]]; then
-    printf '%s\n' "$user_config" | curl --silent --show-error --location \
-      --config - \
-      --request "$method" \
-      --header 'Content-Type: application/xml; charset=utf-8' \
-      --data-binary "@$body_file" \
-      --output /dev/null \
-      --write-out '%{http_code}' \
-      "$url"
-  else
-    printf '%s\n' "$user_config" | curl --silent --show-error --location \
-      --config - \
-      --request "$method" \
-      --header 'Depth: 0' \
-      --output /dev/null \
-      --write-out '%{http_code}' \
-      "$url"
-  fi
-}
-
-radicale_curl_status_retry() {
-  local status attempt
-  for attempt in 1 2 3 4 5; do
-    status="$(radicale_curl_status "$@" || true)"
-    case "$status" in
-      000|502|503)
-        sleep "$attempt"
-        ;;
-      *)
-        printf "%s" "$status"
-        return 0
-        ;;
-    esac
-  done
-  printf "%s" "$status"
-}
-
-provision_radicale_calendar() {
-  local email="$1"
-  local password="$2"
-
-  local base_url calendar_name display_name parent_url url status body_file
-  base_url="${RADICALE_CALDAV_BASE_URL%/}"
-  calendar_name="${RADICALE_DEFAULT_CALENDAR_NAME:-default}"
-  display_name="${RADICALE_DEFAULT_CALENDAR_DISPLAY_NAME:-Default}"
-  parent_url="$base_url/$email/"
-  url="$base_url/$email/$calendar_name/"
-
-  status="$(radicale_curl_status_retry PROPFIND "$parent_url" "$email" "$password")"
-  case "$status" in
-    200|207) ;;
-    *)
-      status="$(radicale_curl_status_retry MKCOL "$parent_url" "$email" "$password")"
-      case "$status" in
-        200|201|204) ;;
-        405)
-          status="$(radicale_curl_status_retry PROPFIND "$parent_url" "$email" "$password")"
-          [[ "$status" == "200" || "$status" == "207" ]] || die "Radicale user collection provisioning failed for $email: MKCOL returned 405, PROPFIND returned $status"
-          ;;
-        *)
-          die "Radicale user collection provisioning failed for $email: MKCOL returned $status for $parent_url"
-          ;;
-      esac
-      ;;
-  esac
-
-  status="$(radicale_curl_status_retry PROPFIND "$url" "$email" "$password")"
-  case "$status" in
-    200|207)
-      info "Radicale calendar already exists: $url"
-      return 0
-      ;;
-  esac
-
-  body_file="$(mktemp)"
-  chmod 0600 "$body_file"
-  printf '%s\n' \
-    '<?xml version="1.0" encoding="utf-8" ?>' \
-    '<C:mkcalendar xmlns:D="DAV:" xmlns:C="urn:ietf:params:xml:ns:caldav">' \
-    '  <D:set>' \
-    '    <D:prop>' \
-    "      <D:displayname>$(xml_escape "$display_name")</D:displayname>" \
-    '      <C:supported-calendar-component-set>' \
-    '        <C:comp name="VEVENT"/>' \
-    '      </C:supported-calendar-component-set>' \
-    '    </D:prop>' \
-    '  </D:set>' \
-    '</C:mkcalendar>' > "$body_file"
-
-  status="$(radicale_curl_status_retry MKCALENDAR "$url" "$email" "$password" "$body_file")"
-  rm -f "$body_file"
-
-  case "$status" in
-    200|201|204)
-      info "Radicale calendar ready: $url"
-      ;;
-    405)
-      status="$(radicale_curl_status_retry PROPFIND "$url" "$email" "$password")"
-      [[ "$status" == "200" || "$status" == "207" ]] && {
-        info "Radicale calendar already exists: $url"
-        return 0
-      }
-      die "Radicale calendar provisioning failed for $email: MKCALENDAR returned 405, PROPFIND returned $status"
-      ;;
-    *)
-      die "Radicale calendar provisioning failed for $email: MKCALENDAR returned $status for $url"
-      ;;
-  esac
 }
 
 parse_config_only_args() {

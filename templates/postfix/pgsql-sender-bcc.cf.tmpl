@@ -1,0 +1,5 @@
+hosts = __MAIL_DB_HOST__
+user = __MAIL_DB_USER__
+password = __MAIL_DB_PASSWORD__
+dbname = __MAIL_DB_NAME__
+query = SELECT split_part(email, '@', 1) || '+Sent@' || split_part(email, '@', 2) FROM users WHERE email=lower('%s') AND active=true

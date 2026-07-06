@@ -6,9 +6,8 @@ Default stack:
 
 - Postfix for SMTP inbound and authenticated submission.
 - Dovecot for IMAPS, LMTP delivery, authentication, and Sieve.
-- SQLite for virtual domains, users, and aliases.
-- Roundcube for stable browser webmail, with the Elastic2026 skin and optional browser calendar plugin.
-- Radicale for contacts, calendars, CalDAV, and CardDAV.
+- PostgreSQL for virtual domains, users, aliases, and SOGo groupware data.
+- SOGo for browser webmail, contacts, calendars, CalDAV/CardDAV, and ActiveSync.
 - Nginx as HTTPS reverse proxy.
 - Let's Encrypt certificates via Certbot webroot challenge.
 - OpenDKIM, OpenDMARC, SPF policy checks, and Rspamd.
@@ -100,11 +99,11 @@ Email deliverability cannot be made fully automatic. Production use requires DNS
 
 See `docs/dns.md` for exact records.
 
-## Why Roundcube And Radicale
+## SOGo Groupware
 
-SOGo is capable but overbuilt for a small self-hosted mail server. This installer uses smaller, stable single-purpose components: Roundcube for webmail and Radicale for contacts/calendar sync. Roundcube can also expose the same Radicale calendars in the browser through the bundled calendar plugin setup.
-
-See `docs/webmail-options.md` for the comparison.
+The web layer is SOGo. It uses the local Dovecot IMAP service for mail access,
+Postfix submission for outbound mail, and PostgreSQL for users, calendars,
+contacts, sessions, and profile data.
 
 ## Safety
 

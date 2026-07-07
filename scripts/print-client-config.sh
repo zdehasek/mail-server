@@ -66,6 +66,7 @@ Apple Mail
   User Name: $account
   Incoming Mail Server: $MAIL_HOSTNAME
   Outgoing Mail Server: $MAIL_HOSTNAME
+  Primary mailbox profile: https://$WEBMAIL_HOSTNAME/mail/apple.mobileconfig
 
 Thunderbird Mail
   Configure manually

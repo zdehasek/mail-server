@@ -39,6 +39,7 @@ warnings=0
 check_template "$ROOT_DIR/templates/nginx/sogo.conf.tmpl" /etc/nginx/sites-available/sogo.conf
 check_template "$ROOT_DIR/templates/sogo/sogo.conf.tmpl" /etc/sogo/sogo.conf raw
 check_template "$ROOT_DIR/templates/nginx/autoconfig.xml.tmpl" /etc/nginx/mail-autoconfig.xml raw
+check_template "$ROOT_DIR/templates/nginx/apple-mail.mobileconfig.tmpl" /etc/nginx/apple-mail.mobileconfig raw
 warn_state "config-drift is scoped to SOGo/webmail generated files; it does not audit every Postfix, Dovecot, Rspamd, DKIM, DMARC, Fail2ban, or SSH hardening file."
 
 printf '\nSummary: %d drift(s), %d warning(s)\n' "$failures" "$warnings"

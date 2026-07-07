@@ -215,6 +215,17 @@ https://mail.example.com/.well-known/autoconfig/mail/config-v1.1.xml
 Use this URL when Thunderbird automatic discovery does not find the account from
 the email domain alone.
 
+Apple Mail does not use Thunderbird's autoconfig XML. A passwordless Apple
+configuration profile for the primary mailbox is served at:
+
+```text
+https://mail.example.com/mail/apple.mobileconfig
+https://mail.example.com/.well-known/mail/apple.mobileconfig
+```
+
+The profile includes IMAP/SMTP host, port, TLS, and username settings only. The
+mailbox password is still entered locally on the Apple device.
+
 ## Health Checks
 
 Run the broad check suite:

@@ -43,6 +43,28 @@ server {
     return 301 /SOGo/dav;
   }
 
+  location = /mail/config-v1.1.xml {
+    default_type application/xml;
+    alias /etc/nginx/mail-autoconfig.xml;
+  }
+
+  location = /.well-known/autoconfig/mail/config-v1.1.xml {
+    default_type application/xml;
+    alias /etc/nginx/mail-autoconfig.xml;
+  }
+
+  location = /mail/apple.mobileconfig {
+    default_type application/x-apple-aspen-config;
+    add_header Content-Disposition 'attachment; filename="__PRIMARY_DOMAIN__-mail.mobileconfig"';
+    alias /etc/nginx/apple-mail.mobileconfig;
+  }
+
+  location = /.well-known/mail/apple.mobileconfig {
+    default_type application/x-apple-aspen-config;
+    add_header Content-Disposition 'attachment; filename="__PRIMARY_DOMAIN__-mail.mobileconfig"';
+    alias /etc/nginx/apple-mail.mobileconfig;
+  }
+
   location ^~ /SOGo {
     proxy_pass http://127.0.0.1:20000;
     proxy_redirect http://127.0.0.1:20000 default;

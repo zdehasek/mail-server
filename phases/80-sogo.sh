@@ -11,6 +11,8 @@ service_enable_now sogo
 run systemctl restart sogo
 
 render_template "$ROOT_DIR/templates/nginx/sogo.conf.tmpl" /etc/nginx/sites-available/sogo.conf
+write_file /etc/nginx/mail-autoconfig.xml "$(replace_tokens "$ROOT_DIR/templates/nginx/autoconfig.xml.tmpl")"
+write_file /etc/nginx/apple-mail.mobileconfig "$(replace_tokens "$ROOT_DIR/templates/nginx/apple-mail.mobileconfig.tmpl")"
 run ln -sf /etc/nginx/sites-available/sogo.conf /etc/nginx/sites-enabled/sogo.conf
 run rm -f /etc/nginx/sites-enabled/roundcube.conf
 run rm -f /etc/nginx/sites-enabled/mailserver-acme.conf

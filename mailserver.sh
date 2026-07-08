@@ -107,6 +107,11 @@ validate_domain_or_die() {
   [[ "$domain" =~ ^[a-z0-9][a-z0-9.-]*[a-z0-9]$ && "$domain" == *.* && "$domain" != *..* ]] || die "Invalid domain: $domain"
 }
 
+is_valid_domain() {
+  local domain="$1"
+  [[ "$domain" =~ ^[a-z0-9][a-z0-9.-]*[a-z0-9]$ && "$domain" == *.* && "$domain" != *..* ]]
+}
+
 format_command() {
   local arg rendered=""
   for arg in "$@"; do
@@ -631,6 +636,28 @@ prompt_tty() {
   printf '%s\n' "${reply:-$default}"
 }
 
+prompt_domain_tty() {
+  local default="${1:-}"
+  local reply domain
+
+  has_tty || return 1
+  while true; do
+    reply="$(prompt_tty "Primary mail domain only, for example nocni.club" "$default")"
+    domain="$(normalize_domain "$reply")"
+    if [[ "$domain" == *@* ]]; then
+      warn "That looks like an email address; using only the domain after @."
+      domain="${domain##*@}"
+    fi
+
+    if is_valid_domain "$domain"; then
+      printf '%s\n' "$domain"
+      return 0
+    fi
+
+    printf 'Invalid domain: %s. Enter a domain like nocni.club, not an email address.\n' "$reply" > /dev/tty
+  done
+}
+
 say_tty() {
   local message="$*"
   if has_tty; then
@@ -903,7 +930,7 @@ cmd_init() {
   if [[ "$non_interactive" != "true" && ( -z "$domain" || -z "$admin_email" || -z "$public_ipv4" ) ]]; then
     if has_tty; then
       say_tty "Collecting setup answers first. No network or install steps will run until prompts finish."
-      domain="${domain:-$(prompt_tty "Primary mail domain" "${MAILSERVER_DOMAIN:-}")}"
+      domain="${domain:-$(prompt_domain_tty "${MAILSERVER_DOMAIN:-}")}"
       mail_hostname="${mail_hostname:-mail.$domain}"
       admin_email="${admin_email:-admin@$domain}"
       webmail_hostname="${webmail_hostname:-$mail_hostname}"

@@ -58,7 +58,7 @@ INSTALL_DIR="${MAILSERVER_INSTALL_DIR:-/opt/mailserver}"
 CONFIG_DIR="${MAILSERVER_CONFIG_DIR:-$(config_home)/.email-server}"
 DEFAULT_CONFIG_FILE="$CONFIG_DIR/config.env"
 CLI_PATH="${MAILSERVER_CLI_PATH:-/usr/local/bin/mailserver}"
-REPO_URL="${MAILSERVER_REPO_URL:-https://github.com/zdehasek/email-server.git}"
+REPO_URL="${MAILSERVER_REPO_URL:-https://github.com/zdehasek/mail-server.git}"
 REPO_REF="${MAILSERVER_REF:-}"
 COMMAND=""
 COMMAND_ARGS=()
@@ -136,7 +136,7 @@ show_help() {
 Usage:
   mailserver [--config PATH] COMMAND [OPTIONS]
   mailserver RESOURCE ACTION [OPTIONS]
-  curl -fsSL https://raw.githubusercontent.com/zdehasek/email-server/master/mailserver.sh | sudo bash
+  curl -fsSL https://raw.githubusercontent.com/zdehasek/mail-server/master/mailserver.sh | sudo bash
 
 Setup:
   init                         Create ~/.email-server/config.env interactively
@@ -210,8 +210,8 @@ Examples:
   sudo mailserver forwards add --source user@example.com --dest user@example.net --allow-mailbox-source
   mailserver client-info --user user@example.com
   ./mailserver.sh doctor --config .env.example
-  curl -fsSL https://raw.githubusercontent.com/zdehasek/email-server/master/mailserver.sh | sudo bash
-  curl -fsSL https://raw.githubusercontent.com/zdehasek/email-server/master/mailserver.sh | sudo MAILSERVER_INSTALL_DIR=/opt/mailserver bash -s -- setup-dry-run
+  curl -fsSL https://raw.githubusercontent.com/zdehasek/mail-server/master/mailserver.sh | sudo bash
+  curl -fsSL https://raw.githubusercontent.com/zdehasek/mail-server/master/mailserver.sh | sudo MAILSERVER_INSTALL_DIR=/opt/mailserver bash -s -- setup-dry-run
 
 Notes:
   The default config is ~/.email-server/config.env. When run through sudo,
@@ -562,7 +562,7 @@ bootstrap_checkout() {
       git clone "$REPO_URL" "$dest"
       ok "Previous installer directory kept at $backup"
     else
-      die "Install directory exists and is not an email-server git checkout: $dest"
+      die "Install directory exists and is not a mail-server git checkout: $dest"
     fi
   else
     say "Cloning installer into $dest"

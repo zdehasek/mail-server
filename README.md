@@ -20,8 +20,8 @@ For the complete step-by-step setup guide, including local installation,
 [`docs/setup-guide.md`](docs/setup-guide.md).
 
 ```bash
-git clone git@github.com:zdehasek/email-server.git
-cd email-server
+git clone git@github.com:zdehasek/mail-server.git
+cd mail-server
 ./mailserver.sh install-cli
 mailserver init
 mailserver doctor
@@ -45,7 +45,7 @@ You can also bootstrap the checkout on the target server with a hosted copy of
 `mailserver.sh`:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/zdehasek/email-server/master/mailserver.sh | sudo bash
+curl -fsSL https://raw.githubusercontent.com/zdehasek/mail-server/master/mailserver.sh | sudo bash
 mailserver setup-dry-run
 sudo mailserver setup
 ```

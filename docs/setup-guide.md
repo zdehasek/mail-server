@@ -12,8 +12,8 @@ policy, and final deliverability tests must be handled outside the server.
 Run on the target server:
 
 ```bash
-git clone git@github.com:zdehasek/email-server.git
-cd email-server
+git clone git@github.com:zdehasek/mail-server.git
+cd mail-server
 ./mailserver.sh install-cli
 mailserver init
 mailserver setup-dry-run
@@ -23,7 +23,7 @@ sudo mailserver setup
 Or bootstrap a checkout from a hosted copy of the CLI:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/zdehasek/email-server/master/mailserver.sh | sudo bash
+curl -fsSL https://raw.githubusercontent.com/zdehasek/mail-server/master/mailserver.sh | sudo bash
 mailserver setup-dry-run
 sudo mailserver setup
 ```

@@ -99,6 +99,11 @@ The wizard:
 7. Runs final SSL, service, and TLS policy checks.
 8. Offers to install the recurring backup cron.
 
+During the guided setup, verbose package, Certbot, Nginx, and service output is
+written to a log file shown at the top of the screen. The terminal view stays on
+the current step, the DNS records to publish, and the checks that still need
+attention.
+
 `mailserver` loads the config automatically. You can also pass
 `--config /path/to/config.env` to any subcommand, or set `CONFIG` or
 `ENV_FILE`. When a command runs through `sudo`, the sudo user's home is used so

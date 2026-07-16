@@ -34,4 +34,4 @@ for phase in "${phases[@]}"; do
   source "$ROOT_DIR/phases/$phase.sh"
 done
 
-info "Install flow complete. Run mailserver print-dns --config $CONFIG_FILE and publish DNS records."
+info "Install flow complete. Run mailserver print-dns --config $CONFIG_FILE and publish DKIM DNS if you are not using the guided init flow."

@@ -1253,7 +1253,7 @@ cmd_init() {
   fi
   ok "Created $dest."
   if [[ "$config_only" == "true" || "$non_interactive" == "true" ]] || ! has_tty; then
-    say "Next: mailserver setup-dry-run"
+    say "Next: mailserver doctor"
     return 0
   fi
 

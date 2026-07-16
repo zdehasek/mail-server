@@ -771,15 +771,17 @@ prompt_tty() {
   local label="$1"
   local default="${2:-}"
   local reply
+  local prompt
 
   has_tty || return 1
   if [[ -n "$default" ]]; then
-    printf '%s [%s]: ' "$label" "$default" > /dev/tty
+    prompt="$label: "
+    IFS= read -e -r -i "$default" -p "$prompt" reply < /dev/tty || true
   else
-    printf '%s: ' "$label" > /dev/tty
+    prompt="$label: "
+    IFS= read -e -r -p "$prompt" reply < /dev/tty || true
   fi
-  IFS= read -r reply < /dev/tty
-  printf '%s\n' "${reply:-$default}"
+  printf '%s\n' "$reply"
 }
 
 prompt_enter_tty() {
@@ -940,14 +942,33 @@ available_timezones() {
 prompt_timezone_tty() {
   local default="$1"
   local reply
+  local zones=()
   local selected
+  local i
 
   has_tty || return 1
+  mapfile -t zones < <(available_timezones)
+  if [[ "${#zones[@]}" -eq 0 ]]; then
+    zones=("Europe/Prague" "UTC")
+  fi
 
   while true; do
-    printf 'Server timezone [%s]: ' "${default:-Europe/Prague}" > /dev/tty
-    IFS= read -r reply < /dev/tty
-    selected="${reply:-${default:-Europe/Prague}}"
+    printf 'Server timezone:\n' > /dev/tty
+    for i in "${!zones[@]}"; do
+      printf '  %d) %s\n' "$((i + 1))" "${zones[$i]}" > /dev/tty
+    done
+    if [[ -n "$default" ]]; then
+      printf '  Enter = %s, or type any IANA timezone like Europe/Berlin\n' "$default" > /dev/tty
+    else
+      printf '  Type any IANA timezone like Europe/Berlin\n' > /dev/tty
+    fi
+    IFS= read -e -r -i "${default:-Europe/Prague}" -p "Timezone choice [1-${#zones[@]}/IANA]: " reply < /dev/tty || true
+
+    if [[ "$reply" =~ ^[0-9]+$ && "$reply" -ge 1 && "$reply" -le "${#zones[@]}" ]]; then
+      selected="${zones[$((reply - 1))]}"
+    else
+      selected="${reply:-${default:-Europe/Prague}}"
+    fi
 
     if [[ ! -d /usr/share/zoneinfo ]] || timezone_exists "$selected"; then
       printf '%s\n' "$selected"

@@ -234,6 +234,13 @@ Run the broad check suite:
 sudo mailserver doctor
 ```
 
+To repair safe local drift, such as UFW rules, stopped installed services, and
+managed SOGo/nginx/autoconfig files that differ from templates, run:
+
+```bash
+sudo mailserver doctor --fix
+```
+
 Run a local end-to-end delivery test without sending external email:
 
 ```bash

@@ -97,14 +97,24 @@ apply_service_fixes() {
 
 run_health_checks() {
   local status=0
+  local config_drift_args=(--config "$CONFIG_FILE")
+  [[ "$DOCTOR_FIX" == "true" ]] && config_drift_args+=(--fix)
+
+  if [[ "$DOCTOR_FIX" == "true" ]]; then
+    "$ROOT_DIR/scripts/config-drift.sh" "${config_drift_args[@]}" || status=$?
+    printf '\n'
+  fi
+
   "$ROOT_DIR/scripts/dns-state.sh" --config "$CONFIG_FILE" || status=$?
   printf '\n'
   "$ROOT_DIR/scripts/check-ssl.sh" --config "$CONFIG_FILE" || status=$?
   printf '\n'
   "$ROOT_DIR/scripts/service-state.sh" --config "$CONFIG_FILE" || status=$?
   printf '\n'
-  "$ROOT_DIR/scripts/config-drift.sh" --config "$CONFIG_FILE" || status=$?
-  printf '\n'
+  if [[ "$DOCTOR_FIX" != "true" ]]; then
+    "$ROOT_DIR/scripts/config-drift.sh" "${config_drift_args[@]}" || status=$?
+    printf '\n'
+  fi
   "$ROOT_DIR/scripts/tls-policy-state.sh" --config "$CONFIG_FILE" || status=$?
   return "$status"
 }

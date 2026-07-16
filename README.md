@@ -112,6 +112,7 @@ contacts, sessions, and profile data.
 ## Safety
 
 - `mailserver doctor` is read-only unless explicitly run with `--fix`.
+- `mailserver doctor --fix` can repair local UFW, service, and managed webmail config drift.
 - `install.sh --dry-run` prints intended changes without applying them.
 - Managed files are backed up under `/var/backups/mailserver/<timestamp>/`.
 - `sudo mailserver backup` creates a mail server data backup.

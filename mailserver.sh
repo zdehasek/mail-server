@@ -156,7 +156,7 @@ Health checks:
   dns-state                    Check A/AAAA, MX, SPF, DMARC, PTR, DKIM
   check-ssl                    Check HTTPS, IMAPS, and SMTP TLS certs
   service-state                Check services, ports, and web endpoints
-  config-drift                 Compare live SOGo/autoconfig files with templates
+  config-drift [--fix]         Compare or repair live SOGo/autoconfig files
   e2e-delivery                 Inject local test mail, fetch via IMAP, check SOGo DAV
   tls-policy-state             Check MTA-STS, TLS reporting, and DANE DNS state
   rspamd-state                 Show Rspamd controller status or counters
@@ -252,7 +252,7 @@ show_command_help() {
       printf 'Usage: mailserver %s [--domain example.com] [--skip-dkim] [--skip-ptr] [--config PATH]\n' "$1"
       ;;
     config-drift)
-      printf 'Usage: mailserver config-drift [--config PATH]\n'
+      printf 'Usage: sudo mailserver config-drift [--fix] [--config PATH]\n'
       ;;
     e2e-delivery)
       printf 'Usage: mailserver e2e-delivery [--user user@example.com] [--password-file PATH] [--no-cleanup] [--config PATH]\n'

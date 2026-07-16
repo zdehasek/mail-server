@@ -6,7 +6,7 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 # shellcheck disable=SC1091
 source "$ROOT_DIR/lib/common.sh"
 
-usage() { echo "Usage: mailserver dns-state [--domain example.com] [--skip-dkim] [--skip-ptr] [--config PATH]"; }
+usage() { usage_line "Usage: mailserver dns-state [--domain example.com] [--skip-dkim] [--skip-ptr] [--config PATH]"; }
 parse_config_only_args "$@" || { usage; exit 0; }
 load_config
 
@@ -108,8 +108,9 @@ check_txt() {
   fi
 }
 
-printf 'DNS state for %s\n' "$target_domain"
-printf 'Resolver: %s\n\n' "$DNS_RESOLVER"
+ui_heading "DNS state for $target_domain"
+info "Resolver: $DNS_RESOLVER"
+ui_blank
 
 declare -A hosts=()
 hosts["$MAIL_HOSTNAME"]=1
@@ -167,5 +168,6 @@ else
   fi
 fi
 
-printf '\nSummary: %d failure(s), %d warning(s)\n' "$failures" "$warnings"
+ui_blank
+ui_summary "$failures" "$warnings" "$failures failure(s), $warnings warning(s)"
 [[ "$failures" -eq 0 ]]

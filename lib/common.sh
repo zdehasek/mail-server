@@ -13,9 +13,9 @@ STATE_DIR="/etc/mailserver/install-state"
 MANAGED_HEADER="# Managed by mail-server installer. Manual changes may be overwritten."
 
 use_color() {
-  [[ -n "${NO_COLOR:-}" ]] && return 1
   [[ -n "${FORCE_COLOR:-}" && "${FORCE_COLOR:-}" != "0" ]] && return 0
   [[ -n "${CLICOLOR_FORCE:-}" && "${CLICOLOR_FORCE:-}" != "0" ]] && return 0
+  [[ -n "${NO_COLOR:-}" ]] && return 1
   [[ ( -t 1 || -t 2 ) && -z "${NO_COLOR:-}" && "${TERM:-}" != "dumb" ]]
 }
 
@@ -43,6 +43,53 @@ log() { log_line "LOG  " 36 "• " "$*"; }
 info() { log_line "INFO " 36 "ℹ️ " "$*"; }
 warn() { log_line "WARN " "38;5;208" "⚠️ " "$*" >&2; }
 die() { log_line "ERROR" 31 "❌" "$*" >&2; exit 1; }
+
+ui_line() {
+  local color="$1"
+  local text="$2"
+  printf '%s\n' "$(style_text "$color" "$text")"
+}
+
+ui_line_err() {
+  local color="$1"
+  local text="$2"
+  printf '%s\n' "$(style_text "$color" "$text")" >&2
+}
+
+ui_blank() {
+  printf '\n'
+}
+
+ui_heading() {
+  ui_line "1;36" "== $* =="
+}
+
+usage_line() {
+  ui_line 36 "$*"
+}
+
+ui_subheading() {
+  ui_line 36 "-- $* --"
+}
+
+ui_summary() {
+  local failures="${1:-0}"
+  local warnings="${2:-0}"
+  shift 2 || true
+  local text="Summary: $*"
+
+  if [[ "$failures" -gt 0 ]]; then
+    ui_line 31 "$text"
+  elif [[ "$warnings" -gt 0 ]]; then
+    ui_line "38;5;208" "$text"
+  else
+    ui_line 32 "$text"
+  fi
+}
+
+dry_run_line() {
+  ui_line "38;5;208" "DRY-RUN: $*"
+}
 
 ok_state() {
   printf '%s\n' "$(style_text 32 "✅ OK    $*")"
@@ -257,7 +304,7 @@ set_config_entry_or_append() {
   local value
   value="$(config_value "$3")"
   if [[ "$DRY_RUN" == "true" ]]; then
-    printf 'DRY-RUN: set %s=%s in %s\n' "$key" "$value" "$file"
+    dry_run_line "set $key=$value in $file"
     return 0
   fi
   if grep -qE "^${key}=" "$file"; then
@@ -297,11 +344,15 @@ confirm() {
 
 run() {
   if [[ "$DRY_RUN" == "true" ]]; then
-    printf 'DRY-RUN: %q' "$1"
+    local rendered
+    printf -v rendered '%q' "$1"
     shift || true
     local arg
-    for arg in "$@"; do printf ' %q' "$arg"; done
-    printf '\n'
+    for arg in "$@"; do
+      printf -v arg '%q' "$arg"
+      rendered+=" $arg"
+    done
+    dry_run_line "$rendered"
     return 0
   fi
   "$@"
@@ -332,7 +383,7 @@ write_file() {
   local content="$2"
   backup_file "$path"
   if [[ "$DRY_RUN" == "true" ]]; then
-    printf 'DRY-RUN: write %s\n' "$path"
+    dry_run_line "write $path"
     return 0
   fi
   mkdir -p "$(dirname "$path")"

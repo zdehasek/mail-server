@@ -5,7 +5,7 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 # shellcheck source=../lib/common.sh
 source "$ROOT_DIR/lib/common.sh"
 
-usage() { echo "Usage: sudo mailserver remove-domain --domain example.com [--config PATH]"; }
+usage() { usage_line "Usage: sudo mailserver remove-domain --domain example.com [--config PATH]"; }
 parse_config_only_args "$@" || { usage; exit 0; }
 if [[ "${POSITIONAL[0]:-}" == "--domain" ]]; then
   [[ -n "${POSITIONAL[1]:-}" && "${#POSITIONAL[@]}" -eq 2 ]] || { usage; exit 1; }

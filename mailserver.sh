@@ -64,9 +64,9 @@ COMMAND=""
 COMMAND_ARGS=()
 
 use_color() {
-  [[ -n "${NO_COLOR:-}" ]] && return 1
   [[ -n "${FORCE_COLOR:-}" && "${FORCE_COLOR:-}" != "0" ]] && return 0
   [[ -n "${CLICOLOR_FORCE:-}" && "${CLICOLOR_FORCE:-}" != "0" ]] && return 0
+  [[ -n "${NO_COLOR:-}" ]] && return 1
   [[ ( -t 1 || -t 2 ) && "${TERM:-}" != "dumb" ]]
 }
 
@@ -86,6 +86,10 @@ say() {
 
 ok() {
   printf '%s\n' "$(color 32 "✅ $*")"
+}
+
+usage_line() {
+  printf '%s\n' "$(color 36 "$*")"
 }
 
 warn() {
@@ -233,85 +237,85 @@ HELP
 show_command_help() {
   case "$1" in
     add-user)
-      printf 'Usage: mailserver users add --user user@example.com [--full-name "Full Name"] [--config PATH]\n'
+      usage_line 'Usage: mailserver users add --user user@example.com [--full-name "Full Name"] [--config PATH]'
       ;;
     add-domain)
-      printf 'Usage: mailserver domains add --domain example.com [--alias-dest admin@example.com] [--no-default-aliases] [--config PATH]\n'
+      usage_line 'Usage: mailserver domains add --domain example.com [--alias-dest admin@example.com] [--no-default-aliases] [--config PATH]'
       ;;
     set-domain)
-      printf 'Usage: mailserver domains set --domain example.com [--admin-email admin@example.com] [--primary-mailbox admin@example.com] [--mail-hostname mail.example.com] [--webmail-hostname mail.example.com] [--dav-hostname dav.example.com] [--config PATH]\n'
+      usage_line 'Usage: mailserver domains set --domain example.com [--admin-email admin@example.com] [--primary-mailbox admin@example.com] [--mail-hostname mail.example.com] [--webmail-hostname mail.example.com] [--dav-hostname dav.example.com] [--config PATH]'
       ;;
     remove-domain)
-      printf 'Usage: mailserver domains rm --domain example.com [--config PATH]\n'
+      usage_line 'Usage: mailserver domains rm --domain example.com [--config PATH]'
       ;;
     remove)
-      printf 'Usage: sudo mailserver remove --purge [--config PATH] [--dry-run]\n'
+      usage_line 'Usage: sudo mailserver remove --purge [--config PATH] [--dry-run]'
       ;;
     doctor)
-      printf 'Usage: mailserver doctor [--fix] [--config PATH]\n'
+      usage_line 'Usage: mailserver doctor [--fix] [--config PATH]'
       ;;
     check)
-      printf 'Usage: mailserver check [--fix] [--config PATH]\n'
+      usage_line 'Usage: mailserver check [--fix] [--config PATH]'
       ;;
     print-dns|dns-state)
-      printf 'Usage: mailserver %s [--domain example.com] [--skip-dkim] [--skip-ptr] [--config PATH]\n' "$1"
+      usage_line "Usage: mailserver $1 [--domain example.com] [--skip-dkim] [--skip-ptr] [--config PATH]"
       ;;
     config-drift)
-      printf 'Usage: sudo mailserver config-drift [--fix] [--config PATH]\n'
+      usage_line 'Usage: sudo mailserver config-drift [--fix] [--config PATH]'
       ;;
     e2e-delivery)
-      printf 'Usage: mailserver e2e-delivery [--user user@example.com] [--password-file PATH] [--no-cleanup] [--config PATH]\n'
+      usage_line 'Usage: mailserver e2e-delivery [--user user@example.com] [--password-file PATH] [--no-cleanup] [--config PATH]'
       ;;
     tls-policy-state)
-      printf 'Usage: mailserver tls-policy-state [--domain example.com] [--config PATH]\n'
+      usage_line 'Usage: mailserver tls-policy-state [--domain example.com] [--config PATH]'
       ;;
     rspamd-state)
-      printf 'Usage: mailserver rspamd-state [status|counters|commands] [--config PATH]\n'
+      usage_line 'Usage: mailserver rspamd-state [status|counters|commands] [--config PATH]'
       ;;
     list-domains)
-      printf 'Usage: mailserver domains ls [--config PATH]\n'
+      usage_line 'Usage: mailserver domains ls [--config PATH]'
       ;;
     list-aliases)
-      printf 'Usage: mailserver aliases ls [--domain example.com] [--config PATH]\n'
+      usage_line 'Usage: mailserver aliases ls [--domain example.com] [--config PATH]'
       ;;
     list-forwards)
-      printf 'Usage: mailserver forwards ls [--domain example.com] [--config PATH]\n'
+      usage_line 'Usage: mailserver forwards ls [--domain example.com] [--config PATH]'
       ;;
     list-users)
-      printf 'Usage: mailserver users ls [--config PATH]\n'
+      usage_line 'Usage: mailserver users ls [--config PATH]'
       ;;
     remove-user)
-      printf 'Usage: mailserver users rm --user user@example.com [--config PATH]\n'
+      usage_line 'Usage: mailserver users rm --user user@example.com [--config PATH]'
       ;;
     change-password)
-      printf 'Usage: mailserver users passwd --user user@example.com [--config PATH]\n'
+      usage_line 'Usage: mailserver users passwd --user user@example.com [--config PATH]'
       ;;
     add-alias)
-      printf 'Usage: mailserver aliases add --source source@example.com --dest dest@example.com [--config PATH]\n'
+      usage_line 'Usage: mailserver aliases add --source source@example.com --dest dest@example.com [--config PATH]'
       ;;
     set-alias)
-      printf 'Usage: mailserver aliases set --source source@example.com --dest dest@example.com [--config PATH]\n'
+      usage_line 'Usage: mailserver aliases set --source source@example.com --dest dest@example.com [--config PATH]'
       ;;
     add-forward)
-      printf 'Usage: mailserver forwards add --source mailbox@example.com --dest dest@example.com [--allow-mailbox-source] [--config PATH]\n'
+      usage_line 'Usage: mailserver forwards add --source mailbox@example.com --dest dest@example.com [--allow-mailbox-source] [--config PATH]'
       ;;
     client-info|client-config)
-      printf 'Usage: mailserver %s [--user user@example.com] [--config PATH]\n' "$1"
+      usage_line "Usage: mailserver $1 [--user user@example.com] [--config PATH]"
       ;;
     restore)
-      printf 'Usage: mailserver restore --list|--inspect ARCHIVE|--validate ARCHIVE|--extract ARCHIVE --target DIR [--config PATH]\n'
+      usage_line 'Usage: mailserver restore --list|--inspect ARCHIVE|--validate ARCHIVE|--extract ARCHIVE --target DIR [--config PATH]'
       ;;
     init)
-      printf 'Usage: mailserver init [--config-only] [--domain DOMAIN] [--admin-email EMAIL] [--mail-hostname HOST] [--webmail-hostname HOST] [--dav-hostname HOST] [--public-ipv4 IP] [--public-ipv6 IP] [--timezone TZ] [--non-interactive] [--config PATH]\n'
+      usage_line 'Usage: mailserver init [--config-only] [--domain DOMAIN] [--admin-email EMAIL] [--mail-hostname HOST] [--webmail-hostname HOST] [--dav-hostname HOST] [--public-ipv4 IP] [--public-ipv6 IP] [--timezone TZ] [--non-interactive] [--config PATH]'
       ;;
     reset-setup)
-      printf 'Usage: mailserver reset-setup [--yes] [--config PATH]\n'
+      usage_line 'Usage: mailserver reset-setup [--yes] [--config PATH]'
       ;;
     install-cli)
-      printf 'Usage: mailserver install-cli\n'
+      usage_line 'Usage: mailserver install-cli'
       ;;
     update)
-      printf 'Usage: mailserver update\n'
+      usage_line 'Usage: mailserver update'
       ;;
     *)
       show_help
@@ -322,16 +326,16 @@ show_command_help() {
 show_resource_help() {
   case "$1" in
     domain|domains)
-      printf 'Usage: mailserver domains ls|list|add|rm|remove|set [OPTIONS]\n'
+      usage_line 'Usage: mailserver domains ls|list|add|rm|remove|set [OPTIONS]'
       ;;
     user|users)
-      printf 'Usage: mailserver users ls|list|add|rm|remove|passwd|password|change-password [OPTIONS]\n'
+      usage_line 'Usage: mailserver users ls|list|add|rm|remove|passwd|password|change-password [OPTIONS]'
       ;;
     alias|aliases)
-      printf 'Usage: mailserver aliases ls|list|add|set [OPTIONS]\n'
+      usage_line 'Usage: mailserver aliases ls|list|add|set [OPTIONS]'
       ;;
     forward|forwards)
-      printf 'Usage: mailserver forwards ls|list|add [OPTIONS]\n'
+      usage_line 'Usage: mailserver forwards ls|list|add [OPTIONS]'
       ;;
     *)
       show_help

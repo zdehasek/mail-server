@@ -143,7 +143,8 @@ check_svg_content_type() {
   check_content_type "$url" "image/svg+xml" "$label"
 }
 
-printf 'Service state for %s\n\n' "$PRIMARY_DOMAIN"
+ui_heading "Service state for $PRIMARY_DOMAIN"
+ui_blank
 
 services=(postgresql postfix dovecot nginx memcached sogo opendkim opendmarc fail2ban)
 [[ "${ENABLE_RSPAMD:-true}" == "true" ]] && services+=(rspamd)
@@ -161,7 +162,8 @@ check_port 8893 "OpenDMARC milter" "opendmarc"
 check_port 20000 "SOGo" "sogod"
 [[ "${ENABLE_RSPAMD:-true}" == "true" ]] && check_port 11332 "Rspamd milter" "rspamd"
 
-printf '\nExternal IPv4 reachability\n'
+ui_blank
+ui_subheading "External IPv4 reachability"
 check_external_port 25 "SMTP"
 check_external_port 80 "HTTP / Let's Encrypt"
 check_external_port 443 "HTTPS"
@@ -174,5 +176,6 @@ check_css_content_type "https://$WEBMAIL_HOSTNAME/SOGo/WebServerResources/css/th
 check_javascript_content_type "https://$WEBMAIL_HOSTNAME/SOGo/WebServerResources/js/Common.js" "SOGo Common.js"
 check_http "https://$DAV_HOSTNAME/SOGo/dav/" "401"
 
-printf '\nSummary: %d failure(s), %d warning(s)\n' "$failures" "$warnings"
+ui_blank
+ui_summary "$failures" "$warnings" "$failures failure(s), $warnings warning(s)"
 [[ "$failures" -eq 0 ]]

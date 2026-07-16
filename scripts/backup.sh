@@ -5,7 +5,7 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 # shellcheck source=../lib/common.sh
 source "$ROOT_DIR/lib/common.sh"
 
-usage() { echo "Usage: sudo mailserver backup [--config PATH]"; }
+usage() { usage_line "Usage: sudo mailserver backup [--config PATH]"; }
 parse_config_only_args "$@" || { usage; exit 0; }
 require_root
 load_config
@@ -44,12 +44,17 @@ done
 [[ "${#existing[@]}" -gt 0 ]] || die "No backup paths exist yet. Has the server been installed?"
 
 if [[ "$DRY_RUN" == "true" ]]; then
+  rendered="tar -czf"
+  printf -v arg '%q' "$backup_path"
+  rendered+=" $arg"
+  for path in "${existing[@]}"; do
+    printf -v arg '%q' "$path"
+    rendered+=" $arg"
+  done
+  rendered+=" -C <staging> postgresql"
   info "Would write backup to $backup_path"
   info "Would create PostgreSQL dump for $MAIL_DB_NAME"
-  printf 'DRY-RUN: tar -czf %q' "$backup_path"
-  printf ' %q' "${existing[@]}"
-  printf ' -C <staging> postgresql'
-  printf '\n'
+  dry_run_line "$rendered"
 else
   staging_dir="$(mktemp -d)"
   mkdir -p "$staging_dir/postgresql"

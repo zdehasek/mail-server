@@ -38,10 +38,26 @@ check_resources() {
 
 check_ports() {
   check_command ss
-  local port
-  for port in 25 80 443 587 993; do
-    if ss -ltn "sport = :$port" | awk 'NR>1 {found=1} END {exit found ? 0 : 1}'; then
-      warn "Port $port is already listening. Installer may replace or conflict with an existing service."
+  local port spec
+  local name expected listener
+  local ports=(
+    "25:SMTP:master|postfix"
+    "80:HTTP / Let's Encrypt:nginx"
+    "443:HTTPS:nginx"
+    "587:SMTP submission:master|postfix"
+    "993:IMAPS:dovecot"
+  )
+  for spec in "${ports[@]}"; do
+    IFS=: read -r port name expected <<< "$spec"
+    if port_is_listening "$port"; then
+      listener="$(port_listener_summary "$port")"
+      if port_listener_has_expected "$port" "$expected"; then
+        ok_state "port $port already listening: $name via $listener"
+      elif [[ "$listener" == unknown\ process* ]]; then
+        warn "Port $port ($name) is already listening, but the owner is hidden. Rerun with sudo so doctor can decide whether this is expected or a real conflict."
+      else
+        warn "Port $port ($name) is already listening on $listener. Stop or move that service before install, or run doctor --fix after install for managed repairs."
+      fi
     fi
   done
 }

@@ -65,6 +65,10 @@ contains_line() {
   grep -Fxq "$expected"
 }
 
+info_state() {
+  printf '%s\n' "$(style_text 36 "ℹ️  INFO  $*")"
+}
+
 check_host_ip() {
   local type="$1"
   local host="$2"
@@ -147,7 +151,7 @@ fi
 dkim_name="$DKIM_SELECTOR._domainkey.$target_domain"
 dkim_file="/etc/mailserver/dkim/$target_domain/$DKIM_SELECTOR.txt"
 if [[ "$skip_dkim" == "true" ]]; then
-  warn_state "DKIM check skipped by --skip-dkim"
+  info_state "DKIM TXT check skipped for this phase; it is checked after DKIM is generated during installation"
 else
   dns_dkim="$(dig @"$DNS_RESOLVER" +short TXT "$dkim_name" 2>/dev/null | normalize_txt)"
   if [[ -r "$dkim_file" ]]; then

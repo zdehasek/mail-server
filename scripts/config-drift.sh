@@ -56,7 +56,7 @@ check_template() {
   else
     render_template "$src" "$rendered"
   fi
-  if diff -u "$rendered" "$dest"; then
+  if [[ -f "$dest" ]] && cmp -s "$rendered" "$dest"; then
     ok_state "config matches template: $dest"
   else
     if [[ "$FIX_DRIFT" == "true" ]]; then
@@ -71,8 +71,10 @@ check_template() {
         /etc/nginx/*) nginx_fixed="true" ;;
         /etc/sogo/*) sogo_fixed="true" ;;
       esac
+    elif [[ ! -e "$dest" ]]; then
+      fail_state "managed config missing: $dest (run sudo mailserver doctor --fix)"
     else
-      fail_state "config drift detected: $dest"
+      fail_state "managed config drift detected: $dest (run sudo mailserver doctor --fix)"
     fi
   fi
 }

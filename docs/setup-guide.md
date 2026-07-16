@@ -99,6 +99,11 @@ The wizard:
 7. Runs final SSL, service, and TLS policy checks.
 8. Offers to install the recurring backup cron.
 
+During the guided setup, verbose package, Certbot, Nginx, and service output is
+written to a log file shown at the top of the screen. The terminal view stays on
+the current step, the DNS records to publish, and the checks that still need
+attention.
+
 `mailserver` loads the config automatically. You can also pass
 `--config /path/to/config.env` to any subcommand, or set `CONFIG` or
 `ENV_FILE`. When a command runs through `sudo`, the sudo user's home is used so
@@ -385,11 +390,11 @@ continuing.
 For a complete check against the configured `~/.email-server/config.env`, run:
 
 ```bash
-mailserver check
+mailserver doctor
 ```
 
 This runs DNS, SSL/TLS, and service checks. To inspect only DNS, run
-`mailserver dns-state`.
+`mailserver dns-state`. `mailserver check` remains as a compatibility alias.
 
 ## 6. Dry Run
 
@@ -493,10 +498,10 @@ Run the built-in checks:
 
 ```bash
 sudo mailserver verify
-mailserver check
+mailserver doctor
 ```
 
-The combined `check` command runs:
+The combined `doctor` command runs:
 
 ```bash
 mailserver dns-state

@@ -29,7 +29,9 @@ mailserver init
 Run these commands on the target server. Remote deployment is not a supported
 interface. By default, `mailserver init` creates
 `~/.email-server/config.env`, walks through DNS records, waits until they verify,
-installs the stack, verifies services, and then walks through DKIM DNS. Use
+installs the stack, verifies services, and then walks through DKIM DNS. The
+guided setup keeps package, Certbot, and service output in a timestamped log so
+the terminal stays focused on the current step and the next action. Use
 `mailserver init --config-only` when you only want to create the config and run
 the lower-level commands manually. All commands use that file unless
 `--config PATH`, `CONFIG=PATH`, or `ENV_FILE=PATH` is set. When a command is run
@@ -109,7 +111,8 @@ contacts, sessions, and profile data.
 
 ## Safety
 
-- `doctor.sh` is read-only.
+- `mailserver doctor` is read-only unless explicitly run with `--fix`.
+- `mailserver doctor --fix` can repair local UFW, service, and managed webmail config drift.
 - `install.sh --dry-run` prints intended changes without applying them.
 - Managed files are backed up under `/var/backups/mailserver/<timestamp>/`.
 - `sudo mailserver backup` creates a mail server data backup.

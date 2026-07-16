@@ -143,7 +143,7 @@ Setup:
   init --config-only           Create ~/.email-server/config.env only
   reset-setup                  Move local setup config aside
   install-cli                  Install mailserver into PATH
-  doctor                       Validate local prerequisites and config
+  doctor [--fix]               Validate prerequisites, DNS, TLS, services, and config drift
   setup-dry-run                Run doctor, dry-run install, and DNS output
   dry-run                      Show install actions without applying them
   install                      Install on this server
@@ -152,11 +152,11 @@ Setup:
 
 Health checks:
   verify                       Check local configs and active services
-  check                        Run DNS, SSL/TLS, and service checks
+  check                        Alias for doctor
   dns-state                    Check A/AAAA, MX, SPF, DMARC, PTR, DKIM
   check-ssl                    Check HTTPS, IMAPS, and SMTP TLS certs
   service-state                Check services, ports, and web endpoints
-  config-drift                 Compare live SOGo/autoconfig files with templates
+  config-drift [--fix]         Compare or repair live SOGo/autoconfig files
   e2e-delivery                 Inject local test mail, fetch via IMAP, check SOGo DAV
   tls-policy-state             Check MTA-STS, TLS reporting, and DANE DNS state
   rspamd-state                 Show Rspamd controller status or counters
@@ -242,11 +242,17 @@ show_command_help() {
     remove-domain)
       printf 'Usage: mailserver domains rm --domain example.com [--config PATH]\n'
       ;;
+    doctor)
+      printf 'Usage: mailserver doctor [--fix] [--config PATH]\n'
+      ;;
+    check)
+      printf 'Usage: mailserver check [--fix] [--config PATH]\n'
+      ;;
     print-dns|dns-state)
       printf 'Usage: mailserver %s [--domain example.com] [--skip-dkim] [--skip-ptr] [--config PATH]\n' "$1"
       ;;
     config-drift)
-      printf 'Usage: mailserver config-drift [--config PATH]\n'
+      printf 'Usage: sudo mailserver config-drift [--fix] [--config PATH]\n'
       ;;
     e2e-delivery)
       printf 'Usage: mailserver e2e-delivery [--user user@example.com] [--password-file PATH] [--no-cleanup] [--config PATH]\n'
@@ -631,19 +637,151 @@ has_tty() {
   [[ ( -t 0 || -t 1 || -t 2 ) && -r /dev/tty && -w /dev/tty ]]
 }
 
+terminal_width() {
+  local cols
+  cols="${COLUMNS:-}"
+  if [[ -z "$cols" || ! "$cols" =~ ^[0-9]+$ ]]; then
+    cols="$(tput cols 2>/dev/null || printf '80')"
+  fi
+  (( cols < 40 )) && cols=40
+  (( cols > 110 )) && cols=110
+  printf '%s\n' "$cols"
+}
+
+screen_line() {
+  local char="${1:--}"
+  local width
+  width="$(terminal_width)"
+  printf '%*s\n' "$width" '' | tr ' ' "$char"
+}
+
+wizard_clear() {
+  has_tty || return 0
+  printf '\033[H\033[2J' > /dev/tty
+}
+
+wizard_write() {
+  if has_tty; then
+    printf '%b\n' "$*" > /dev/tty
+  else
+    printf '%b\n' "$*"
+  fi
+}
+
+wizard_header() {
+  local step="$1"
+  local title="$2"
+  local log_file="${3:-}"
+
+  wizard_clear
+  wizard_write "$(color 36 "Mail server setup")"
+  screen_line "-" | while IFS= read -r line; do wizard_write "$line"; done
+  wizard_write "$(color 1 "Step $step: $title")"
+  if [[ -n "$log_file" ]]; then
+    wizard_write "$(color "2" "Detailed output is saved to: $log_file")"
+  fi
+  wizard_write ""
+}
+
+wizard_note() {
+  local message="$1"
+  wizard_write "$(color 36 "›") $message"
+}
+
+wizard_success() {
+  local message="$1"
+  wizard_write "$(color 32 "✓") $message"
+}
+
+wizard_problem() {
+  local message="$1"
+  wizard_write "$(color 31 "!") $message"
+}
+
+wizard_records() {
+  local text="$1"
+  local width
+  width="$(terminal_width)"
+  wizard_write "$(color 1 "Records to publish")"
+  screen_line "-" | while IFS= read -r line; do wizard_write "$line"; done
+  while IFS= read -r line; do
+    if (( ${#line} > width - 2 )); then
+      printf '%s\n' "$line" | fold -s -w "$((width - 2))" | while IFS= read -r folded; do
+        wizard_write "$folded"
+      done
+    else
+      wizard_write "$line"
+    fi
+  done <<< "$text"
+  screen_line "-" | while IFS= read -r line; do wizard_write "$line"; done
+}
+
+wizard_log_file() {
+  local dir
+  dir="${MAILSERVER_WIZARD_LOG_DIR:-${TMPDIR:-/tmp}}"
+  mkdir -p "$dir"
+  mktemp "$dir/mailserver-init.XXXXXX.log"
+}
+
+wizard_run_cmd() {
+  local label="$1"
+  local log_file="$2"
+  local status
+  shift 2
+
+  wizard_note "$label"
+  set +e
+  {
+    printf '\n[%s] %s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$(format_command "$@")"
+    if use_color; then
+      FORCE_COLOR="${FORCE_COLOR:-1}" CLICOLOR_FORCE="${CLICOLOR_FORCE:-1}" "$@"
+    else
+      "$@"
+    fi
+  } >> "$log_file" 2>&1
+  status=$?
+  set -e
+  if [[ "$status" -eq 0 ]]; then
+    wizard_success "$label finished"
+    return 0
+  fi
+
+  wizard_problem "$label failed. Last log lines:"
+  tail -n 14 "$log_file" | sed 's/^/  /' | while IFS= read -r line; do wizard_write "$line"; done
+  wizard_write ""
+  wizard_write "Full log: $log_file"
+  return "$status"
+}
+
+wizard_run_root_cmd() {
+  local label="$1"
+  local log_file="$2"
+  shift 2
+
+  if [[ "$EUID" -eq 0 ]]; then
+    wizard_run_cmd "$label" "$log_file" "$@"
+  elif command -v sudo >/dev/null 2>&1; then
+    wizard_run_cmd "$label" "$log_file" sudo env FORCE_COLOR="${FORCE_COLOR:-1}" CLICOLOR_FORCE="${CLICOLOR_FORCE:-1}" "$@"
+  else
+    die "This command needs root. Re-run with sudo."
+  fi
+}
+
 prompt_tty() {
   local label="$1"
   local default="${2:-}"
   local reply
+  local prompt
 
   has_tty || return 1
   if [[ -n "$default" ]]; then
-    printf '%s [%s]: ' "$label" "$default" > /dev/tty
+    prompt="$label: "
+    IFS= read -e -r -i "$default" -p "$prompt" reply < /dev/tty || true
   else
-    printf '%s: ' "$label" > /dev/tty
+    prompt="$label: "
+    IFS= read -e -r -p "$prompt" reply < /dev/tty || true
   fi
-  IFS= read -r reply < /dev/tty
-  printf '%s\n' "${reply:-$default}"
+  printf '%s\n' "$reply"
 }
 
 prompt_enter_tty() {
@@ -804,14 +942,33 @@ available_timezones() {
 prompt_timezone_tty() {
   local default="$1"
   local reply
+  local zones=()
   local selected
+  local i
 
   has_tty || return 1
+  mapfile -t zones < <(available_timezones)
+  if [[ "${#zones[@]}" -eq 0 ]]; then
+    zones=("Europe/Prague" "UTC")
+  fi
 
   while true; do
-    printf 'Server timezone [%s]: ' "${default:-Europe/Prague}" > /dev/tty
-    IFS= read -r reply < /dev/tty
-    selected="${reply:-${default:-Europe/Prague}}"
+    printf 'Server timezone:\n' > /dev/tty
+    for i in "${!zones[@]}"; do
+      printf '  %d) %s\n' "$((i + 1))" "${zones[$i]}" > /dev/tty
+    done
+    if [[ -n "$default" ]]; then
+      printf '  Enter = %s, or type any IANA timezone like Europe/Berlin\n' "$default" > /dev/tty
+    else
+      printf '  Type any IANA timezone like Europe/Berlin\n' > /dev/tty
+    fi
+    IFS= read -e -r -i "${default:-Europe/Prague}" -p "Timezone choice [1-${#zones[@]}/IANA]: " reply < /dev/tty || true
+
+    if [[ "$reply" =~ ^[0-9]+$ && "$reply" -ge 1 && "$reply" -le "${#zones[@]}" ]]; then
+      selected="${zones[$((reply - 1))]}"
+    else
+      selected="${reply:-${default:-Europe/Prague}}"
+    fi
 
     if [[ ! -d /usr/share/zoneinfo ]] || timezone_exists "$selected"; then
       printf '%s\n' "$selected"
@@ -841,24 +998,53 @@ wait_for_dns_stage() {
   local config="$1"
   local stage="$2"
   local title="$3"
+  local step="$4"
+  local log_file="$5"
   local args=()
   local stage_arg
+  local dns_records
+  local dns_output
+  local status
 
   while IFS= read -r stage_arg; do
     [[ -n "$stage_arg" ]] && args+=("$stage_arg")
   done < <(dns_check_args_for_stage "$stage")
 
-  print_wizard_step "$title"
-  say "Publish the records below, then come back here."
-  run_root_cmd "$ROOT_DIR/scripts/print-dns.sh" --config "$config"
+  wizard_header "$step" "$title" "$log_file"
+  wizard_note "Publish the DNS records below. This setup will not continue until they resolve correctly."
+  wizard_write ""
+  if [[ "$EUID" -eq 0 ]]; then
+    dns_records="$("$ROOT_DIR/scripts/print-dns.sh" --config "$config" 2>>"$log_file")"
+  elif command -v sudo >/dev/null 2>&1; then
+    dns_records="$(sudo "$ROOT_DIR/scripts/print-dns.sh" --config "$config" 2>>"$log_file")"
+  else
+    die "This command needs root. Re-run with sudo."
+  fi
+  wizard_records "$dns_records"
 
   while true; do
+    wizard_write ""
     prompt_enter_tty "Press Enter to check DNS. Use Ctrl-C to stop and resume later. "
-    if run_cmd "$ROOT_DIR/scripts/dns-state.sh" --config "$config" "${args[@]}"; then
-      ok "DNS checks passed for this step."
+    wizard_header "$step" "$title" "$log_file"
+    wizard_note "Checking DNS now..."
+    set +e
+    dns_output="$("$ROOT_DIR/scripts/dns-state.sh" --config "$config" "${args[@]}" 2>&1)"
+    status=$?
+    set -e
+    {
+      printf '\n[%s] DNS check: %s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$title"
+      printf '%s\n' "$dns_output"
+    } >> "$log_file"
+    if [[ "$status" -eq 0 ]]; then
+      wizard_success "DNS checks passed for this step."
       return 0
     fi
-    warn "DNS is not ready yet. Wait for propagation or adjust the records, then retry."
+    wizard_problem "DNS is not ready yet. Fix the records below or wait for propagation, then retry."
+    printf '%s\n' "$dns_output" | { grep -E 'FAIL|WARN|Summary' || true; } | sed 's/^/  /' | while IFS= read -r line; do
+      wizard_write "$line"
+    done
+    wizard_write ""
+    wizard_write "Full DNS output: $log_file"
   done
 }
 
@@ -1076,37 +1262,44 @@ cmd_init() {
 
 run_guided_setup() {
   local config="$1"
+  local log_file
 
   require_checkout_files
-  print_wizard_step "1. Local checks"
-  say "First I will check this host and config. Fix any failure before DNS or install."
-  run_cmd "$ROOT_DIR/doctor.sh" --config "$config"
+  log_file="$(wizard_log_file)"
 
-  wait_for_dns_stage "$config" preinstall "2. DNS before installation"
+  wizard_header "1/5" "Local checks" "$log_file"
+  wizard_note "First I will check this host and config. Fix any failure before DNS or install."
+  wizard_run_cmd "Checking prerequisites and config" "$log_file" "$ROOT_DIR/doctor.sh" --preflight-only --config "$config"
+  prompt_enter_tty "Press Enter to continue to DNS setup. "
 
-  print_wizard_step "3. Install mail stack"
-  say "DNS is ready enough for certificates and mail routing. The installer will now configure packages, services, the primary mailbox, and DKIM."
-  run_root_cmd "$ROOT_DIR/install.sh" --config "$config" --assume-yes
-  run_root_cmd "$ROOT_DIR/verify.sh" --config "$config"
+  wait_for_dns_stage "$config" preinstall "2. DNS before installation" "2/5" "$log_file"
 
-  wait_for_dns_stage "$config" final "4. DKIM and final DNS"
+  wizard_header "3/5" "Install mail stack" "$log_file"
+  wizard_note "DNS is ready enough for certificates and mail routing."
+  wizard_note "Now I will configure packages, services, the primary mailbox, certificates, and DKIM."
+  wizard_write ""
+  wizard_run_root_cmd "Installing and configuring the mail stack" "$log_file" "$ROOT_DIR/install.sh" --config "$config" --assume-yes
+  wizard_run_root_cmd "Verifying generated config and services" "$log_file" "$ROOT_DIR/verify.sh" --config "$config"
+  prompt_enter_tty "Press Enter to continue to final DNS checks. "
 
-  print_wizard_step "5. Final checks"
-  run_cmd "$ROOT_DIR/scripts/check-ssl.sh" --config "$config"
-  printf '\n'
-  run_cmd "$ROOT_DIR/scripts/service-state.sh" --config "$config"
-  printf '\n'
-  run_cmd "$ROOT_DIR/scripts/tls-policy-state.sh" --config "$config"
-  printf '\n'
+  wait_for_dns_stage "$config" final "4. DKIM and final DNS" "4/5" "$log_file"
+
+  wizard_header "5/5" "Final checks" "$log_file"
+  wizard_run_cmd "Checking TLS certificates" "$log_file" "$ROOT_DIR/scripts/check-ssl.sh" --config "$config"
+  wizard_run_cmd "Checking service status and ports" "$log_file" "$ROOT_DIR/scripts/service-state.sh" --config "$config"
+  wizard_run_cmd "Checking TLS policy DNS" "$log_file" "$ROOT_DIR/scripts/tls-policy-state.sh" --config "$config"
+  wizard_write ""
   if confirm_tty "Install the recurring backup cron now?" "yes"; then
-    run_root_cmd "$ROOT_DIR/scripts/install-backup-cron.sh" --config "$config"
+    wizard_run_root_cmd "Installing recurring backup cron" "$log_file" "$ROOT_DIR/scripts/install-backup-cron.sh" --config "$config"
   else
-    warn "Backup cron skipped. Install it later with: sudo mailserver install-backup-cron --config $config"
+    wizard_problem "Backup cron skipped. Install it later with: sudo mailserver install-backup-cron --config $config"
   fi
 
-  ok "Guided setup complete."
-  say "Primary mailbox password, if generated, is stored at PRIMARY_MAILBOX_PASSWORD_FILE from $config."
-  say "Client settings: mailserver client-info --config $config"
+  wizard_write ""
+  wizard_success "Guided setup complete."
+  wizard_write "Primary mailbox password, if generated, is stored at PRIMARY_MAILBOX_PASSWORD_FILE from $config."
+  wizard_write "Client settings: mailserver client-info --config $config"
+  wizard_write "Detailed log: $log_file"
 }
 
 cmd_set_domain() {
@@ -1325,9 +1518,15 @@ cmd_update() {
 
 cmd_doctor() {
   extract_common_args "$@"
-  [[ "${#REMAINING_ARGS[@]}" -eq 0 ]] || die "doctor does not accept positional arguments."
+  local arg
+  for arg in "${REMAINING_ARGS[@]}"; do
+    case "$arg" in
+      --fix|--preflight-only) ;;
+      *) die "doctor does not accept positional arguments." ;;
+    esac
+  done
   require_checkout_files
-  run_cmd "$ROOT_DIR/doctor.sh" --config "$(config_arg)"
+  run_cmd "$ROOT_DIR/doctor.sh" --config "$(config_arg)" "${REMAINING_ARGS[@]}"
 }
 
 cmd_dry_run() {
@@ -1350,7 +1549,7 @@ cmd_setup_dry_run() {
   require_checkout_files
   local config
   config="$(config_arg)"
-  run_cmd "$ROOT_DIR/doctor.sh" --config "$config"
+  run_cmd "$ROOT_DIR/doctor.sh" --preflight-only --config "$config"
   run_root_cmd "$ROOT_DIR/install.sh" --config "$config" --dry-run --assume-yes
   run_cmd "$ROOT_DIR/scripts/print-dns.sh" --config "$config"
 }
@@ -1361,7 +1560,7 @@ cmd_setup() {
   require_checkout_files
   local config
   config="$(config_arg)"
-  run_cmd "$ROOT_DIR/doctor.sh" --config "$config"
+  run_cmd "$ROOT_DIR/doctor.sh" --preflight-only --config "$config"
   run_root_cmd "$ROOT_DIR/install.sh" --config "$config" --assume-yes
   run_root_cmd "$ROOT_DIR/verify.sh" --config "$config"
   run_root_cmd "$ROOT_DIR/scripts/print-dns.sh" --config "$config"
@@ -1376,21 +1575,8 @@ cmd_verify() {
 
 cmd_check() {
   extract_common_args "$@"
-  [[ "${#REMAINING_ARGS[@]}" -eq 0 ]] || die "check does not accept positional arguments."
-  require_checkout_files
-  local config status
-  config="$(config_arg)"
-  status=0
-  "$ROOT_DIR/scripts/dns-state.sh" --config "$config" || status=$?
-  printf '\n'
-  "$ROOT_DIR/scripts/check-ssl.sh" --config "$config" || status=$?
-  printf '\n'
-  "$ROOT_DIR/scripts/service-state.sh" --config "$config" || status=$?
-  printf '\n'
-  "$ROOT_DIR/scripts/config-drift.sh" --config "$config" || status=$?
-  printf '\n'
-  "$ROOT_DIR/scripts/tls-policy-state.sh" --config "$config" || status=$?
-  return "$status"
+  warn "check is deprecated; use mailserver doctor instead."
+  cmd_doctor --config "$(config_arg)" "${REMAINING_ARGS[@]}"
 }
 
 cmd_simple_script() {

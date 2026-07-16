@@ -23,8 +23,16 @@ check_service() {
 check_port() {
   local port="$1"
   local name="$2"
-  if ss -tln "( sport = :$port )" | tail -n +2 | grep -q .; then
-    ok_state "port $port listening: $name"
+  local expected_regex="$3"
+  local listener
+
+  if port_is_listening "$port"; then
+    listener="$(port_listener_summary "$port")"
+    if port_listener_has_expected "$port" "$expected_regex"; then
+      ok_state "port $port listening: $name via $listener"
+    else
+      fail_state "port $port is occupied by $listener, expected $name ($expected_regex)"
+    fi
   else
     fail_state "port $port is not listening: $name"
   fi
@@ -143,15 +151,15 @@ for service in "${services[@]}"; do
   check_service "$service"
 done
 
-check_port 25 "SMTP"
-check_port 80 "HTTP / Let's Encrypt"
-check_port 443 "HTTPS"
-check_port 587 "SMTP submission"
-check_port 993 "IMAPS"
-check_port 8891 "OpenDKIM milter"
-check_port 8893 "OpenDMARC milter"
-check_port 20000 "SOGo"
-[[ "${ENABLE_RSPAMD:-true}" == "true" ]] && check_port 11332 "Rspamd milter"
+check_port 25 "SMTP" "master|postfix"
+check_port 80 "HTTP / Let's Encrypt" "nginx"
+check_port 443 "HTTPS" "nginx"
+check_port 587 "SMTP submission" "master|postfix"
+check_port 993 "IMAPS" "dovecot"
+check_port 8891 "OpenDKIM milter" "opendkim"
+check_port 8893 "OpenDMARC milter" "opendmarc"
+check_port 20000 "SOGo" "sogod"
+[[ "${ENABLE_RSPAMD:-true}" == "true" ]] && check_port 11332 "Rspamd milter" "rspamd"
 
 printf '\nExternal IPv4 reachability\n'
 check_external_port 25 "SMTP"

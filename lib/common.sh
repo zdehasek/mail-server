@@ -58,6 +58,46 @@ fail_state() {
   failures=$((failures + 1))
 }
 
+port_is_listening() {
+  local port="$1"
+  command -v ss >/dev/null 2>&1 || return 1
+  ss -H -tln "( sport = :$port )" 2>/dev/null | grep -q .
+}
+
+port_listener_raw() {
+  local port="$1"
+  ss -H -tlnp "( sport = :$port )" 2>/dev/null || true
+}
+
+port_listener_programs() {
+  local port="$1"
+  port_listener_raw "$port" |
+    sed -nE 's/.*users:\(\("([^"]+)".*/\1/p' |
+    sort -u |
+    paste -sd, -
+}
+
+port_listener_summary() {
+  local port="$1"
+  local programs
+  programs="$(port_listener_programs "$port")"
+  if [[ -n "$programs" ]]; then
+    printf '%s\n' "$programs"
+  elif [[ "$EUID" -ne 0 ]]; then
+    printf '%s\n' "unknown process (rerun with sudo to see PID/program)"
+  else
+    printf '%s\n' "unknown process"
+  fi
+}
+
+port_listener_has_expected() {
+  local port="$1"
+  local expected_regex="$2"
+  local programs
+  programs="$(port_listener_programs "$port")"
+  [[ -n "$programs" && "$programs" =~ (^|,)($expected_regex)(,|$) ]]
+}
+
 usage_common() {
   cat <<'USAGE'
 Common options:

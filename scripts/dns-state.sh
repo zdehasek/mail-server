@@ -97,14 +97,16 @@ check_host_ip() {
 check_txt() {
   local name="$1"
   local expected="$2"
-  local normalized_expected normalized_records
+  local records records_display normalized_expected normalized_records
   normalized_expected="$(normalize_txt <<< "$expected")"
-  normalized_records="$(dig @"$DNS_RESOLVER" +short TXT "$name" 2>/dev/null | normalize_txt)"
+  records="$(dig @"$DNS_RESOLVER" +short TXT "$name" 2>/dev/null || true)"
+  records_display="$(tr '\n' ' ' <<< "$records" | sed 's/[[:space:]]\+$//')"
+  normalized_records="$(normalize_txt <<< "$records")"
 
   if grep -Fq "$normalized_expected" <<< "$normalized_records"; then
     ok_state "$name TXT matches"
   else
-    fail_state "$name TXT missing expected value"
+    fail_state "$name TXT expected: \"$expected\"; got: ${records_display:-<none>}"
   fi
 }
 
@@ -147,7 +149,7 @@ fi
 dkim_name="$DKIM_SELECTOR._domainkey.$target_domain"
 dkim_file="/etc/mailserver/dkim/$target_domain/$DKIM_SELECTOR.txt"
 if [[ "$skip_dkim" == "true" ]]; then
-  warn_state "DKIM check skipped by --skip-dkim"
+  warn_state "DKIM check skipped by --skip-dkim because the DKIM key is generated during installation; the final DNS step checks it."
 else
   dns_dkim="$(dig @"$DNS_RESOLVER" +short TXT "$dkim_name" 2>/dev/null | normalize_txt)"
   if [[ -r "$dkim_file" ]]; then

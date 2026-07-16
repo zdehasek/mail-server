@@ -231,7 +231,7 @@ mailbox password is still entered locally on the Apple device.
 Run the broad check suite:
 
 ```bash
-sudo mailserver check
+sudo mailserver doctor
 ```
 
 Run a local end-to-end delivery test without sending external email:
@@ -309,4 +309,4 @@ Disaster-recovery drill:
 5. Stop affected services before manually restoring production files.
 6. Restore PostgreSQL with `psql` only after confirming the dump target database.
 7. Restore maildirs with ownership preserved for `vmail:vmail`.
-8. Run `sudo mailserver verify`, `sudo mailserver check`, and a client login test.
+8. Run `sudo mailserver verify`, `sudo mailserver doctor`, and a client login test.

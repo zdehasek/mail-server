@@ -61,7 +61,7 @@ DNS_RESOLVER=8.8.8.8 mailserver dns-state
 To also check SSL/TLS certificates and service ports, run:
 
 ```bash
-mailserver check
+mailserver doctor
 ```
 
 Initial DMARC policy:

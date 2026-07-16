@@ -111,7 +111,7 @@ contacts, sessions, and profile data.
 
 ## Safety
 
-- `doctor.sh` is read-only.
+- `mailserver doctor` is read-only unless explicitly run with `--fix`.
 - `install.sh --dry-run` prints intended changes without applying them.
 - Managed files are backed up under `/var/backups/mailserver/<timestamp>/`.
 - `sudo mailserver backup` creates a mail server data backup.

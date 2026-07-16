@@ -390,11 +390,11 @@ continuing.
 For a complete check against the configured `~/.email-server/config.env`, run:
 
 ```bash
-mailserver check
+mailserver doctor
 ```
 
 This runs DNS, SSL/TLS, and service checks. To inspect only DNS, run
-`mailserver dns-state`.
+`mailserver dns-state`. `mailserver check` remains as a compatibility alias.
 
 ## 6. Dry Run
 
@@ -498,10 +498,10 @@ Run the built-in checks:
 
 ```bash
 sudo mailserver verify
-mailserver check
+mailserver doctor
 ```
 
-The combined `check` command runs:
+The combined `doctor` command runs:
 
 ```bash
 mailserver dns-state

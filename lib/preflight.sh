@@ -47,7 +47,7 @@ check_ports() {
 }
 
 check_external_firewall_notice() {
-  warn "Provider firewalls cannot be verified before mail services are listening. After setup, run: mailserver check"
+  warn "Provider firewalls cannot be verified before mail services are listening. After setup, run: mailserver doctor"
 }
 
 run_preflight() {

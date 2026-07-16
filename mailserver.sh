@@ -143,7 +143,7 @@ Setup:
   init --config-only           Create ~/.email-server/config.env only
   reset-setup                  Move local setup config aside
   install-cli                  Install mailserver into PATH
-  doctor                       Validate local prerequisites and config
+  doctor [--fix]               Validate prerequisites, DNS, TLS, services, and config drift
   setup-dry-run                Run doctor, dry-run install, and DNS output
   dry-run                      Show install actions without applying them
   install                      Install on this server
@@ -152,7 +152,7 @@ Setup:
 
 Health checks:
   verify                       Check local configs and active services
-  check                        Run DNS, SSL/TLS, and service checks
+  check                        Alias for doctor
   dns-state                    Check A/AAAA, MX, SPF, DMARC, PTR, DKIM
   check-ssl                    Check HTTPS, IMAPS, and SMTP TLS certs
   service-state                Check services, ports, and web endpoints
@@ -241,6 +241,12 @@ show_command_help() {
       ;;
     remove-domain)
       printf 'Usage: mailserver domains rm --domain example.com [--config PATH]\n'
+      ;;
+    doctor)
+      printf 'Usage: mailserver doctor [--fix] [--config PATH]\n'
+      ;;
+    check)
+      printf 'Usage: mailserver check [--fix] [--config PATH]\n'
       ;;
     print-dns|dns-state)
       printf 'Usage: mailserver %s [--domain example.com] [--skip-dkim] [--skip-ptr] [--config PATH]\n' "$1"
@@ -1226,7 +1232,7 @@ cmd_init() {
   fi
   ok "Created $dest."
   if [[ "$config_only" == "true" || "$non_interactive" == "true" ]] || ! has_tty; then
-    say "Next: mailserver doctor"
+    say "Next: mailserver setup-dry-run"
     return 0
   fi
 
@@ -1242,7 +1248,7 @@ run_guided_setup() {
 
   wizard_header "1/5" "Local checks" "$log_file"
   wizard_note "First I will check this host and config. Fix any failure before DNS or install."
-  wizard_run_cmd "Checking prerequisites and config" "$log_file" "$ROOT_DIR/doctor.sh" --config "$config"
+  wizard_run_cmd "Checking prerequisites and config" "$log_file" "$ROOT_DIR/doctor.sh" --preflight-only --config "$config"
   prompt_enter_tty "Press Enter to continue to DNS setup. "
 
   wait_for_dns_stage "$config" preinstall "2. DNS before installation" "2/5" "$log_file"
@@ -1491,9 +1497,15 @@ cmd_update() {
 
 cmd_doctor() {
   extract_common_args "$@"
-  [[ "${#REMAINING_ARGS[@]}" -eq 0 ]] || die "doctor does not accept positional arguments."
+  local arg
+  for arg in "${REMAINING_ARGS[@]}"; do
+    case "$arg" in
+      --fix|--preflight-only) ;;
+      *) die "doctor does not accept positional arguments." ;;
+    esac
+  done
   require_checkout_files
-  run_cmd "$ROOT_DIR/doctor.sh" --config "$(config_arg)"
+  run_cmd "$ROOT_DIR/doctor.sh" --config "$(config_arg)" "${REMAINING_ARGS[@]}"
 }
 
 cmd_dry_run() {
@@ -1516,7 +1528,7 @@ cmd_setup_dry_run() {
   require_checkout_files
   local config
   config="$(config_arg)"
-  run_cmd "$ROOT_DIR/doctor.sh" --config "$config"
+  run_cmd "$ROOT_DIR/doctor.sh" --preflight-only --config "$config"
   run_root_cmd "$ROOT_DIR/install.sh" --config "$config" --dry-run --assume-yes
   run_cmd "$ROOT_DIR/scripts/print-dns.sh" --config "$config"
 }
@@ -1527,7 +1539,7 @@ cmd_setup() {
   require_checkout_files
   local config
   config="$(config_arg)"
-  run_cmd "$ROOT_DIR/doctor.sh" --config "$config"
+  run_cmd "$ROOT_DIR/doctor.sh" --preflight-only --config "$config"
   run_root_cmd "$ROOT_DIR/install.sh" --config "$config" --assume-yes
   run_root_cmd "$ROOT_DIR/verify.sh" --config "$config"
   run_root_cmd "$ROOT_DIR/scripts/print-dns.sh" --config "$config"
@@ -1542,21 +1554,8 @@ cmd_verify() {
 
 cmd_check() {
   extract_common_args "$@"
-  [[ "${#REMAINING_ARGS[@]}" -eq 0 ]] || die "check does not accept positional arguments."
-  require_checkout_files
-  local config status
-  config="$(config_arg)"
-  status=0
-  "$ROOT_DIR/scripts/dns-state.sh" --config "$config" || status=$?
-  printf '\n'
-  "$ROOT_DIR/scripts/check-ssl.sh" --config "$config" || status=$?
-  printf '\n'
-  "$ROOT_DIR/scripts/service-state.sh" --config "$config" || status=$?
-  printf '\n'
-  "$ROOT_DIR/scripts/config-drift.sh" --config "$config" || status=$?
-  printf '\n'
-  "$ROOT_DIR/scripts/tls-policy-state.sh" --config "$config" || status=$?
-  return "$status"
+  warn "check is deprecated; use mailserver doctor instead."
+  cmd_doctor --config "$(config_arg)" "${REMAINING_ARGS[@]}"
 }
 
 cmd_simple_script() {

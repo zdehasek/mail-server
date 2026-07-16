@@ -4,8 +4,9 @@ This guide is the start-to-finish runbook for installing this mail server. It
 covers the supported local setup flow: run the installer directly on the target
 server.
 
-The installer is intentionally not fully automatic. DNS, PTR/rDNS, provider SMTP
-policy, and final deliverability tests must be handled outside the server.
+The guided setup cannot change external DNS, PTR/rDNS, or provider SMTP policy
+for you, but it tells you exactly what to publish and waits until those records
+verify before it continues.
 
 ## 1. Choose The Install Flow
 
@@ -16,16 +17,12 @@ git clone git@github.com:zdehasek/mail-server.git
 cd mail-server
 ./mailserver.sh install-cli
 mailserver init
-mailserver setup-dry-run
-sudo mailserver setup
 ```
 
 Or bootstrap a checkout from a hosted copy of the CLI:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/zdehasek/mail-server/master/mailserver.sh | sudo bash
-mailserver setup-dry-run
-sudo mailserver setup
 ```
 
 The curl-pipe path only creates or reuses a local git checkout and runs the
@@ -83,19 +80,37 @@ If an existing web server already uses `80`/`443`, keep it running only if it is
 Nginx and separate `server_name` blocks can be added for the mail hostnames.
 The installer manages Nginx vhosts for webmail and DAV.
 
-## 3. Create `~/.email-server/config.env`
+## 3. Run The Guided Setup
 
-Create the default config with the interactive init wizard:
+Start the guided setup:
 
 ```bash
 mailserver init
 ```
 
-`mailserver` loads this file automatically. You can also pass
+The wizard:
+
+1. Collects the domain, hostnames, public IPs, admin mailbox, and timezone.
+2. Writes `~/.email-server/config.env`.
+3. Runs local prerequisite checks.
+4. Prints the required DNS records and keeps rechecking them until they pass.
+5. Installs and configures the mail stack.
+6. Prints the generated DKIM record and keeps rechecking DNS until it matches.
+7. Runs final SSL, service, and TLS policy checks.
+8. Offers to install the recurring backup cron.
+
+`mailserver` loads the config automatically. You can also pass
 `--config /path/to/config.env` to any subcommand, or set `CONFIG` or
 `ENV_FILE`. When a command runs through `sudo`, the sudo user's home is used so
-`sudo mailserver setup` reads the same default config created by
-`mailserver init`.
+sudo commands read the same default config created by `mailserver init`.
+
+Use the old lower-level flow only when you want to stop after config creation:
+
+```bash
+mailserver init --config-only
+mailserver setup-dry-run
+sudo mailserver setup
+```
 
 For unattended setup, pass the important values directly:
 
@@ -107,11 +122,20 @@ mailserver init \
   --webmail-hostname mail.example.com \
   --dav-hostname dav.example.com \
   --public-ipv4 203.0.113.10 \
-  --timezone Europe/Prague
+  --timezone Europe/Prague \
+  --non-interactive
 ```
 
 Manual editing of `~/.email-server/config.env` is still possible for advanced
 changes, but it is not the normal install path.
+
+To start over, move the local setup config aside:
+
+```bash
+mailserver reset-setup
+```
+
+This does not uninstall packages, services, domains, users, or mailbox data.
 
 ### Domain And Hostnames
 

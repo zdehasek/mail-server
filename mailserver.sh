@@ -139,7 +139,9 @@ Usage:
   curl -fsSL https://raw.githubusercontent.com/zdehasek/mail-server/master/mailserver.sh | sudo bash
 
 Setup:
-  init                         Create ~/.email-server/config.env interactively
+  init                         Guided setup: config, DNS checks, install, verify
+  init --config-only           Create ~/.email-server/config.env only
+  reset-setup                  Move local setup config aside
   install-cli                  Install mailserver into PATH
   doctor                       Validate local prerequisites and config
   setup-dry-run                Run doctor, dry-run install, and DNS output
@@ -201,6 +203,8 @@ Backup:
 
 Examples:
   mailserver init
+  mailserver init --config-only
+  mailserver reset-setup
   mailserver doctor
   mailserver setup-dry-run
   sudo mailserver install
@@ -239,7 +243,7 @@ show_command_help() {
       printf 'Usage: mailserver domains rm --domain example.com [--config PATH]\n'
       ;;
     print-dns|dns-state)
-      printf 'Usage: mailserver %s [--domain example.com] [--config PATH]\n' "$1"
+      printf 'Usage: mailserver %s [--domain example.com] [--skip-dkim] [--skip-ptr] [--config PATH]\n' "$1"
       ;;
     config-drift)
       printf 'Usage: mailserver config-drift [--config PATH]\n'
@@ -287,7 +291,10 @@ show_command_help() {
       printf 'Usage: mailserver restore --list|--inspect ARCHIVE|--validate ARCHIVE|--extract ARCHIVE --target DIR [--config PATH]\n'
       ;;
     init)
-      printf 'Usage: mailserver init [--domain DOMAIN] [--admin-email EMAIL] [--mail-hostname HOST] [--webmail-hostname HOST] [--dav-hostname HOST] [--public-ipv4 IP] [--public-ipv6 IP] [--timezone TZ] [--non-interactive] [--config PATH]\n'
+      printf 'Usage: mailserver init [--config-only] [--domain DOMAIN] [--admin-email EMAIL] [--mail-hostname HOST] [--webmail-hostname HOST] [--dav-hostname HOST] [--public-ipv4 IP] [--public-ipv6 IP] [--timezone TZ] [--non-interactive] [--config PATH]\n'
+      ;;
+    reset-setup)
+      printf 'Usage: mailserver reset-setup [--yes] [--config PATH]\n'
       ;;
     install-cli)
       printf 'Usage: mailserver install-cli\n'
@@ -355,6 +362,9 @@ normalize_command() {
   local action="${COMMAND_ARGS[0]:-}"
 
   case "$resource" in
+    delete-setup|remove-setup)
+      COMMAND="reset-setup"
+      ;;
     domain|domains)
       [[ -n "$action" ]] || { show_resource_help "$resource"; exit 0; }
       COMMAND_ARGS=("${COMMAND_ARGS[@]:1}")
@@ -636,6 +646,39 @@ prompt_tty() {
   printf '%s\n' "${reply:-$default}"
 }
 
+prompt_enter_tty() {
+  local message="$1"
+
+  if has_tty; then
+    printf '%s' "$message" > /dev/tty
+    IFS= read -r _ < /dev/tty || true
+  else
+    say "$message"
+  fi
+}
+
+confirm_tty() {
+  local prompt="$1"
+  local default="${2:-no}"
+  local reply suffix
+
+  if [[ "$default" == "yes" ]]; then
+    suffix="[Y/n]"
+  else
+    suffix="[y/N]"
+  fi
+
+  if ! has_tty; then
+    [[ "$default" == "yes" ]]
+    return "$?"
+  fi
+
+  printf '%s %s ' "$prompt" "$suffix" > /dev/tty
+  IFS= read -r reply < /dev/tty || true
+  reply="${reply:-$default}"
+  [[ "$reply" == "y" || "$reply" == "Y" || "$reply" == "yes" || "$reply" == "YES" ]]
+}
+
 prompt_domain_tty() {
   local default="${1:-}"
   local reply domain
@@ -761,35 +804,14 @@ available_timezones() {
 prompt_timezone_tty() {
   local default="$1"
   local reply
-  local zones=()
   local selected
-  local i
 
   has_tty || return 1
-  mapfile -t zones < <(available_timezones)
-  if [[ "${#zones[@]}" -eq 0 ]]; then
-    zones=("Europe/Prague" "UTC")
-  fi
 
   while true; do
-    printf 'Server timezone:\n' > /dev/tty
-    for i in "${!zones[@]}"; do
-      printf '  %d) %s\n' "$((i + 1))" "${zones[$i]}" > /dev/tty
-    done
-    if [[ -n "$default" ]]; then
-      printf '  Enter = %s, or type any IANA timezone like Europe/Berlin\n' "$default" > /dev/tty
-    else
-      printf '  Type any IANA timezone like Europe/Berlin\n' > /dev/tty
-    fi
-    printf 'Timezone choice [1-%d/%s]: ' "${#zones[@]}" "${default:-IANA timezone}" > /dev/tty
+    printf 'Server timezone [%s]: ' "${default:-Europe/Prague}" > /dev/tty
     IFS= read -r reply < /dev/tty
-    reply="${reply:-$default}"
-
-    if [[ "$reply" =~ ^[0-9]+$ && "$reply" -ge 1 && "$reply" -le "${#zones[@]}" ]]; then
-      selected="${zones[$((reply - 1))]}"
-    else
-      selected="$reply"
-    fi
+    selected="${reply:-${default:-Europe/Prague}}"
 
     if [[ ! -d /usr/share/zoneinfo ]] || timezone_exists "$selected"; then
       printf '%s\n' "$selected"
@@ -797,6 +819,46 @@ prompt_timezone_tty() {
     fi
 
     printf 'Invalid timezone: %s. Use an IANA name like Europe/Prague.\n' "$selected" > /dev/tty
+  done
+}
+
+print_wizard_step() {
+  local title="$1"
+  printf '\n%s\n' "$(color 36 "== $title ==")"
+}
+
+dns_check_args_for_stage() {
+  local stage="$1"
+
+  case "$stage" in
+    preinstall) printf '%s\n' "--skip-dkim" ;;
+    final) printf '%s\n' "" ;;
+    *) die "Unknown DNS check stage: $stage" ;;
+  esac
+}
+
+wait_for_dns_stage() {
+  local config="$1"
+  local stage="$2"
+  local title="$3"
+  local args=()
+  local stage_arg
+
+  while IFS= read -r stage_arg; do
+    [[ -n "$stage_arg" ]] && args+=("$stage_arg")
+  done < <(dns_check_args_for_stage "$stage")
+
+  print_wizard_step "$title"
+  say "Publish the records below, then come back here."
+  run_root_cmd "$ROOT_DIR/scripts/print-dns.sh" --config "$config"
+
+  while true; do
+    prompt_enter_tty "Press Enter to check DNS. Use Ctrl-C to stop and resume later. "
+    if run_cmd "$ROOT_DIR/scripts/dns-state.sh" --config "$config" "${args[@]}"; then
+      ok "DNS checks passed for this step."
+      return 0
+    fi
+    warn "DNS is not ready yet. Wait for propagation or adjust the records, then retry."
   done
 }
 
@@ -864,6 +926,7 @@ cmd_init() {
   local public_ipv6=""
   local timezone=""
   local non_interactive="false"
+  local config_only="false"
   local arg
 
   while [[ "${#REMAINING_ARGS[@]}" -gt 0 ]]; do
@@ -913,6 +976,9 @@ cmd_init() {
       --non-interactive)
         non_interactive="true"
         ;;
+      --config-only|--no-wizard)
+        config_only="true"
+        ;;
       *)
         die "Unknown init option: $arg"
         ;;
@@ -924,6 +990,14 @@ cmd_init() {
   dest="$(config_arg)"
   if [[ -f "$dest" ]]; then
     ok "Config already exists: $dest"
+    if [[ "$config_only" == "true" || "$non_interactive" == "true" ]] || ! has_tty; then
+      return 0
+    fi
+    if ! confirm_tty "Continue the guided setup with this config?" "yes"; then
+      say "Keeping existing config unchanged."
+      return 0
+    fi
+    run_guided_setup "$dest"
     return 0
   fi
 
@@ -992,7 +1066,47 @@ cmd_init() {
     chown_for_sudo_user "$dest"
   fi
   ok "Created $dest."
-  say "Next: mailserver doctor"
+  if [[ "$config_only" == "true" || "$non_interactive" == "true" ]] || ! has_tty; then
+    say "Next: mailserver doctor"
+    return 0
+  fi
+
+  run_guided_setup "$dest"
+}
+
+run_guided_setup() {
+  local config="$1"
+
+  require_checkout_files
+  print_wizard_step "1. Local checks"
+  say "First I will check this host and config. Fix any failure before DNS or install."
+  run_cmd "$ROOT_DIR/doctor.sh" --config "$config"
+
+  wait_for_dns_stage "$config" preinstall "2. DNS before installation"
+
+  print_wizard_step "3. Install mail stack"
+  say "DNS is ready enough for certificates and mail routing. The installer will now configure packages, services, the primary mailbox, and DKIM."
+  run_root_cmd "$ROOT_DIR/install.sh" --config "$config" --assume-yes
+  run_root_cmd "$ROOT_DIR/verify.sh" --config "$config"
+
+  wait_for_dns_stage "$config" final "4. DKIM and final DNS"
+
+  print_wizard_step "5. Final checks"
+  run_cmd "$ROOT_DIR/scripts/check-ssl.sh" --config "$config"
+  printf '\n'
+  run_cmd "$ROOT_DIR/scripts/service-state.sh" --config "$config"
+  printf '\n'
+  run_cmd "$ROOT_DIR/scripts/tls-policy-state.sh" --config "$config"
+  printf '\n'
+  if confirm_tty "Install the recurring backup cron now?" "yes"; then
+    run_root_cmd "$ROOT_DIR/scripts/install-backup-cron.sh" --config "$config"
+  else
+    warn "Backup cron skipped. Install it later with: sudo mailserver install-backup-cron --config $config"
+  fi
+
+  ok "Guided setup complete."
+  say "Primary mailbox password, if generated, is stored at PRIMARY_MAILBOX_PASSWORD_FILE from $config."
+  say "Client settings: mailserver client-info --config $config"
 }
 
 cmd_set_domain() {
@@ -1111,6 +1225,40 @@ cmd_install_cli() {
   [[ "${#REMAINING_ARGS[@]}" -eq 0 ]] || die "install-cli does not accept positional arguments."
   require_checkout_files
   install_cli_link interactive
+}
+
+cmd_reset_setup() {
+  extract_common_args "$@"
+  local assume_yes="false"
+  local arg
+
+  while [[ "${#REMAINING_ARGS[@]}" -gt 0 ]]; do
+    arg="${REMAINING_ARGS[0]}"
+    REMAINING_ARGS=("${REMAINING_ARGS[@]:1}")
+    case "$arg" in
+      --yes|-y)
+        assume_yes="true"
+        ;;
+      *)
+        die "Unknown reset-setup option: $arg"
+        ;;
+    esac
+  done
+
+  local config backup
+  config="$(config_arg)"
+  [[ -f "$config" ]] || die "Setup config not found: $config"
+
+  warn "This only removes the local setup config. It does not uninstall services or delete mail data."
+  if [[ "$assume_yes" != "true" ]]; then
+    confirm_tty "Move $config aside?" "no" || die "Cancelled."
+  fi
+
+  backup="$config.deleted.$(date -u +%Y%m%dT%H%M%SZ)"
+  mv "$config" "$backup"
+  chown_for_sudo_user "$backup"
+  ok "Moved setup config to $backup"
+  say "Run mailserver init to create a fresh setup."
 }
 
 replace_non_git_checkout() {
@@ -1397,6 +1545,7 @@ main() {
   normalize_command
   case "$COMMAND" in
     init) cmd_init "${COMMAND_ARGS[@]}" ;;
+    reset-setup) cmd_reset_setup "${COMMAND_ARGS[@]}" ;;
     set-domain) cmd_set_domain "${COMMAND_ARGS[@]}" ;;
     install-cli) cmd_install_cli "${COMMAND_ARGS[@]}" ;;
     update) cmd_update "${COMMAND_ARGS[@]}" ;;

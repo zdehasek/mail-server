@@ -24,20 +24,14 @@ git clone git@github.com:zdehasek/mail-server.git
 cd mail-server
 ./mailserver.sh install-cli
 mailserver init
-mailserver doctor
-mailserver dry-run
-sudo mailserver install
-sudo mailserver add-domain --domain example.org
-sudo mailserver add-user --user user@example.com
-sudo mailserver print-dns
-sudo mailserver verify
-mailserver check
-sudo mailserver install-backup-cron
 ```
 
 Run these commands on the target server. Remote deployment is not a supported
 interface. By default, `mailserver init` creates
-`~/.email-server/config.env` interactively. All commands use that file unless
+`~/.email-server/config.env`, walks through DNS records, waits until they verify,
+installs the stack, verifies services, and then walks through DKIM DNS. Use
+`mailserver init --config-only` when you only want to create the config and run
+the lower-level commands manually. All commands use that file unless
 `--config PATH`, `CONFIG=PATH`, or `ENV_FILE=PATH` is set. When a command is run
 with `sudo`, the sudo user's home is used for the default config path.
 
@@ -82,6 +76,14 @@ mailserver update
 `update` fast-forwards the checked-out installer from its git remote. If you run
 the CLI via a curl-pipe one-liner, it first reuses or creates the local checkout
 and then runs the update there.
+
+```bash
+mailserver reset-setup
+```
+
+`reset-setup` moves the local setup config aside so the wizard can be started
+again. It does not uninstall packages, services, domains, users, or mailbox
+data.
 
 Do not run this on an existing mail server without reading `docs/prerequisites.md` and taking backups. The installer backs up managed files before overwriting them, but it is designed for a fresh Ubuntu 26.04 host.
 

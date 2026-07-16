@@ -1023,9 +1023,9 @@ wait_for_dns_stage() {
   wizard_note "Publish the DNS records below. This setup will not continue until they resolve correctly."
   wizard_write ""
   if [[ "$EUID" -eq 0 ]]; then
-    dns_records="$("$ROOT_DIR/scripts/print-dns.sh" --config "$config" 2>>"$log_file")"
+    dns_records="$("$ROOT_DIR/scripts/print-dns.sh" --config "$config" "${args[@]}" 2>>"$log_file")"
   elif command -v sudo >/dev/null 2>&1; then
-    dns_records="$(sudo "$ROOT_DIR/scripts/print-dns.sh" --config "$config" 2>>"$log_file")"
+    dns_records="$(sudo "$ROOT_DIR/scripts/print-dns.sh" --config "$config" "${args[@]}" 2>>"$log_file")"
   else
     die "This command needs root. Re-run with sudo."
   fi

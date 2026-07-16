@@ -97,14 +97,15 @@ check_host_ip() {
 check_txt() {
   local name="$1"
   local expected="$2"
-  local normalized_expected normalized_records
+  local raw_records normalized_expected normalized_records
   normalized_expected="$(normalize_txt <<< "$expected")"
-  normalized_records="$(dig @"$DNS_RESOLVER" +short TXT "$name" 2>/dev/null | normalize_txt)"
+  raw_records="$(dig @"$DNS_RESOLVER" +short TXT "$name" 2>/dev/null || true)"
+  normalized_records="$(normalize_txt <<< "$raw_records")"
 
   if grep -Fq "$normalized_expected" <<< "$normalized_records"; then
     ok_state "$name TXT matches"
   else
-    fail_state "$name TXT missing expected value"
+    fail_state "$name TXT is missing the required value; set DNS record: Name=$name Type=TXT Value=\"$expected\"; got: ${raw_records:-<none>}"
   fi
 }
 

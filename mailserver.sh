@@ -142,6 +142,7 @@ Setup:
   init                         Guided setup: config, DNS checks, install, verify
   init --config-only           Create ~/.email-server/config.env only
   reset-setup                  Move local setup config aside
+  remove --purge               Permanently delete services, databases, config, and mail data
   install-cli                  Install mailserver into PATH
   doctor [--fix]               Validate prerequisites, DNS, TLS, services, and config drift
   setup-dry-run                Run doctor, dry-run install, and DNS output
@@ -205,6 +206,7 @@ Examples:
   mailserver init
   mailserver init --config-only
   mailserver reset-setup
+  sudo mailserver remove --purge
   mailserver doctor
   mailserver setup-dry-run
   sudo mailserver install
@@ -241,6 +243,9 @@ show_command_help() {
       ;;
     remove-domain)
       printf 'Usage: mailserver domains rm --domain example.com [--config PATH]\n'
+      ;;
+    remove)
+      printf 'Usage: sudo mailserver remove --purge [--config PATH] [--dry-run]\n'
       ;;
     doctor)
       printf 'Usage: mailserver doctor [--fix] [--config PATH]\n'
@@ -1732,6 +1737,7 @@ main() {
   case "$COMMAND" in
     init) cmd_init "${COMMAND_ARGS[@]}" ;;
     reset-setup) cmd_reset_setup "${COMMAND_ARGS[@]}" ;;
+    remove) cmd_option_script scripts/remove.sh true "${COMMAND_ARGS[@]}" ;;
     set-domain) cmd_set_domain "${COMMAND_ARGS[@]}" ;;
     install-cli) cmd_install_cli "${COMMAND_ARGS[@]}" ;;
     update) cmd_update "${COMMAND_ARGS[@]}" ;;

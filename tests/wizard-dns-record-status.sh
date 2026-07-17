@@ -49,6 +49,38 @@ assert_contains '❌ missing _dmarc.example.com. TXT "v=DMARC1; p=none; rua=mail
 assert_contains '❌ different default._domainkey.example.com. TXT "v=DKIM1; k=rsa; p=ABC123"'
 assert_contains '❌ missing 203.0.113.10 -> mail.example.com'
 
+tls_records='Optional TLS policy DNS records:
+mta-sts.example.com. A 203.0.113.10
+_mta-sts.example.com. TXT "v=STSv1; id=1"
+_smtp._tls.example.com. TXT "v=TLSRPTv1; rua=mailto:postmaster@example.com"
+_25._tcp.mail.example.com. TLSA 3 1 1 ABC123'
+
+tls_output='== TLS policy state for example.com ==
+⚠ WARN  mta-sts.example.com A expected: mta-sts.example.com. A 203.0.113.10; got: <none>
+⚠ WARN  _mta-sts.example.com TXT expected: _mta-sts.example.com. TXT "v=STSv1; id=1"; got: <none>
+✅ OK    _smtp._tls.example.com. TXT "v=TLSRPTv1; rua=mailto:postmaster@example.com"
+⚠ WARN  _25._tcp.mail.example.com TLSA expected: _25._tcp.mail.example.com. TLSA 3 1 1 ABC123; got: <none>'
+
+tls_visible_output="$(wizard_records "$tls_records" "$tls_output")"
+tls_visible_output="$(sed -E $'s/\x1B\\[[0-9;]*[[:alpha:]]//g' <<< "$tls_visible_output")"
+
+if [[ "$tls_visible_output" != *'⚠ warn    mta-sts.example.com. A 203.0.113.10'* ]]; then
+  printf 'Expected TLS A warning to be attached to the copy-pasteable record:\n%s\n' "$tls_visible_output" >&2
+  exit 1
+fi
+if [[ "$tls_visible_output" != *'⚠ warn    _mta-sts.example.com. TXT "v=STSv1; id=1"'* ]]; then
+  printf 'Expected MTA-STS TXT warning to be attached to the copy-pasteable record:\n%s\n' "$tls_visible_output" >&2
+  exit 1
+fi
+if [[ "$tls_visible_output" != *'✅ OK     _smtp._tls.example.com. TXT "v=TLSRPTv1; rua=mailto:postmaster@example.com"'* ]]; then
+  printf 'Expected TLSRPT OK to be attached to the copy-pasteable record:\n%s\n' "$tls_visible_output" >&2
+  exit 1
+fi
+if [[ "$tls_visible_output" != *'⚠ warn    _25._tcp.mail.example.com. TLSA 3 1 1 ABC123'* ]]; then
+  printf 'Expected TLSA warning to be attached to the copy-pasteable record:\n%s\n' "$tls_visible_output" >&2
+  exit 1
+fi
+
 COLUMNS=40
 long_dkim_record='default._domainkey.example.com. TXT "v=DKIM1; h=sha256; k=rsa; p=ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"'
 long_output="$(wizard_records "$long_dkim_record")"

@@ -15,6 +15,7 @@ check_ubuntu_2604() {
 check_systemd() { [[ -d /run/systemd/system ]] || die "systemd is required."; }
 
 check_dns() {
+  [[ "${MAILSERVER_SKIP_PREFLIGHT_DNS:-false}" == "true" ]] && return 0
   check_command getent
   local resolved=""
   resolved="$(getent ahostsv4 "$MAIL_HOSTNAME" | awk '{print $1; exit}' || true)"

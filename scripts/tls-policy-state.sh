@@ -30,44 +30,57 @@ failures=0
 
 check_txt() {
   local name="$1"
-  local label="$2"
+  local expected="$2"
+  local expected_value="$3"
   local value
-  value="$(dig +short TXT "$name" | tr -d '"')"
-  if [[ -n "$value" ]]; then
-    ok_state "$label: $value"
+  value="$(dig +short TXT "$name" | tr -d '"' | sed 's/[[:space:]]\+/ /g; s/^ //; s/ $//')"
+  if [[ "$value" == "$expected_value" ]]; then
+    ok_state "$expected"
   else
-    warn_state "$label missing: $name"
+    warn_state "$name TXT expected: $expected; got: ${value:-<none>}"
   fi
 }
 
 check_tlsa() {
   local name="$1"
-  local label="$2"
+  local expected="$2"
+  local expected_value="$3"
   local value
-  value="$(dig +short TLSA "$name")"
-  if [[ -n "$value" ]]; then
-    ok_state "$label: ${value//$'\n'/; }"
+  value="$(dig +short TLSA "$name" | sed 's/[[:space:]]\+/ /g; s/^ //; s/ $//')"
+  if [[ "$value" == "$expected_value" ]]; then
+    ok_state "$expected"
   else
-    warn_state "$label missing: $name"
+    warn_state "$name TLSA expected: $expected; got: ${value:-<none>}"
   fi
 }
 
 check_host() {
   local name="$1"
-  local label="$2"
-  if dig +short A "$name" | grep -q . || dig +short AAAA "$name" | grep -q .; then
-    ok_state "$label resolves: $name"
+  local type="$2"
+  local expected="$3"
+  local value
+  value="$(dig +short "$type" "$name" | sed 's/\.$//' | sort -u)"
+  if grep -Fxq "$expected" <<< "$value"; then
+    ok_state "$name. $type $expected"
   else
-    warn_state "$label does not resolve: $name"
+    warn_state "$name $type expected: $name. $type $expected; got: ${value:-<none>}"
   fi
 }
 
 ui_heading "TLS policy state for $target_domain"
 ui_blank
-check_txt "_mta-sts.$target_domain" "MTA-STS TXT"
-check_host "mta-sts.$target_domain" "MTA-STS policy host"
-check_txt "_smtp._tls.$target_domain" "SMTP TLS reporting TXT"
-check_tlsa "_25._tcp.$MAIL_HOSTNAME" "DANE TLSA for MX"
+check_txt "_mta-sts.$target_domain" "_mta-sts.$target_domain. TXT \"v=STSv1; id=1\"" "v=STSv1; id=1"
+check_host "mta-sts.$target_domain" A "$SERVER_PUBLIC_IPV4"
+if [[ -n "${SERVER_PUBLIC_IPV6:-}" ]]; then
+  check_host "mta-sts.$target_domain" AAAA "$SERVER_PUBLIC_IPV6"
+fi
+check_txt "_smtp._tls.$target_domain" "_smtp._tls.$target_domain. TXT \"v=TLSRPTv1; rua=mailto:postmaster@$target_domain\"" "v=TLSRPTv1; rua=mailto:postmaster@$target_domain"
+tlsa_cert_file="${MAILSERVER_TLSA_CERT_FILE:-/etc/letsencrypt/live/$MAIL_HOSTNAME/fullchain.pem}"
+if tlsa_record="$(tlsa_record_from_cert_file "$tlsa_cert_file" "$MAIL_HOSTNAME")"; then
+  check_tlsa "_25._tcp.$MAIL_HOSTNAME" "$tlsa_record" "${tlsa_record#_25._tcp.$MAIL_HOSTNAME. TLSA }"
+else
+  warn_state "DANE TLSA can be checked after the certificate exists: $tlsa_cert_file"
+fi
 
 ui_blank
 ui_summary "$failures" "$warnings" "$failures failure(s), $warnings warning(s)"

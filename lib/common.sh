@@ -567,6 +567,26 @@ format_dkim_dns_record_file() {
   printf '%s. TXT %s\n' "$name" "$value"
 }
 
+tlsa_record_from_cert_file() {
+  local cert_file="$1"
+  local hostname="$2"
+  local tlsa_hash
+
+  [[ -f "$cert_file" ]] || return 1
+  command -v openssl >/dev/null 2>&1 || return 1
+  command -v od >/dev/null 2>&1 || return 1
+
+  tlsa_hash="$(
+    openssl x509 -in "$cert_file" -noout -pubkey 2>/dev/null |
+      openssl pkey -pubin -outform DER 2>/dev/null |
+      openssl dgst -sha256 -binary 2>/dev/null |
+      od -An -tx1 -v |
+      tr -d ' \n'
+  )"
+  [[ -n "$tlsa_hash" ]] || return 1
+  printf '_25._tcp.%s. TLSA 3 1 1 %s\n' "$hostname" "$tlsa_hash"
+}
+
 validate_domain_or_die() {
   local domain="$1"
   [[ "$domain" =~ ^[a-z0-9][a-z0-9.-]*[a-z0-9]$ && "$domain" == *.* && "$domain" != *..* ]] || die "Invalid domain: $domain"

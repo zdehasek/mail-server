@@ -858,15 +858,13 @@ wizard_run_cmd() {
 
   wizard_note "$label"
   set +e
-  {
-    printf '\n[%s] %s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$(format_command "$@")"
-    if use_color; then
-      FORCE_COLOR="${FORCE_COLOR:-1}" CLICOLOR_FORCE="${CLICOLOR_FORCE:-1}" "$@"
-    else
-      "$@"
-    fi
-  } >> "$log_file" 2>&1
-  status=$?
+  printf '\n[%s] %s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$(format_command "$@")" >> "$log_file"
+  if use_color; then
+    FORCE_COLOR="${FORCE_COLOR:-1}" CLICOLOR_FORCE="${CLICOLOR_FORCE:-1}" "$@" 2>&1 | tee -a "$log_file"
+  else
+    "$@" 2>&1 | tee -a "$log_file"
+  fi
+  status=${PIPESTATUS[0]}
   set -e
   if [[ "$status" -eq 0 ]]; then
     wizard_success "$label finished"

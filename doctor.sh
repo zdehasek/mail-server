@@ -164,6 +164,10 @@ run_health_checks() {
   return "$status"
 }
 
+if [[ "$PREFLIGHT_ONLY" != "true" ]]; then
+  MAILSERVER_SKIP_PREFLIGHT_FIREWALL_NOTICE=true
+  export MAILSERVER_SKIP_PREFLIGHT_FIREWALL_NOTICE
+fi
 run_preflight
 
 if [[ "$DOCTOR_FIX" == "true" ]]; then

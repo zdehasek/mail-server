@@ -41,10 +41,10 @@ check_ports() {
   local port spec
   local name expected listener
   local ports=(
-    "25:SMTP:master|postfix"
+    "25:SMTP:master|postfix|smtpd"
     "80:HTTP / Let's Encrypt:nginx"
     "443:HTTPS:nginx"
-    "587:SMTP submission:master|postfix"
+    "587:SMTP submission:master|postfix|smtpd"
     "993:IMAPS:dovecot"
   )
   for spec in "${ports[@]}"; do
@@ -63,6 +63,7 @@ check_ports() {
 }
 
 check_external_firewall_notice() {
+  [[ "${MAILSERVER_SKIP_PREFLIGHT_FIREWALL_NOTICE:-false}" == "true" ]] && return 0
   warn "Provider firewalls cannot be verified before mail services are listening. After setup, run: mailserver doctor"
 }
 

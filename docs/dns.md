@@ -17,6 +17,18 @@ default._domainkey.example.com. TXT "v=DKIM1; k=rsa; p=<generated DKIM value>"
 For provider `Content`/`Value` fields, paste only the quoted DKIM value after
 `TXT`. Do not paste the record name or `TXT` type into the content field.
 
+Optional TLS policy hardening records are printed by `mailserver print-dns`
+with the rest of the DNS setup values:
+
+```text
+mta-sts.example.com.  A    203.0.113.10
+_mta-sts.example.com. TXT "v=STSv1; id=1"
+_smtp._tls.example.com. TXT "v=TLSRPTv1; rua=mailto:postmaster@example.com"
+_25._tcp.mail.example.com. TLSA 3 1 1 <certificate public key SHA-256>
+```
+
+The TLSA value is printed after the Let's Encrypt certificate exists.
+
 If IPv6 is configured:
 
 ```text

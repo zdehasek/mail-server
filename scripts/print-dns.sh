@@ -91,6 +91,37 @@ fi
 
 cat <<DNS
 
+Optional TLS policy DNS records:
+DNS
+print_host_record "mta-sts.$target_domain" A "$SERVER_PUBLIC_IPV4"
+if [[ -n "${SERVER_PUBLIC_IPV6:-}" ]]; then
+  print_host_record "mta-sts.$target_domain" AAAA "$SERVER_PUBLIC_IPV6"
+fi
+cat <<DNS
+_mta-sts.$target_domain. TXT "v=STSv1; id=1"
+_smtp._tls.$target_domain. TXT "v=TLSRPTv1; rua=mailto:postmaster@$target_domain"
+DNS
+
+tlsa_cert_file="${MAILSERVER_TLSA_CERT_FILE:-/etc/letsencrypt/live/$MAIL_HOSTNAME/fullchain.pem}"
+if [[ -f "$tlsa_cert_file" ]] && command -v openssl >/dev/null 2>&1 && command -v od >/dev/null 2>&1; then
+  tlsa_hash="$(
+    openssl x509 -in "$tlsa_cert_file" -noout -pubkey 2>/dev/null |
+      openssl pkey -pubin -outform DER 2>/dev/null |
+      openssl dgst -sha256 -binary 2>/dev/null |
+      od -An -tx1 -v |
+      tr -d ' \n'
+  )"
+  if [[ -n "$tlsa_hash" ]]; then
+    printf '_25._tcp.%s. TLSA 3 1 1 %s\n' "$MAIL_HOSTNAME" "$tlsa_hash"
+  fi
+else
+  cat <<DNS
+DANE TLSA can be printed after the certificate exists: $tlsa_cert_file
+DNS
+fi
+
+cat <<DNS
+
 Provider PTR/rDNS must be:
 $SERVER_PUBLIC_IPV4 -> $MAIL_HOSTNAME
 DNS

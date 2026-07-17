@@ -434,8 +434,9 @@ they are overwritten.
 
 ## 8. Verify DKIM
 
-DKIM is included in the same DNS output as MX, SPF, DMARC, and host records.
-After installation, print DNS again if you need to copy or confirm it:
+DKIM and optional TLS policy records are included in the same DNS output as MX,
+SPF, DMARC, and host records. After installation, print DNS again if you need
+to copy or confirm it:
 
 ```bash
 sudo mailserver print-dns

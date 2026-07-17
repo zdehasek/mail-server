@@ -40,6 +40,18 @@ check_txt() {
   fi
 }
 
+check_tlsa() {
+  local name="$1"
+  local label="$2"
+  local value
+  value="$(dig +short TLSA "$name")"
+  if [[ -n "$value" ]]; then
+    ok_state "$label: ${value//$'\n'/; }"
+  else
+    warn_state "$label missing: $name"
+  fi
+}
+
 check_host() {
   local name="$1"
   local label="$2"
@@ -55,7 +67,7 @@ ui_blank
 check_txt "_mta-sts.$target_domain" "MTA-STS TXT"
 check_host "mta-sts.$target_domain" "MTA-STS policy host"
 check_txt "_smtp._tls.$target_domain" "SMTP TLS reporting TXT"
-check_txt "_25._tcp.$MAIL_HOSTNAME" "DANE TLSA for MX"
+check_tlsa "_25._tcp.$MAIL_HOSTNAME" "DANE TLSA for MX"
 
 ui_blank
 ui_summary "$failures" "$warnings" "$failures failure(s), $warnings warning(s)"

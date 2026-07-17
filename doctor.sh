@@ -95,6 +95,21 @@ apply_service_fixes() {
   done
 }
 
+apply_milter_fixes() {
+  local service
+
+  info "Configuring OpenDKIM and OpenDMARC TCP milter sockets."
+  configure_milter_tcp_sockets
+
+  for service in opendkim opendmarc postfix; do
+    if ! systemctl list-unit-files "$service.service" --no-legend 2>/dev/null | grep -q "^$service\\.service"; then
+      warn_state "milter fix skipped restart because $service is not installed"
+      continue
+    fi
+    reload_or_restart "$service" || warn_state "could not restart service after milter socket fix: $service"
+  done
+}
+
 run_health_checks() {
   local status=0
   local config_drift_args=(--config "$CONFIG_FILE")
@@ -124,6 +139,7 @@ run_preflight
 if [[ "$DOCTOR_FIX" == "true" ]]; then
   apply_firewall_fixes
   apply_service_fixes
+  apply_milter_fixes
   ui_blank
 fi
 

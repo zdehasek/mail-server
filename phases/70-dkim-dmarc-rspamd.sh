@@ -3,6 +3,7 @@
 render_template "$ROOT_DIR/templates/opendkim/opendkim.conf.tmpl" /etc/opendkim.conf
 refresh_opendkim_domain_maps
 render_template "$ROOT_DIR/templates/opendmarc/opendmarc.conf.tmpl" /etc/opendmarc.conf
+configure_milter_tcp_sockets
 
 service_enable_now opendkim
 service_enable_now opendmarc

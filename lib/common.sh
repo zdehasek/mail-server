@@ -422,6 +422,42 @@ render_template() {
 $body"
 }
 
+configure_milter_tcp_sockets() {
+  write_file /etc/default/opendkim "$MANAGED_HEADER
+# Keep the package generator aligned with /etc/opendkim.conf and Postfix.
+RUNDIR=/run/opendkim
+SOCKET=inet:8891@127.0.0.1
+USER=opendkim
+GROUP=opendkim
+PIDFILE=\$RUNDIR/opendkim.pid
+EXTRAAFTER="
+
+  write_file /etc/default/opendmarc "$MANAGED_HEADER
+# Keep the package generator aligned with /etc/opendmarc.conf and Postfix.
+RUNDIR=/run/opendmarc
+SOCKET=inet:8893@127.0.0.1
+USER=opendmarc
+GROUP=opendmarc
+PIDFILE=\$RUNDIR/opendmarc.pid
+EXTRAAFTER="
+
+  if [[ -x /usr/lib/opendkim/opendkim.service.generate ]]; then
+    run /usr/lib/opendkim/opendkim.service.generate
+  elif [[ -x /lib/opendkim/opendkim.service.generate ]]; then
+    run /lib/opendkim/opendkim.service.generate
+  fi
+
+  if [[ -x /usr/lib/opendmarc/opendmarc.service.generate ]]; then
+    run /usr/lib/opendmarc/opendmarc.service.generate
+  elif [[ -x /lib/opendmarc/opendmarc.service.generate ]]; then
+    run /lib/opendmarc/opendmarc.service.generate
+  fi
+
+  if command -v systemctl >/dev/null 2>&1; then
+    run systemctl daemon-reload
+  fi
+}
+
 install_packages() {
   local packages=("$@")
   run apt-get update

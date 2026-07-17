@@ -736,20 +736,110 @@ wizard_record_write_line() {
   fi
 }
 
+wizard_dns_record_key() {
+  local line="$1"
+  line="$(sed -E $'s/\x1B\\[[0-9;]*[[:alpha:]]//g; s/[[:space:]]+/ /g; s/^ //; s/ $//' <<< "$line")"
+  printf '%s\n' "$line"
+}
+
+wizard_dns_status_icon() {
+  local status="$1"
+
+  case "$status" in
+    ok) color 32 "✅ OK    " ;;
+    fail) color 31 "❌ missing" ;;
+    warn) color "38;5;208" "⚠ warn   " ;;
+    *) printf '         ' ;;
+  esac
+}
+
+wizard_dns_status_key_from_line() {
+  local line="$1"
+  local message expected
+
+  if [[ "$line" == *"OK    "* ]]; then
+    message="${line#*OK    }"
+  elif [[ "$line" == *"FAIL  "* ]]; then
+    message="${line#*FAIL  }"
+    if [[ "$message" == *" expected: "* ]]; then
+      expected="${message#* expected: }"
+      expected="${expected%; got:*}"
+      wizard_dns_record_key "$expected"
+      return 0
+    fi
+  elif [[ "$line" == *"WARN  "* ]]; then
+    message="${line#*WARN  }"
+  else
+    return 1
+  fi
+
+  if [[ "$message" == PTR/rDNS\ * ]]; then
+    message="${message#PTR/rDNS }"
+  fi
+  wizard_dns_record_key "$message"
+}
+
+wizard_dns_status_from_line() {
+  local line="$1"
+
+  if [[ "$line" == *"OK    "* ]]; then
+    printf '%s\n' "ok"
+  elif [[ "$line" == *"FAIL  "* ]]; then
+    printf '%s\n' "fail"
+  elif [[ "$line" == *"WARN  "* ]]; then
+    printf '%s\n' "warn"
+  else
+    return 1
+  fi
+}
+
+wizard_dns_statuses_from_output() {
+  local dns_output="$1"
+  local line status key
+
+  WIZARD_DNS_RECORD_STATUS=()
+  while IFS= read -r line; do
+    status="$(wizard_dns_status_from_line "$line" || true)"
+    [[ -n "$status" ]] || continue
+    key="$(wizard_dns_status_key_from_line "$line" || true)"
+    [[ -n "$key" ]] || continue
+    WIZARD_DNS_RECORD_STATUS["$key"]="$status"
+  done <<< "$dns_output"
+}
+
 wizard_records() {
   local text="$1"
-  local width color_code
+  local dns_output="${2:-}"
+  local width color_code status status_icon line_to_write key
   width="$(terminal_width)"
+  declare -gA WIZARD_DNS_RECORD_STATUS
+  if [[ -n "$dns_output" ]]; then
+    wizard_dns_statuses_from_output "$dns_output"
+  else
+    WIZARD_DNS_RECORD_STATUS=()
+  fi
+
   wizard_write "$(color 1 "Records to publish")"
   screen_line "-" | while IFS= read -r line; do wizard_write "$line"; done
   while IFS= read -r line; do
     color_code="$(wizard_record_color_code "$line")"
-    if (( ${#line} > width - 2 )); then
-      printf '%s\n' "$line" | fold -s -w "$((width - 2))" | while IFS= read -r folded; do
+    key="$(wizard_dns_record_key "$line")"
+    status=""
+    if [[ -n "$key" ]]; then
+      status="${WIZARD_DNS_RECORD_STATUS[$key]:-}"
+    fi
+    if [[ -n "$status" ]]; then
+      status_icon="$(wizard_dns_status_icon "$status")"
+      line_to_write="$status_icon $line"
+    else
+      line_to_write="$line"
+    fi
+    if (( ${#line_to_write} > width - 2 )); then
+      printf '%s\n' "$line_to_write" | fold -s -w "$((width - 2))" | while IFS= read -r folded; do
         wizard_record_write_line "$folded" "$color_code"
       done
     else
-      wizard_record_write_line "$line" "$color_code"
+      wizard_record_write_line "$line_to_write" "$color_code"
     fi
   done <<< "$text"
   screen_line "-" | while IFS= read -r line; do wizard_write "$line"; done
@@ -1059,7 +1149,15 @@ wait_for_dns_stage() {
   else
     die "This command needs root. Re-run with sudo."
   fi
-  wizard_records "$dns_records"
+  set +e
+  dns_output="$("$ROOT_DIR/scripts/dns-state.sh" --config "$config" "${args[@]}" 2>&1)"
+  status=$?
+  set -e
+  {
+    printf '\n[%s] DNS status snapshot: %s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$title"
+    printf '%s\n' "$dns_output"
+  } >> "$log_file"
+  wizard_records "$dns_records" "$dns_output"
 
   while true; do
     wizard_write ""
@@ -1079,6 +1177,8 @@ wait_for_dns_stage() {
       return 0
     fi
     wizard_problem "DNS is not ready yet. Fix the records below or wait for propagation, then retry."
+    wizard_records "$dns_records" "$dns_output"
+    wizard_write ""
     printf '%s\n' "$dns_output" | { grep -E 'FAIL|WARN|Summary' || true; } | sed 's/^/  /' | while IFS= read -r line; do
       wizard_write "$line"
     done
@@ -1811,4 +1911,6 @@ main() {
   esac
 }
 
-main "$@"
+if [[ "${MAILSERVER_SOURCE_ONLY:-false}" != "true" ]]; then
+  main "$@"
+fi

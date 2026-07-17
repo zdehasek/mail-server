@@ -36,11 +36,11 @@ For an additional domain, activate the domain first, then print domain-specific
 records:
 
 ```bash
-sudo mailserver add-domain --domain example.net
+sudo mailserver domains add --domain example.net
 sudo mailserver print-dns --domain example.net
 ```
 
-`add-domain` creates `postmaster`, `abuse`, and `dmarc` aliases for the domain
+`domains add` creates `postmaster`, `abuse`, and `dmarc` aliases for the domain
 by default so DMARC aggregate reports have a destination.
 
 After publishing the records, check current DNS state against

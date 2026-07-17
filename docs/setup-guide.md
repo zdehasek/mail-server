@@ -280,7 +280,7 @@ exists, setup keeps it active and preserves the existing password hash unless
 `PRIMARY_MAILBOX_PASSWORD` is set explicitly. If an alias already exists, setup
 leaves it in place.
 
-Use `sudo mailserver add-domain --domain example.net` to activate another domain
+Use `sudo mailserver domains add --domain example.net` to activate another domain
 after setup. It seeds the domain database, refreshes DKIM tables, reloads mail
 services, and prints the DNS records to publish.
 
@@ -368,8 +368,8 @@ edit `Reverse DNS` / `rDNS`, and set it to `mail.example.com`.
 DKIM for the primary domain is generated before the DNS step when you run
 `sudo mailserver print-dns`. Publish the generated TXT value with the MX, SPF,
 DMARC, and PTR changes. For additional domains, run
-`sudo mailserver add-domain --domain example.net`, then
-`sudo mailserver print-dns --domain example.net`. `add-domain` creates the
+`sudo mailserver domains add --domain example.net`, then
+`sudo mailserver print-dns --domain example.net`. `domains add` creates the
 standard `postmaster`, `abuse`, and `dmarc` aliases to `ADMIN_EMAIL` unless
 you pass `--alias-dest` or `--no-default-aliases`.
 
@@ -395,7 +395,7 @@ mailserver doctor
 ```
 
 This runs DNS, SSL/TLS, and service checks. To inspect only DNS, run
-`mailserver dns-state`. `mailserver check` remains as a compatibility alias.
+`mailserver dns-state`.
 
 ## 6. Dry Run
 
@@ -477,15 +477,15 @@ sudo cat /etc/mailserver/secrets/primary-mailbox-password
 Additional mailboxes can still be created manually:
 
 ```bash
-sudo mailserver add-user --user user@example.com
+sudo mailserver users add --user user@example.com
 ```
 
 Additional domains must be configured before creating mailboxes or aliases for
 them:
 
 ```bash
-sudo mailserver add-domain --domain example.org
-sudo mailserver add-user --user user@example.org
+sudo mailserver domains add --domain example.org
+sudo mailserver users add --user user@example.org
 ```
 
 Install recurring backups:

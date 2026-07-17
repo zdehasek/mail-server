@@ -5,7 +5,7 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 # shellcheck source=../lib/common.sh
 source "$ROOT_DIR/lib/common.sh"
 
-usage() { usage_line "Usage: sudo mailserver add-domain --domain example.com [--alias-dest admin@example.com] [--no-default-aliases] [--config PATH]"; }
+usage() { usage_line "Usage: sudo mailserver domains add --domain example.com [--alias-dest admin@example.com] [--no-default-aliases] [--config PATH]"; }
 parse_config_only_args "$@" || { usage; exit 0; }
 domain=""
 alias_dest=""
@@ -82,6 +82,6 @@ if [[ "$create_default_aliases" == "true" ]]; then
   info "Standard aliases ready: postmaster@$domain abuse@$domain dmarc@$domain -> $alias_dest"
 fi
 if [[ "$domain" != "$(normalize_domain "$PRIMARY_DOMAIN")" ]]; then
-  info "Add mailboxes with: sudo mailserver add-user --user user@$domain"
+  info "Add mailboxes with: sudo mailserver users add --user user@$domain"
   info "Print DNS records with: sudo mailserver print-dns --domain $domain"
 fi

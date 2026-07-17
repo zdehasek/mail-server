@@ -5,7 +5,7 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 # shellcheck source=../lib/common.sh
 source "$ROOT_DIR/lib/common.sh"
 
-usage() { usage_line "Usage: sudo mailserver list-forwards [--domain example.com] [--config PATH]"; }
+usage() { usage_line "Usage: sudo mailserver forwards ls [--domain example.com] [--config PATH]"; }
 parse_config_only_args "$@" || { usage; exit 0; }
 domain=""
 while [[ "${#POSITIONAL[@]}" -gt 0 ]]; do

@@ -5,7 +5,7 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 # shellcheck source=../lib/common.sh
 source "$ROOT_DIR/lib/common.sh"
 
-usage() { usage_line "Usage: sudo mailserver add-forward --source mailbox@example.com --dest destination@example.com [--allow-mailbox-source] [--config PATH]"; }
+usage() { usage_line "Usage: sudo mailserver forwards add --source mailbox@example.com --dest destination@example.com [--allow-mailbox-source] [--config PATH]"; }
 parse_config_only_args "$@" || { usage; exit 0; }
 source_addr=""
 dest_addr=""

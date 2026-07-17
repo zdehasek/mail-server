@@ -157,7 +157,6 @@ Setup:
 
 Health checks:
   verify                       Check local configs and active services
-  check                        Alias for doctor
   dns-state                    Check A/AAAA, MX, SPF, DMARC, PTR, DKIM
   check-ssl                    Check HTTPS, IMAPS, and SMTP TLS certs
   service-state                Check services, ports, and web endpoints
@@ -169,37 +168,23 @@ Health checks:
 
 Client configuration:
   client-info                  Print Apple Mail, Thunderbird, and CalDAV settings
-  client-config                Alias for client-info
   client-info --user user@example.com
 
 Mailbox operations:
-  list-domains
-  domains ls|list
-  set-domain --domain example.com
+  domains ls
   domains set --domain example.com
-  add-domain --domain example.com
   domains add --domain example.com
-  remove-domain --domain example.com
-  domains rm|remove --domain example.com
-  list-aliases [--domain example.com]
-  aliases ls|list [--domain example.com]
-  list-forwards [--domain example.com]
-  forwards ls|list [--domain example.com]
-  list-users
-  users ls|list
-  add-user --user user@example.com [--full-name "Full Name"]
+  domains rm --domain example.com
+  aliases ls [--domain example.com]
+  forwards ls [--domain example.com]
+  users ls
   users add --user user@example.com [--full-name "Full Name"]
-  remove-user --user user@example.com
-  users rm|remove --user user@example.com
+  users rm --user user@example.com
   setup-primary-mailbox
-  add-alias --source postmaster@example.com --dest user@example.com
   aliases add --source postmaster@example.com --dest user@example.com
-  set-alias --source postmaster@example.com --dest user@example.com
   aliases set --source postmaster@example.com --dest user@example.com
-  add-forward --source user@example.com --dest user@example.net [--allow-mailbox-source]
   forwards add --source user@example.com --dest user@example.net [--allow-mailbox-source]
-  change-password --user user@example.com
-  users passwd|password|change-password --user user@example.com
+  users passwd --user user@example.com
 
 Backup:
   backup
@@ -254,9 +239,6 @@ show_command_help() {
     doctor)
       usage_line 'Usage: mailserver doctor [--fix] [--config PATH]'
       ;;
-    check)
-      usage_line 'Usage: mailserver check [--fix] [--config PATH]'
-      ;;
     print-dns|dns-state)
       usage_line "Usage: mailserver $1 [--domain example.com] [--skip-dkim] [--skip-ptr] [--config PATH]"
       ;;
@@ -299,8 +281,8 @@ show_command_help() {
     add-forward)
       usage_line 'Usage: mailserver forwards add --source mailbox@example.com --dest dest@example.com [--allow-mailbox-source] [--config PATH]'
       ;;
-    client-info|client-config)
-      usage_line "Usage: mailserver $1 [--user user@example.com] [--config PATH]"
+    client-info)
+      usage_line 'Usage: mailserver client-info [--user user@example.com] [--config PATH]'
       ;;
     restore)
       usage_line 'Usage: mailserver restore --list|--inspect ARCHIVE|--validate ARCHIVE|--extract ARCHIVE --target DIR [--config PATH]'
@@ -326,16 +308,16 @@ show_command_help() {
 show_resource_help() {
   case "$1" in
     domain|domains)
-      usage_line 'Usage: mailserver domains ls|list|add|rm|remove|set [OPTIONS]'
+      usage_line 'Usage: mailserver domains ls|add|rm|set [OPTIONS]'
       ;;
     user|users)
-      usage_line 'Usage: mailserver users ls|list|add|rm|remove|passwd|password|change-password [OPTIONS]'
+      usage_line 'Usage: mailserver users ls|add|rm|passwd [OPTIONS]'
       ;;
     alias|aliases)
-      usage_line 'Usage: mailserver aliases ls|list|add|set [OPTIONS]'
+      usage_line 'Usage: mailserver aliases ls|add|set [OPTIONS]'
       ;;
     forward|forwards)
-      usage_line 'Usage: mailserver forwards ls|list|add [OPTIONS]'
+      usage_line 'Usage: mailserver forwards ls|add [OPTIONS]'
       ;;
     *)
       show_help
@@ -377,6 +359,51 @@ normalize_command() {
   local action="${COMMAND_ARGS[0]:-}"
 
   case "$resource" in
+    list-domains)
+      die "Use: mailserver domains ls"
+      ;;
+    add-domain)
+      die "Use: mailserver domains add --domain example.com"
+      ;;
+    remove-domain)
+      die "Use: mailserver domains rm --domain example.com"
+      ;;
+    set-domain)
+      die "Use: mailserver domains set --domain example.com"
+      ;;
+    list-users)
+      die "Use: mailserver users ls"
+      ;;
+    add-user)
+      die "Use: mailserver users add --user user@example.com"
+      ;;
+    remove-user)
+      die "Use: mailserver users rm --user user@example.com"
+      ;;
+    change-password)
+      die "Use: mailserver users passwd --user user@example.com"
+      ;;
+    list-aliases)
+      die "Use: mailserver aliases ls"
+      ;;
+    add-alias)
+      die "Use: mailserver aliases add --source source@example.com --dest dest@example.com"
+      ;;
+    set-alias)
+      die "Use: mailserver aliases set --source source@example.com --dest dest@example.com"
+      ;;
+    list-forwards)
+      die "Use: mailserver forwards ls"
+      ;;
+    add-forward)
+      die "Use: mailserver forwards add --source source@example.com --dest dest@example.com"
+      ;;
+    client-config)
+      die "Use: mailserver client-info"
+      ;;
+    check)
+      die "Use: mailserver doctor"
+      ;;
     delete-setup|remove-setup)
       COMMAND="reset-setup"
       ;;
@@ -384,37 +411,37 @@ normalize_command() {
       [[ -n "$action" ]] || { show_resource_help "$resource"; exit 0; }
       COMMAND_ARGS=("${COMMAND_ARGS[@]:1}")
       case "$action" in
-        ls|list) COMMAND="list-domains" ;;
+        ls) COMMAND="list-domains" ;;
         add) COMMAND="add-domain" ;;
-        rm|remove) COMMAND="remove-domain" ;;
+        rm) COMMAND="remove-domain" ;;
         set) COMMAND="set-domain" ;;
         help|--help|-h)
           show_command_help list-domains
           exit 0
           ;;
-        *) die "Unknown domains action: $action. Use: ls, add, rm, remove, or set." ;;
+        *) die "Unknown domains action: $action. Use: ls, add, rm, or set." ;;
       esac
       ;;
     user|users)
       [[ -n "$action" ]] || { show_resource_help "$resource"; exit 0; }
       COMMAND_ARGS=("${COMMAND_ARGS[@]:1}")
       case "$action" in
-        ls|list) COMMAND="list-users" ;;
+        ls) COMMAND="list-users" ;;
         add) COMMAND="add-user" ;;
-        rm|remove) COMMAND="remove-user" ;;
-        passwd|password|change-password) COMMAND="change-password" ;;
+        rm) COMMAND="remove-user" ;;
+        passwd) COMMAND="change-password" ;;
         help|--help|-h)
           show_command_help list-users
           exit 0
           ;;
-        *) die "Unknown users action: $action. Use: ls, add, rm, remove, passwd, password, or change-password." ;;
+        *) die "Unknown users action: $action. Use: ls, add, rm, or passwd." ;;
       esac
       ;;
     alias|aliases)
       [[ -n "$action" ]] || { show_resource_help "$resource"; exit 0; }
       COMMAND_ARGS=("${COMMAND_ARGS[@]:1}")
       case "$action" in
-        ls|list) COMMAND="list-aliases" ;;
+        ls) COMMAND="list-aliases" ;;
         add) COMMAND="add-alias" ;;
         set) COMMAND="set-alias" ;;
         help|--help|-h)
@@ -428,7 +455,7 @@ normalize_command() {
       [[ -n "$action" ]] || { show_resource_help "$resource"; exit 0; }
       COMMAND_ARGS=("${COMMAND_ARGS[@]:1}")
       case "$action" in
-        ls|list) COMMAND="list-forwards" ;;
+        ls) COMMAND="list-forwards" ;;
         add) COMMAND="add-forward" ;;
         help|--help|-h)
           show_command_help list-forwards
@@ -1742,12 +1769,6 @@ cmd_verify() {
   run_root_cmd "$ROOT_DIR/verify.sh" --config "$(config_arg)"
 }
 
-cmd_check() {
-  extract_common_args "$@"
-  warn "check is deprecated; use mailserver doctor instead."
-  cmd_doctor --config "$(config_arg)" "${REMAINING_ARGS[@]}"
-}
-
 cmd_simple_script() {
   local script="$1"
   local root_needed="$2"
@@ -1911,7 +1932,6 @@ main() {
     setup-dry-run) cmd_setup_dry_run "${COMMAND_ARGS[@]}" ;;
     setup) cmd_setup "${COMMAND_ARGS[@]}" ;;
     verify) cmd_verify "${COMMAND_ARGS[@]}" ;;
-    check) cmd_check "${COMMAND_ARGS[@]}" ;;
     print-dns) cmd_option_script scripts/print-dns.sh true "${COMMAND_ARGS[@]}" ;;
     dns-state) cmd_option_script scripts/dns-state.sh false "${COMMAND_ARGS[@]}" ;;
     check-ssl) cmd_simple_script scripts/check-ssl.sh false "${COMMAND_ARGS[@]}" ;;
@@ -1930,7 +1950,7 @@ main() {
     backup) cmd_simple_script scripts/backup.sh true "${COMMAND_ARGS[@]}" ;;
     restore) cmd_option_script scripts/restore.sh true "${COMMAND_ARGS[@]}" ;;
     install-backup-cron) cmd_simple_script scripts/install-backup-cron.sh true "${COMMAND_ARGS[@]}" ;;
-    client-info|client-config) cmd_client_info "${COMMAND_ARGS[@]}" ;;
+    client-info) cmd_client_info "${COMMAND_ARGS[@]}" ;;
     add-user) cmd_user_arg scripts/add-user.sh "${COMMAND_ARGS[@]}" ;;
     remove-user) cmd_user_arg scripts/remove-user.sh "${COMMAND_ARGS[@]}" ;;
     change-password) cmd_user_arg scripts/change-password.sh "${COMMAND_ARGS[@]}" ;;

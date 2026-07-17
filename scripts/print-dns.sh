@@ -84,7 +84,7 @@ DNS
 else
   cat <<DNS
 
-DKIM record is not generated yet. Run sudo mailserver add-domain --domain $target_domain, then rerun this command.
+DKIM record is not generated yet. Run sudo mailserver domains add --domain $target_domain, then rerun this command.
 Expected name: $DKIM_SELECTOR._domainkey.$target_domain.
 DNS
 fi

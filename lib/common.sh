@@ -523,6 +523,10 @@ format_dkim_dns_record_file() {
     name="$name.$domain"
   fi
   value="${value%% ; -----*}"
+  value="$(sed 's/[[:space:]]\+/ /g; s/^ //; s/ $//' <<< "$value")"
+  if [[ "$value" =~ ^\(\ (.*)\ \)$ ]]; then
+    value="${BASH_REMATCH[1]}"
+  fi
   printf '%s. TXT %s\n' "$name" "$value"
 }
 

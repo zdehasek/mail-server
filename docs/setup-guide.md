@@ -444,7 +444,7 @@ sudo mailserver print-dns
 The DKIM TXT record looks like:
 
 ```text
-default._domainkey.example.com. TXT ( "v=DKIM1; k=rsa; " "p=<generated DKIM value>" )
+default._domainkey.example.com. TXT "v=DKIM1; k=rsa; " "p=<generated DKIM value>"
 ```
 
 Keep DMARC at `p=none` until outbound delivery tests are clean. Later move to

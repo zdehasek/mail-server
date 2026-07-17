@@ -11,7 +11,7 @@ dav.example.com.      A    203.0.113.10
 webmail.example.com.  A    203.0.113.10
 example.com.          TXT  "v=spf1 mx -all"
 _dmarc.example.com.   TXT  "v=DMARC1; p=none; rua=mailto:dmarc@example.com; adkim=s; aspf=s"
-default._domainkey.example.com. TXT ( "v=DKIM1; k=rsa; " "p=<generated DKIM value>" )
+default._domainkey.example.com. TXT "v=DKIM1; k=rsa; " "p=<generated DKIM value>"
 ```
 
 If IPv6 is configured:

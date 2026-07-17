@@ -6,7 +6,7 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 # shellcheck disable=SC1091
 source "$ROOT_DIR/lib/common.sh"
 
-usage() { echo "Usage: mailserver dns-state [--domain example.com] [--skip-dkim] [--skip-ptr] [--config PATH]"; }
+usage() { usage_line "Usage: mailserver dns-state [--domain example.com] [--skip-dkim] [--skip-ptr] [--config PATH]"; }
 parse_config_only_args "$@" || { usage; exit 0; }
 load_config
 
@@ -97,21 +97,22 @@ check_host_ip() {
 check_txt() {
   local name="$1"
   local expected="$2"
-  local raw_records normalized_expected normalized_records display_records
+  local records records_display normalized_expected normalized_records
   normalized_expected="$(normalize_txt <<< "$expected")"
-  raw_records="$(dig @"$DNS_RESOLVER" +short TXT "$name" 2>/dev/null)"
-  normalized_records="$(normalize_txt <<< "$raw_records")"
+  records="$(dig @"$DNS_RESOLVER" +short TXT "$name" 2>/dev/null || true)"
+  records_display="$(tr '\n' ' ' <<< "$records" | sed 's/[[:space:]]\+$//')"
+  normalized_records="$(normalize_txt <<< "$records")"
 
   if grep -Fq "$normalized_expected" <<< "$normalized_records"; then
     ok_state "$name TXT matches"
   else
-    display_records="$(tr '\n' ' ' <<< "$raw_records" | sed -E 's/[[:space:]]+/ /g; s/[[:space:]]$//')"
-    fail_state "$name TXT missing expected value; set: $name TXT \"$expected\"; got: ${display_records:-<none>}"
+    fail_state "$name TXT expected: \"$expected\"; got: ${records_display:-<none>}"
   fi
 }
 
-printf 'DNS state for %s\n' "$target_domain"
-printf 'Resolver: %s\n\n' "$DNS_RESOLVER"
+ui_heading "DNS state for $target_domain"
+info "Resolver: $DNS_RESOLVER"
+ui_blank
 
 declare -A hosts=()
 hosts["$MAIL_HOSTNAME"]=1
@@ -148,7 +149,7 @@ fi
 dkim_name="$DKIM_SELECTOR._domainkey.$target_domain"
 dkim_file="/etc/mailserver/dkim/$target_domain/$DKIM_SELECTOR.txt"
 if [[ "$skip_dkim" == "true" ]]; then
-  warn_state "DKIM check skipped because the key is generated during installation"
+  warn_state "DKIM check skipped by --skip-dkim because the DKIM key is generated during installation; the final DNS step checks it."
 else
   dns_dkim="$(dig @"$DNS_RESOLVER" +short TXT "$dkim_name" 2>/dev/null | normalize_txt)"
   if [[ -r "$dkim_file" ]]; then
@@ -169,5 +170,6 @@ else
   fi
 fi
 
-printf '\nSummary: %d failure(s), %d warning(s)\n' "$failures" "$warnings"
+ui_blank
+ui_summary "$failures" "$warnings" "$failures failure(s), $warnings warning(s)"
 [[ "$failures" -eq 0 ]]

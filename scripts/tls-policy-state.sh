@@ -5,7 +5,7 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 # shellcheck source=../lib/common.sh
 source "$ROOT_DIR/lib/common.sh"
 
-usage() { echo "Usage: mailserver tls-policy-state [--domain example.com] [--config PATH]"; }
+usage() { usage_line "Usage: mailserver tls-policy-state [--domain example.com] [--config PATH]"; }
 parse_config_only_args "$@" || { usage; exit 0; }
 load_config
 
@@ -50,11 +50,13 @@ check_host() {
   fi
 }
 
-printf 'TLS policy state for %s\n\n' "$target_domain"
+ui_heading "TLS policy state for $target_domain"
+ui_blank
 check_txt "_mta-sts.$target_domain" "MTA-STS TXT"
 check_host "mta-sts.$target_domain" "MTA-STS policy host"
 check_txt "_smtp._tls.$target_domain" "SMTP TLS reporting TXT"
 check_txt "_25._tcp.$MAIL_HOSTNAME" "DANE TLSA for MX"
 
-printf '\nSummary: %d failure(s), %d warning(s)\n' "$failures" "$warnings"
+ui_blank
+ui_summary "$failures" "$warnings" "$failures failure(s), $warnings warning(s)"
 [[ "$failures" -eq 0 ]]

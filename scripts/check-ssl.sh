@@ -59,7 +59,8 @@ check_cert() {
   ok_state "$label: subject $subject"
 }
 
-printf 'SSL/TLS state for %s\n\n' "$PRIMARY_DOMAIN"
+ui_heading "SSL/TLS state for $PRIMARY_DOMAIN"
+ui_blank
 
 declare -A https_hosts=()
 https_hosts["$MAIL_HOSTNAME"]=1
@@ -73,5 +74,6 @@ done
 check_cert "IMAPS $MAIL_HOSTNAME" "$MAIL_HOSTNAME" 993
 check_cert "SMTP submission $MAIL_HOSTNAME" "$MAIL_HOSTNAME" 587 smtp
 
-printf '\nSummary: %d failure(s), %d warning(s)\n' "$failures" "$warnings"
+ui_blank
+ui_summary "$failures" "$warnings" "$failures failure(s), $warnings warning(s)"
 [[ "$failures" -eq 0 ]]

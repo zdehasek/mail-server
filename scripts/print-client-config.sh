@@ -6,7 +6,7 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 # shellcheck disable=SC1091
 source "$ROOT_DIR/lib/common.sh"
 
-usage() { echo "Usage: mailserver client-info [--user user@example.com] [--config PATH]"; }
+usage() { usage_line "Usage: mailserver client-info [--user user@example.com] [--config PATH]"; }
 
 account=""
 while [[ $# -gt 0 ]]; do

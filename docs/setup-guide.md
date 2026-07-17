@@ -447,16 +447,8 @@ The DKIM TXT record looks like:
 default._domainkey.example.com. TXT "v=DKIM1; k=rsa; p=<generated DKIM value>"
 ```
 
-In a provider UI, use the DKIM fields printed by the wizard:
-
-```text
-Type: TXT
-Name: default._domainkey.example.com
-Content: "v=DKIM1; k=rsa; p=<generated DKIM value>"
-```
-
-The `Content` value is one logical TXT value. Do not paste the record name or
-`TXT` into a provider `Content`/`Value` field.
+In a provider UI, paste only the quoted DKIM value after `TXT` into a
+`Content`/`Value` field. Do not paste the record name or `TXT` into that field.
 
 Keep DMARC at `p=none` until outbound delivery tests are clean. Later move to
 `p=quarantine`, then `p=reject`.

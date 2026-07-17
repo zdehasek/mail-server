@@ -19,11 +19,6 @@ example.com. TXT "v=spf1 mx -all"
 _dmarc.example.com. TXT "v=DMARC1; p=none; rua=mailto:dmarc@example.com; adkim=s; aspf=s"
 default._domainkey.example.com. TXT "v=DKIM1; k=rsa; p=ABC123"
 
-DKIM provider fields:
-  Type: TXT
-  Name: default._domainkey.example.com
-  Content: "v=DKIM1; k=rsa; p=ABC123"
-
 Provider PTR/rDNS must be:
 203.0.113.10 -> mail.example.com'
 
@@ -52,7 +47,6 @@ assert_contains '❌ missing mail.example.com. A 203.0.113.10'
 assert_contains '✅ OK     example.com. TXT "v=spf1 mx -all"'
 assert_contains '❌ missing _dmarc.example.com. TXT "v=DMARC1; p=none; rua=mailto:dmarc@example.com; adkim=s; aspf=s"'
 assert_contains '✅ OK     default._domainkey.example.com. TXT "v=DKIM1; k=rsa; p=ABC123"'
-assert_contains '  Content: "v=DKIM1; k=rsa; p=ABC123"'
 assert_contains '❌ missing 203.0.113.10 -> mail.example.com'
 
 printf 'wizard DNS record status rendering ok\n'

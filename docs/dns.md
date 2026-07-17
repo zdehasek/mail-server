@@ -14,18 +14,8 @@ _dmarc.example.com.   TXT  "v=DMARC1; p=none; rua=mailto:dmarc@example.com; adki
 default._domainkey.example.com. TXT "v=DKIM1; k=rsa; p=<generated DKIM value>"
 ```
 
-For provider forms, enter the DKIM record as fields:
-
-```text
-Type: TXT
-Name: default._domainkey.example.com
-Content: "v=DKIM1; k=rsa; p=<generated DKIM value>"
-```
-
-Some zone-file examples split long TXT values into multiple quoted strings.
-Provider DNS forms usually want one logical `Content`/`Value` field and split
-the TXT record internally. Do not paste the record name or `TXT` type into the
-content field.
+For provider `Content`/`Value` fields, paste only the quoted DKIM value after
+`TXT`. Do not paste the record name or `TXT` type into the content field.
 
 If IPv6 is configured:
 

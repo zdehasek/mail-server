@@ -93,11 +93,11 @@ The wizard:
 1. Collects the domain, hostnames, public IPs, admin mailbox, and timezone.
 2. Writes `~/.email-server/config.env`.
 3. Runs local prerequisite checks.
-4. Prints the required DNS records and keeps rechecking them until they pass.
+4. Generates DKIM for the primary domain, prints all required DNS records, and
+   keeps rechecking them until they pass.
 5. Installs and configures the mail stack.
-6. Prints the generated DKIM record and keeps rechecking DNS until it matches.
-7. Runs final SSL, service, and TLS policy checks.
-8. Offers to install the recurring backup cron.
+6. Runs final SSL, service, and TLS policy checks.
+7. Offers to install the recurring backup cron.
 
 During the guided setup, verbose package, Certbot, Nginx, and service output is
 written to a log file shown at the top of the screen. The terminal view stays on
@@ -434,8 +434,8 @@ they are overwritten.
 
 ## 8. Verify DKIM
 
-After installation, print DNS again if you need to copy or confirm the generated
-DKIM record:
+DKIM is included in the same DNS output as MX, SPF, DMARC, and host records.
+After installation, print DNS again if you need to copy or confirm it:
 
 ```bash
 sudo mailserver print-dns
@@ -444,10 +444,7 @@ sudo mailserver print-dns
 The DKIM TXT record looks like:
 
 ```text
-Type: TXT
-Name: default._domainkey
-Content: <generated DKIM value>
-TTL: Auto
+default._domainkey.example.com. TXT ( "v=DKIM1; k=rsa; " "p=<generated DKIM value>" )
 ```
 
 Keep DMARC at `p=none` until outbound delivery tests are clean. Later move to

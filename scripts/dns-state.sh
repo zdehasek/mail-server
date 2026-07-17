@@ -69,6 +69,7 @@ check_host_ip() {
   local type="$1"
   local host="$2"
   local expected="$3"
+  local expected_record
   local records
   records="$(dig_short "$host" "$type")"
 
@@ -81,10 +82,11 @@ check_host_ip() {
     return 0
   fi
 
+  expected_record="$host. $type $expected"
   if contains_line "$expected" <<< "$records"; then
-    ok_state "$host $type contains $expected"
+    ok_state "$expected_record"
   else
-    fail_state "$host $type expected: $host. $type $expected; got: ${records:-<none>}"
+    fail_state "$host $type expected: $expected_record; got: ${records:-<none>}"
   fi
 
   local extra
@@ -97,16 +99,17 @@ check_host_ip() {
 check_txt() {
   local name="$1"
   local expected="$2"
-  local records records_display normalized_expected normalized_records
+  local expected_record records records_display normalized_expected normalized_records
+  expected_record="$name. TXT \"$expected\""
   normalized_expected="$(normalize_txt <<< "$expected")"
   records="$(dig @"$DNS_RESOLVER" +short TXT "$name" 2>/dev/null || true)"
   records_display="$(tr '\n' ' ' <<< "$records" | sed 's/[[:space:]]\+$//')"
   normalized_records="$(normalize_txt <<< "$records")"
 
   if grep -Fq "$normalized_expected" <<< "$normalized_records"; then
-    ok_state "$name TXT matches"
+    ok_state "$expected_record"
   else
-    fail_state "$name TXT expected: $name. TXT \"$expected\"; got: ${records_display:-<none>}"
+    fail_state "$name TXT expected: $expected_record; got: ${records_display:-<none>}"
   fi
 }
 
@@ -126,10 +129,11 @@ done
 
 mx_records="$(dig_short "$target_domain" MX)"
 expected_mx="10 $MAIL_HOSTNAME"
+expected_mx_record="$target_domain. MX 10 $MAIL_HOSTNAME."
 if contains_line "$expected_mx" <<< "$mx_records"; then
-  ok_state "$target_domain MX points to $MAIL_HOSTNAME"
+  ok_state "$expected_mx_record"
 else
-  fail_state "$target_domain MX expected: $target_domain. MX $expected_mx; got: ${mx_records:-<none>}"
+  fail_state "$target_domain MX expected: $expected_mx_record; got: ${mx_records:-<none>}"
 fi
 
 check_txt "$target_domain" "v=spf1 mx -all"
@@ -140,7 +144,7 @@ if [[ "$skip_ptr" == "true" ]]; then
 else
   ptr_records="$(dig_short -x "$SERVER_PUBLIC_IPV4")"
   if contains_line "$MAIL_HOSTNAME" <<< "$ptr_records"; then
-    ok_state "$SERVER_PUBLIC_IPV4 PTR/rDNS points to $MAIL_HOSTNAME"
+    ok_state "PTR/rDNS $SERVER_PUBLIC_IPV4 -> $MAIL_HOSTNAME"
   else
     fail_state "$SERVER_PUBLIC_IPV4 PTR/rDNS expected: $SERVER_PUBLIC_IPV4 -> $MAIL_HOSTNAME; got: ${ptr_records:-<none>}"
   fi
@@ -158,7 +162,7 @@ else
     expected_dkim="$(normalize_local_dkim "$dkim_file")"
     expected_dkim_record="$(format_dkim_dns_record_file "$dkim_file" "$target_domain")"
     if [[ -n "$dns_dkim" && "$dns_dkim" == *"$expected_dkim"* ]]; then
-      ok_state "$dkim_name TXT matches generated DKIM key"
+      ok_state "$expected_dkim_record"
     else
       fail_state "$dkim_name TXT expected: $expected_dkim_record; got: ${dns_dkim_display:-<none>}"
     fi

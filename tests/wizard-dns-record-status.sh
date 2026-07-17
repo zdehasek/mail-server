@@ -27,9 +27,9 @@ dns_output='== DNS state for example.com ==
 ❌ FAIL  mail.example.com A expected: mail.example.com. A 203.0.113.10; got: <none>
 ✅ OK    example.com. TXT "v=spf1 mx -all"
 ❌ FAIL  _dmarc.example.com TXT expected: _dmarc.example.com. TXT "v=DMARC1; p=none; rua=mailto:dmarc@example.com; adkim=s; aspf=s"; got: <none>
-✅ OK    default._domainkey.example.com. TXT "v=DKIM1; k=rsa; p=ABC123"
+❌ FAIL  default._domainkey.example.com TXT expected: default._domainkey.example.com. TXT "v=DKIM1; k=rsa; p=ABC123"; got: "v=DKIM1; k=rsa;\010p=ABC123"
 ❌ FAIL  203.0.113.10 PTR/rDNS expected: 203.0.113.10 -> mail.example.com; got: <none>
-Summary: 3 failure(s), 0 warning(s)'
+Summary: 4 failure(s), 0 warning(s)'
 
 output="$(wizard_records "$dns_records" "$dns_output")"
 visible_output="$(sed -E $'s/\x1B\\[[0-9;]*[[:alpha:]]//g' <<< "$output")"
@@ -46,7 +46,7 @@ assert_contains '✅ OK     example.com. MX 10 mail.example.com.'
 assert_contains '❌ missing mail.example.com. A 203.0.113.10'
 assert_contains '✅ OK     example.com. TXT "v=spf1 mx -all"'
 assert_contains '❌ missing _dmarc.example.com. TXT "v=DMARC1; p=none; rua=mailto:dmarc@example.com; adkim=s; aspf=s"'
-assert_contains '✅ OK     default._domainkey.example.com. TXT "v=DKIM1; k=rsa; p=ABC123"'
+assert_contains '❌ different default._domainkey.example.com. TXT "v=DKIM1; k=rsa; p=ABC123"'
 assert_contains '❌ missing 203.0.113.10 -> mail.example.com'
 
 printf 'wizard DNS record status rendering ok\n'

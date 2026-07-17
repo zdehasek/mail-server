@@ -748,6 +748,7 @@ wizard_dns_status_icon() {
   case "$status" in
     ok) color 32 "✅ OK    " ;;
     fail) color 31 "❌ missing" ;;
+    different) color 31 "❌ different" ;;
     warn) color "38;5;208" "⚠ warn   " ;;
     *) printf '         ' ;;
   esac
@@ -785,7 +786,11 @@ wizard_dns_status_from_line() {
   if [[ "$line" == *"OK    "* ]]; then
     printf '%s\n' "ok"
   elif [[ "$line" == *"FAIL  "* ]]; then
-    printf '%s\n' "fail"
+    if [[ "$line" == *" got: <none>"* ]]; then
+      printf '%s\n' "fail"
+    else
+      printf '%s\n' "different"
+    fi
   elif [[ "$line" == *"WARN  "* ]]; then
     printf '%s\n' "warn"
   else

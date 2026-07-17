@@ -24,15 +24,20 @@ check_port() {
   local port="$1"
   local name="$2"
   local expected_regex="$3"
+  local repair_hint="${4:-}"
   local listener
 
   if port_is_listening "$port"; then
     listener="$(port_listener_summary "$port")"
     if port_listener_has_expected "$port" "$expected_regex"; then
       ok_state "port $port listening: $name via $listener"
+    elif [[ -n "$repair_hint" ]]; then
+      fail_state "port $port is occupied by $listener, expected $name ($expected_regex); $repair_hint"
     else
       fail_state "port $port is occupied by $listener, expected $name ($expected_regex)"
     fi
+  elif [[ -n "$repair_hint" ]]; then
+    fail_state "port $port is not listening: $name; $repair_hint"
   else
     fail_state "port $port is not listening: $name"
   fi
@@ -152,13 +157,13 @@ for service in "${services[@]}"; do
   check_service "$service"
 done
 
-check_port 25 "SMTP" "master|postfix"
+check_port 25 "SMTP" "master|postfix|smtpd"
 check_port 80 "HTTP / Let's Encrypt" "nginx"
 check_port 443 "HTTPS" "nginx"
 check_port 587 "SMTP submission" "master|postfix|smtpd"
 check_port 993 "IMAPS" "dovecot"
-check_port 8891 "OpenDKIM milter; repair with: sudo mailserver doctor --fix" "opendkim"
-check_port 8893 "OpenDMARC milter; repair with: sudo mailserver doctor --fix" "opendmarc"
+check_port 8891 "OpenDKIM milter" "opendkim" "repair with: sudo mailserver doctor --fix"
+check_port 8893 "OpenDMARC milter" "opendmarc" "repair with: sudo mailserver doctor --fix"
 check_port 20000 "SOGo" "sogod"
 [[ "${ENABLE_RSPAMD:-true}" == "true" ]] && check_port 11332 "Rspamd milter" "rspamd"
 

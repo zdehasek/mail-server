@@ -34,8 +34,9 @@ assert_file_contains "$ROOT_DIR/lib/common.sh" "SOCKET=inet:8891@127.0.0.1"
 assert_file_contains "$ROOT_DIR/lib/common.sh" "SOCKET=inet:8893@127.0.0.1"
 
 service_state_source="$(< "$ROOT_DIR/scripts/service-state.sh")"
+assert_contains "$service_state_source" 'check_port 25 "SMTP" "master|postfix|smtpd"'
 assert_contains "$service_state_source" 'check_port 587 "SMTP submission" "master|postfix|smtpd"'
-assert_contains "$service_state_source" "OpenDKIM milter; repair with: sudo mailserver doctor --fix"
-assert_contains "$service_state_source" "OpenDMARC milter; repair with: sudo mailserver doctor --fix"
+assert_contains "$service_state_source" 'check_port 8891 "OpenDKIM milter" "opendkim" "repair with: sudo mailserver doctor --fix"'
+assert_contains "$service_state_source" 'check_port 8893 "OpenDMARC milter" "opendmarc" "repair with: sudo mailserver doctor --fix"'
 
 printf 'milter socket repair wiring ok\n'

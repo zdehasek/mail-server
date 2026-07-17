@@ -117,7 +117,7 @@ if [[ "$nginx_fixed" == "true" ]]; then
   fi
 fi
 
-warn_state "config-drift is scoped to SOGo/webmail generated files; it does not audit every Postfix, Dovecot, Rspamd, DKIM, DMARC, Fail2ban, or SSH hardening file."
+info "config-drift is scoped to SOGo/webmail generated files; it does not audit every Postfix, Dovecot, Rspamd, DKIM, DMARC, Fail2ban, or SSH hardening file."
 
 ui_blank
 ui_summary "$failures" "$warnings" "$failures drift(s), $warnings warning(s), $fixes fixed"

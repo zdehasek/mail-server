@@ -815,8 +815,7 @@ wizard_dns_statuses_from_output() {
 wizard_records() {
   local text="$1"
   local dns_output="${2:-}"
-  local width color_code status status_icon line_to_write key
-  width="$(terminal_width)"
+  local color_code status status_icon line_to_write key
   declare -gA WIZARD_DNS_RECORD_STATUS
   if [[ -n "$dns_output" ]]; then
     wizard_dns_statuses_from_output "$dns_output"
@@ -839,13 +838,7 @@ wizard_records() {
     else
       line_to_write="$line"
     fi
-    if (( ${#line_to_write} > width - 2 )); then
-      printf '%s\n' "$line_to_write" | fold -s -w "$((width - 2))" | while IFS= read -r folded; do
-        wizard_record_write_line "$folded" "$color_code"
-      done
-    else
-      wizard_record_write_line "$line_to_write" "$color_code"
-    fi
+    wizard_record_write_line "$line_to_write" "$color_code"
   done <<< "$text"
   screen_line "-" | while IFS= read -r line; do wizard_write "$line"; done
 }

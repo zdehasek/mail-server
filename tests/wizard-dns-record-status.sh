@@ -49,4 +49,14 @@ assert_contains '❌ missing _dmarc.example.com. TXT "v=DMARC1; p=none; rua=mail
 assert_contains '❌ different default._domainkey.example.com. TXT "v=DKIM1; k=rsa; p=ABC123"'
 assert_contains '❌ missing 203.0.113.10 -> mail.example.com'
 
+COLUMNS=40
+long_dkim_record='default._domainkey.example.com. TXT "v=DKIM1; h=sha256; k=rsa; p=ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"'
+long_output="$(wizard_records "$long_dkim_record")"
+long_visible_output="$(sed -E $'s/\x1B\\[[0-9;]*[[:alpha:]]//g' <<< "$long_output")"
+
+if [[ "$long_visible_output" != *"$long_dkim_record"* ]]; then
+  printf 'Expected long DKIM output to keep one copy-pasteable record line:\n%s\n\nActual output:\n%s\n' "$long_dkim_record" "$long_visible_output" >&2
+  exit 1
+fi
+
 printf 'wizard DNS record status rendering ok\n'

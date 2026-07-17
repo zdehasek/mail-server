@@ -50,6 +50,20 @@ if [[ "$DOCTOR_FIX" == "true" ]]; then
 fi
 
 apply_firewall_fixes() {
+  run_ufw_quiet() {
+    local label="$1"
+    shift
+    if [[ "$DRY_RUN" == "true" ]]; then
+      run "$@"
+      return 0
+    fi
+    if "$@" >/dev/null; then
+      ok_state "$label"
+    else
+      warn_state "could not apply UFW rule: $label"
+    fi
+  }
+
   if [[ "${ENABLE_UFW:-true}" != "true" ]]; then
     warn_state "UFW fix skipped because ENABLE_UFW=false"
     return 0
@@ -60,17 +74,17 @@ apply_firewall_fixes() {
   fi
 
   info "Opening required local UFW ports."
-  run ufw default deny incoming
-  run ufw default allow outgoing
-  run ufw allow "${SSH_PORT}/tcp" comment SSH
-  run ufw allow 25/tcp comment SMTP
-  run ufw allow 80/tcp comment HTTP-ACME
-  run ufw allow 443/tcp comment HTTPS
-  run ufw allow 587/tcp comment SMTP-Submission
-  run ufw allow 993/tcp comment IMAPS
+  run_ufw_quiet "UFW default incoming policy is deny" ufw default deny incoming
+  run_ufw_quiet "UFW default outgoing policy is allow" ufw default allow outgoing
+  run_ufw_quiet "UFW allows ${SSH_PORT}/tcp SSH" ufw allow "${SSH_PORT}/tcp" comment SSH
+  run_ufw_quiet "UFW allows 25/tcp SMTP" ufw allow 25/tcp comment SMTP
+  run_ufw_quiet "UFW allows 80/tcp HTTP / Let's Encrypt" ufw allow 80/tcp comment HTTP-ACME
+  run_ufw_quiet "UFW allows 443/tcp HTTPS" ufw allow 443/tcp comment HTTPS
+  run_ufw_quiet "UFW allows 587/tcp SMTP submission" ufw allow 587/tcp comment SMTP-Submission
+  run_ufw_quiet "UFW allows 993/tcp IMAPS" ufw allow 993/tcp comment IMAPS
 
   if ss -ltn "sport = :${SSH_PORT}" | awk 'NR>1 {found=1} END {exit found ? 0 : 1}'; then
-    run ufw --force enable
+    run_ufw_quiet "UFW is enabled" ufw --force enable
   else
     warn_state "UFW rules were written, but UFW was not enabled because SSH port ${SSH_PORT} is not listening"
   fi

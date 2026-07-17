@@ -155,7 +155,7 @@ done
 check_port 25 "SMTP" "master|postfix"
 check_port 80 "HTTP / Let's Encrypt" "nginx"
 check_port 443 "HTTPS" "nginx"
-check_port 587 "SMTP submission" "master|postfix"
+check_port 587 "SMTP submission" "master|postfix|smtpd"
 check_port 993 "IMAPS" "dovecot"
 check_port 8891 "OpenDKIM milter; repair with: sudo mailserver doctor --fix" "opendkim"
 check_port 8893 "OpenDMARC milter; repair with: sudo mailserver doctor --fix" "opendmarc"

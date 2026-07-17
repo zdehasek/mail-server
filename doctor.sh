@@ -97,6 +97,7 @@ apply_service_fixes() {
 
 apply_milter_fixes() {
   local service
+  local status=0
 
   info "Configuring OpenDKIM and OpenDMARC TCP milter sockets."
   configure_milter_tcp_sockets
@@ -106,8 +107,23 @@ apply_milter_fixes() {
       warn_state "milter fix skipped restart because $service is not installed"
       continue
     fi
-    reload_or_restart "$service" || warn_state "could not restart service after milter socket fix: $service"
+    run systemctl restart "$service" || warn_state "could not restart service after milter socket fix: $service"
   done
+
+  sleep 1
+  if port_listener_has_expected 8891 "opendkim"; then
+    ok_state "OpenDKIM milter is listening on 127.0.0.1:8891"
+  else
+    fail_state "OpenDKIM milter is still not listening on 127.0.0.1:8891 after restart"
+    status=1
+  fi
+  if port_listener_has_expected 8893 "opendmarc"; then
+    ok_state "OpenDMARC milter is listening on 127.0.0.1:8893"
+  else
+    fail_state "OpenDMARC milter is still not listening on 127.0.0.1:8893 after restart"
+    status=1
+  fi
+  return "$status"
 }
 
 run_health_checks() {

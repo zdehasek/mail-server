@@ -7,8 +7,8 @@ configure_milter_tcp_sockets
 
 service_enable_now opendkim
 service_enable_now opendmarc
-reload_or_restart opendkim
-reload_or_restart opendmarc
+run systemctl restart opendkim
+run systemctl restart opendmarc
 
 if [[ "${ENABLE_RSPAMD:-true}" == "true" ]]; then
   render_template "$ROOT_DIR/templates/rspamd/milter_headers.conf.tmpl" /etc/rspamd/local.d/milter_headers.conf

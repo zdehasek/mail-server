@@ -34,7 +34,7 @@ assert_contains "$log_output" "stdout line"
 assert_contains "$log_output" "stderr line"
 
 set +e
-fail_output="$(wizard_run_cmd "Failing command" "$log_file" bash -c 'printf "before failure\n"; exit 23')"
+fail_output="$(wizard_run_cmd "Failing command" "$log_file" bash -c 'printf "before failure\n"; printf "FAIL  exact failure reason\n"; exit 23')"
 fail_status=$?
 set -e
 
@@ -44,6 +44,9 @@ if [[ "$fail_status" -ne 23 ]]; then
 fi
 
 assert_contains "$fail_output" "before failure"
-assert_contains "$fail_output" "Failing command failed. Last log lines:"
+assert_contains "$fail_output" "Failing command failed."
+assert_contains "$fail_output" "Relevant failure lines:"
+assert_contains "$fail_output" "FAIL  exact failure reason"
+assert_contains "$fail_output" "Next: fix the failures above, then rerun:"
 
 printf 'wizard live output streaming ok\n'

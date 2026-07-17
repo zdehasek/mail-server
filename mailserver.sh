@@ -850,15 +850,52 @@ wizard_log_file() {
   mktemp "$dir/mailserver-init.XXXXXX.log"
 }
 
+wizard_last_command_output() {
+  local log_file="$1"
+  awk '
+    /^\[[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z\] / {
+      output = ""
+      next
+    }
+    {
+      output = output $0 "\n"
+    }
+    END {
+      printf "%s", output
+    }
+  ' "$log_file"
+}
+
+wizard_failure_excerpt() {
+  local log_file="$1"
+  local relevant
+
+  relevant="$(
+    wizard_last_command_output "$log_file" |
+      grep -E 'FAIL[[:space:]]|ERROR|WARN[[:space:]]|❌|⚠️' |
+      tail -n 20 || true
+  )"
+
+  if [[ -n "$relevant" ]]; then
+    wizard_write "Relevant failure lines:"
+    while IFS= read -r line; do wizard_write "  $line"; done <<< "$relevant"
+  else
+    wizard_write "Last log lines:"
+    tail -n 14 "$log_file" | sed 's/^/  /' | while IFS= read -r line; do wizard_write "$line"; done
+  fi
+}
+
 wizard_run_cmd() {
   local label="$1"
   local log_file="$2"
   local status
+  local retry_command
   shift 2
 
+  retry_command="$(format_command "$@")"
   wizard_note "$label"
   set +e
-  printf '\n[%s] %s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$(format_command "$@")" >> "$log_file"
+  printf '\n[%s] %s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$retry_command" >> "$log_file"
   if use_color; then
     FORCE_COLOR="${FORCE_COLOR:-1}" CLICOLOR_FORCE="${CLICOLOR_FORCE:-1}" "$@" 2>&1 | tee -a "$log_file"
   else
@@ -871,9 +908,10 @@ wizard_run_cmd() {
     return 0
   fi
 
-  wizard_problem "$label failed. Last log lines:"
-  tail -n 14 "$log_file" | sed 's/^/  /' | while IFS= read -r line; do wizard_write "$line"; done
+  wizard_problem "$label failed."
+  wizard_failure_excerpt "$log_file"
   wizard_write ""
+  wizard_write "Next: fix the failures above, then rerun: $retry_command"
   wizard_write "Full log: $log_file"
   return "$status"
 }

@@ -84,7 +84,7 @@ check_host_ip() {
   if contains_line "$expected" <<< "$records"; then
     ok_state "$host $type contains $expected"
   else
-    fail_state "$host $type missing $expected; got: ${records:-<none>}"
+    fail_state "$host $type expected: $host. $type $expected; got: ${records:-<none>}"
   fi
 
   local extra
@@ -106,7 +106,7 @@ check_txt() {
   if grep -Fq "$normalized_expected" <<< "$normalized_records"; then
     ok_state "$name TXT matches"
   else
-    fail_state "$name TXT expected: \"$expected\"; got: ${records_display:-<none>}"
+    fail_state "$name TXT expected: $name. TXT \"$expected\"; got: ${records_display:-<none>}"
   fi
 }
 
@@ -129,7 +129,7 @@ expected_mx="10 $MAIL_HOSTNAME"
 if contains_line "$expected_mx" <<< "$mx_records"; then
   ok_state "$target_domain MX points to $MAIL_HOSTNAME"
 else
-  fail_state "$target_domain MX missing '$expected_mx'; got: ${mx_records:-<none>}"
+  fail_state "$target_domain MX expected: $target_domain. MX $expected_mx; got: ${mx_records:-<none>}"
 fi
 
 check_txt "$target_domain" "v=spf1 mx -all"
@@ -142,7 +142,7 @@ else
   if contains_line "$MAIL_HOSTNAME" <<< "$ptr_records"; then
     ok_state "$SERVER_PUBLIC_IPV4 PTR/rDNS points to $MAIL_HOSTNAME"
   else
-    fail_state "$SERVER_PUBLIC_IPV4 PTR/rDNS missing $MAIL_HOSTNAME; got: ${ptr_records:-<none>}"
+    fail_state "$SERVER_PUBLIC_IPV4 PTR/rDNS expected: $SERVER_PUBLIC_IPV4 -> $MAIL_HOSTNAME; got: ${ptr_records:-<none>}"
   fi
 fi
 
@@ -151,13 +151,16 @@ dkim_file="$DKIM_ROOT/$target_domain/$DKIM_SELECTOR.txt"
 if [[ "$skip_dkim" == "true" ]]; then
   warn_state "DKIM check skipped by --skip-dkim"
 else
-  dns_dkim="$(dig @"$DNS_RESOLVER" +short TXT "$dkim_name" 2>/dev/null | normalize_txt)"
+  dns_dkim_records="$(dig @"$DNS_RESOLVER" +short TXT "$dkim_name" 2>/dev/null || true)"
+  dns_dkim_display="$(tr '\n' ' ' <<< "$dns_dkim_records" | sed 's/[[:space:]]\+$//')"
+  dns_dkim="$(normalize_txt <<< "$dns_dkim_records")"
   if [[ -r "$dkim_file" ]]; then
     expected_dkim="$(normalize_local_dkim "$dkim_file")"
+    expected_dkim_record="$(format_dkim_dns_record_file "$dkim_file" "$target_domain")"
     if [[ -n "$dns_dkim" && "$dns_dkim" == *"$expected_dkim"* ]]; then
       ok_state "$dkim_name TXT matches generated DKIM key"
     else
-      fail_state "$dkim_name TXT missing or different from generated DKIM key"
+      fail_state "$dkim_name TXT expected: $expected_dkim_record; got: ${dns_dkim_display:-<none>}"
     fi
   elif [[ -f "$dkim_file" ]]; then
     if [[ "$dns_dkim" == *"v=DKIM1"* && "$dns_dkim" == *"p="* ]]; then

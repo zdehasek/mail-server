@@ -497,6 +497,35 @@ normalize_domain() {
   printf '%s\n' "${domain,,}"
 }
 
+format_dkim_dns_record_file() {
+  local file="$1"
+  local domain="$2"
+  local line
+  local name
+  local value
+
+  line="$(tr '\n' ' ' < "$file" | sed 's/[[:space:]]\+/ /g; s/^ //; s/ $//')"
+  [[ -n "$line" ]] || return 0
+
+  if [[ "$line" =~ ^([^[:space:]]+)[[:space:]]+IN[[:space:]]+TXT[[:space:]]+(.+)$ ]]; then
+    name="${BASH_REMATCH[1]}"
+    value="${BASH_REMATCH[2]}"
+  elif [[ "$line" =~ ^([^[:space:]]+)[[:space:]]+TXT[[:space:]]+(.+)$ ]]; then
+    name="${BASH_REMATCH[1]}"
+    value="${BASH_REMATCH[2]}"
+  else
+    printf '%s\n' "$line"
+    return 0
+  fi
+
+  name="${name%.}"
+  if [[ "$name" != *".$domain" ]]; then
+    name="$name.$domain"
+  fi
+  value="${value%% ; -----*}"
+  printf '%s. TXT %s\n' "$name" "$value"
+}
+
 validate_domain_or_die() {
   local domain="$1"
   [[ "$domain" =~ ^[a-z0-9][a-z0-9.-]*[a-z0-9]$ && "$domain" == *.* && "$domain" != *..* ]] || die "Invalid domain: $domain"

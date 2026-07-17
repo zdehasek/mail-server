@@ -51,35 +51,6 @@ print_host_record "$MAIL_HOSTNAME" A "$SERVER_PUBLIC_IPV4"
 print_host_record "$WEBMAIL_HOSTNAME" A "$SERVER_PUBLIC_IPV4"
 print_host_record "$DAV_HOSTNAME" A "$SERVER_PUBLIC_IPV4"
 
-print_dkim_record_file() {
-  local file="$1"
-  local domain="$2"
-  local line
-  local name
-  local value
-
-  line="$(tr '\n' ' ' < "$file" | sed 's/[[:space:]]\+/ /g; s/^ //; s/ $//')"
-  [[ -n "$line" ]] || return 0
-
-  if [[ "$line" =~ ^([^[:space:]]+)[[:space:]]+IN[[:space:]]+TXT[[:space:]]+(.+)$ ]]; then
-    name="${BASH_REMATCH[1]}"
-    value="${BASH_REMATCH[2]}"
-  elif [[ "$line" =~ ^([^[:space:]]+)[[:space:]]+TXT[[:space:]]+(.+)$ ]]; then
-    name="${BASH_REMATCH[1]}"
-    value="${BASH_REMATCH[2]}"
-  else
-    printf '%s\n' "$line"
-    return 0
-  fi
-
-  name="${name%.}"
-  if [[ "$name" != *".$domain" ]]; then
-    name="$name.$domain"
-  fi
-  value="${value%% ; -----*}"
-  printf '%s. TXT %s\n' "$name" "$value"
-}
-
 cat <<DNS
 $target_domain. TXT "v=spf1 mx -all"
 _dmarc.$target_domain. TXT "v=DMARC1; p=none; rua=mailto:dmarc@$target_domain; adkim=s; aspf=s"
@@ -101,9 +72,9 @@ DKIM record:
 DNS
 elif [[ ! -f "$dkim_txt" && "$target_domain" == "$(normalize_domain "$PRIMARY_DOMAIN")" ]]; then
   ensure_dkim_key_for_domain "$target_domain"
-  print_dkim_record_file "$dkim_txt" "$target_domain"
+  format_dkim_dns_record_file "$dkim_txt" "$target_domain"
 elif [[ -f "$dkim_txt" ]]; then
-  print_dkim_record_file "$dkim_txt" "$target_domain"
+  format_dkim_dns_record_file "$dkim_txt" "$target_domain"
 elif [[ "$target_domain" == "$(normalize_domain "$PRIMARY_DOMAIN")" ]]; then
   cat <<DNS
 

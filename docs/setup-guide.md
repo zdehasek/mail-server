@@ -365,8 +365,9 @@ must point back to `MAIL_HOSTNAME`:
 For Hetzner, open the server, go to `Networking`, find the public IP address,
 edit `Reverse DNS` / `rDNS`, and set it to `mail.example.com`.
 
-DKIM is generated during installation. Publish it after `sudo mailserver setup`
-by running `sudo mailserver print-dns`. For additional domains, run
+DKIM for the primary domain is generated before the DNS step when you run
+`sudo mailserver print-dns`. Publish the generated TXT value with the MX, SPF,
+DMARC, and PTR changes. For additional domains, run
 `sudo mailserver add-domain --domain example.net`, then
 `sudo mailserver print-dns --domain example.net`. `add-domain` creates the
 standard `postmaster`, `abuse`, and `dmarc` aliases to `ADMIN_EMAIL` unless
@@ -431,15 +432,16 @@ This runs:
 Managed files are backed up under `/var/backups/mailserver/<timestamp>/` before
 they are overwritten.
 
-## 8. Publish DKIM
+## 8. Verify DKIM
 
-After installation:
+After installation, print DNS again if you need to copy or confirm the generated
+DKIM record:
 
 ```bash
 sudo mailserver print-dns
 ```
 
-Copy the generated DKIM TXT record:
+The DKIM TXT record looks like:
 
 ```text
 Type: TXT

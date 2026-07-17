@@ -147,9 +147,9 @@ else
 fi
 
 dkim_name="$DKIM_SELECTOR._domainkey.$target_domain"
-dkim_file="/etc/mailserver/dkim/$target_domain/$DKIM_SELECTOR.txt"
+dkim_file="$DKIM_ROOT/$target_domain/$DKIM_SELECTOR.txt"
 if [[ "$skip_dkim" == "true" ]]; then
-  warn_state "DKIM check skipped by --skip-dkim because the DKIM key is generated during installation; the final DNS step checks it."
+  warn_state "DKIM check skipped by --skip-dkim"
 else
   dns_dkim="$(dig @"$DNS_RESOLVER" +short TXT "$dkim_name" 2>/dev/null | normalize_txt)"
   if [[ -r "$dkim_file" ]]; then

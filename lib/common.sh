@@ -522,18 +522,36 @@ configured_mail_domains() {
 
 ensure_dkim_key_for_domain() {
   local domain="$1"
-  local dkim_dir="/etc/mailserver/dkim/$domain"
+  local dkim_dir="$DKIM_ROOT/$domain"
   local private_key="$dkim_dir/$DKIM_SELECTOR.private"
+  local txt_file="$dkim_dir/$DKIM_SELECTOR.txt"
+  local public_key
 
   validate_domain_or_die "$domain"
   run mkdir -p "$dkim_dir"
   if [[ "$DRY_RUN" != "true" && ! -f "$private_key" ]]; then
-    command -v opendkim-genkey >/dev/null 2>&1 || die "opendkim-genkey is required to generate DKIM for $domain. Install OpenDKIM first."
-    opendkim-genkey -b 2048 -d "$domain" -s "$DKIM_SELECTOR" -D "$dkim_dir"
+    if command -v opendkim-genkey >/dev/null 2>&1 && opendkim-genkey -b 2048 -d "$domain" -s "$DKIM_SELECTOR" -D "$dkim_dir"; then
+      :
+    elif [[ -f "$private_key" ]]; then
+      :
+    elif command -v openssl >/dev/null 2>&1 && command -v base64 >/dev/null 2>&1; then
+      openssl genrsa -out "$private_key" 2048 >/dev/null 2>&1
+    else
+      die "opendkim-genkey or openssl+base64 is required to generate DKIM for $domain."
+    fi
+  fi
+
+  if [[ "$DRY_RUN" != "true" && -f "$private_key" && ! -f "$txt_file" ]]; then
+    command -v openssl >/dev/null 2>&1 || die "openssl is required to write the DKIM DNS record for $domain."
+    command -v base64 >/dev/null 2>&1 || die "base64 is required to write the DKIM DNS record for $domain."
+    public_key="$(openssl rsa -in "$private_key" -pubout -outform DER 2>/dev/null | base64 | tr -d '\n')"
+    [[ -n "$public_key" ]] || die "Could not derive DKIM public key for $domain."
+    printf '%s._domainkey IN TXT ( "v=DKIM1; k=rsa; " "p=%s" ) ; ----- DKIM key %s for %s\n' \
+      "$DKIM_SELECTOR" "$public_key" "$DKIM_SELECTOR" "$domain" > "$txt_file"
   fi
 
   if [[ "$DRY_RUN" != "true" && -f "$private_key" ]]; then
-    if getent passwd opendkim >/dev/null 2>&1; then
+    if [[ "$EUID" -eq 0 ]] && getent passwd opendkim >/dev/null 2>&1; then
       chown -R opendkim:opendkim "$dkim_dir"
     fi
     chmod 0600 "$private_key"
@@ -554,7 +572,7 @@ refresh_opendkim_domain_maps() {
   mapfile -t domains <<< "$domain_lines"
   [[ "${#domains[@]}" -gt 0 ]] || die "No mail domains configured for DKIM."
 
-  run mkdir -p /etc/opendkim /etc/mailserver/dkim
+  run mkdir -p /etc/opendkim "$DKIM_ROOT"
 
   for host in 127.0.0.1 ::1 localhost "$MAIL_HOSTNAME"; do
     [[ -n "$host" ]] || continue
@@ -566,7 +584,7 @@ refresh_opendkim_domain_maps() {
     domain="$(normalize_domain "$domain")"
     validate_domain_or_die "$domain"
     ensure_dkim_key_for_domain "$domain"
-    key_table+="$DKIM_SELECTOR._domainkey.$domain $domain:$DKIM_SELECTOR:/etc/mailserver/dkim/$domain/$DKIM_SELECTOR.private"$'\n'
+    key_table+="$DKIM_SELECTOR._domainkey.$domain $domain:$DKIM_SELECTOR:$DKIM_ROOT/$domain/$DKIM_SELECTOR.private"$'\n'
     signing_table+="*@$domain $DKIM_SELECTOR._domainkey.$domain"$'\n'
     if [[ -z "${trusted_seen[$domain]:-}" ]]; then
       trusted_hosts+="$domain"$'\n'

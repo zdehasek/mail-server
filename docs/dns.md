@@ -20,7 +20,8 @@ dav.example.com.      AAAA 2001:db8::10
 webmail.example.com.  AAAA 2001:db8::10
 ```
 
-DKIM is generated during install. Print it with:
+DKIM for the primary domain is generated before the DNS step when you print the
+records:
 
 ```bash
 sudo mailserver print-dns

@@ -1179,10 +1179,6 @@ wait_for_dns_stage() {
     wizard_problem "DNS is not ready yet. Fix the records below or wait for propagation, then retry."
     wizard_records "$dns_records" "$dns_output"
     wizard_write ""
-    printf '%s\n' "$dns_output" | { grep -E 'FAIL|WARN|Summary' || true; } | sed 's/^/  /' | while IFS= read -r line; do
-      wizard_write "$line"
-    done
-    wizard_write ""
     wizard_write "Full DNS output: $log_file"
   done
 }

@@ -5,7 +5,7 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 # shellcheck source=../lib/common.sh
 source "$ROOT_DIR/lib/common.sh"
 
-usage() { echo "Usage: sudo mailserver add-domain --domain example.com [--alias-dest admin@example.com] [--no-default-aliases] [--config PATH]"; }
+usage() { usage_line "Usage: sudo mailserver add-domain --domain example.com [--alias-dest admin@example.com] [--no-default-aliases] [--config PATH]"; }
 parse_config_only_args "$@" || { usage; exit 0; }
 domain=""
 alias_dest=""

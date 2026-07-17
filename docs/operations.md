@@ -80,6 +80,21 @@ sudo mailserver domains rm --domain example.net
 This does not delete maildirs from disk. DNS and DKIM records for non-primary
 domains are domain-specific; use `--domain` when printing or checking them.
 
+## Purge the server
+
+Use this only when you want to wipe the local mailserver install and start over
+from defaults:
+
+```bash
+sudo mailserver remove --purge
+```
+
+The command prints a red destructive-action warning and requires typing the full
+confirmation sentence shown on screen. It stops and disables mail services,
+drops the configured PostgreSQL database and role, deletes mailbox data,
+generated config, `/etc/mailserver` secrets/state, generated TLS material, and
+mailserver backups, resets UFW, and purges installed mail/webmail packages.
+
 Create or refresh the configured primary mailbox and operational aliases:
 
 ```bash

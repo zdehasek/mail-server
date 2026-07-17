@@ -116,7 +116,10 @@ contacts, sessions, and profile data.
 - `install.sh --dry-run` prints intended changes without applying them.
 - Managed files are backed up under `/var/backups/mailserver/<timestamp>/`.
 - `sudo mailserver backup` creates a mail server data backup.
+- `sudo mailserver remove --purge` is destructive. It requires typing a full
+  confirmation sentence and removes services, mail data, databases, generated
+  config, secrets, and mailserver backups.
 - `sudo mailserver install-backup-cron` installs a recurring backup job.
-- Mailboxes are never deleted by these scripts.
+- Mailboxes are never deleted by routine mailbox/domain commands.
 - UFW defaults to deny incoming and only allows SSH, SMTP, HTTP/HTTPS, submission, and IMAPS.
 - SSH hardening is skipped unless a key-enabled allowed user is known.

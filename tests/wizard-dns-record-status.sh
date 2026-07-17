@@ -49,7 +49,7 @@ assert_contains '❌ missing _dmarc.example.com. TXT "v=DMARC1; p=none; rua=mail
 assert_contains '❌ different default._domainkey.example.com. TXT "v=DKIM1; k=rsa; p=ABC123"'
 assert_contains '❌ missing 203.0.113.10 -> mail.example.com'
 
-tls_records='Optional TLS policy DNS records:
+tls_records='Recommended TLS policy DNS records:
 mta-sts.example.com. A 203.0.113.10
 _mta-sts.example.com. TXT "v=STSv1; id=1"
 _smtp._tls.example.com. TXT "v=TLSRPTv1; rua=mailto:postmaster@example.com"

@@ -271,7 +271,7 @@ sudo mailserver rspamd-state
 sudo mailserver rspamd-state counters
 ```
 
-Check optional TLS policy records:
+Check recommended TLS policy records:
 
 ```bash
 mailserver tls-policy-state
@@ -279,7 +279,7 @@ mailserver tls-policy-state --domain example.com
 ```
 
 Missing MTA-STS, SMTP TLS reporting, or DANE records are warnings by default.
-They are useful hardening steps, not required for a working personal mailserver.
+They are recommended hardening steps, not required for a working personal mailserver.
 
 ## Sent Copies
 

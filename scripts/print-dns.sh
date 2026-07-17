@@ -91,7 +91,7 @@ fi
 
 cat <<DNS
 
-Optional TLS policy DNS records:
+Recommended TLS policy DNS records:
 DNS
 print_host_record "mta-sts.$target_domain" A "$SERVER_PUBLIC_IPV4"
 if [[ -n "${SERVER_PUBLIC_IPV6:-}" ]]; then

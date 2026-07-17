@@ -17,7 +17,7 @@ default._domainkey.example.com. TXT "v=DKIM1; k=rsa; p=<generated DKIM value>"
 For provider `Content`/`Value` fields, paste only the quoted DKIM value after
 `TXT`. Do not paste the record name or `TXT` type into the content field.
 
-Optional TLS policy hardening records are printed by `mailserver print-dns`
+Recommended TLS policy hardening records are printed by `mailserver print-dns`
 with the rest of the DNS setup values:
 
 ```text

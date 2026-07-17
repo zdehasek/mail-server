@@ -434,7 +434,7 @@ they are overwritten.
 
 ## 8. Verify DKIM
 
-DKIM and optional TLS policy records are included in the same DNS output as MX,
+DKIM and recommended TLS policy records are included in the same DNS output as MX,
 SPF, DMARC, and host records. After installation, print DNS again if you need
 to copy or confirm it:
 

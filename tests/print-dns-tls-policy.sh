@@ -65,7 +65,7 @@ assert_contains() {
   fi
 }
 
-assert_contains "Optional TLS policy DNS records:"
+assert_contains "Recommended TLS policy DNS records:"
 assert_contains "mta-sts.example.com. A 203.0.113.10"
 assert_contains '_mta-sts.example.com. TXT "v=STSv1; id=1"'
 assert_contains '_smtp._tls.example.com. TXT "v=TLSRPTv1; rua=mailto:postmaster@example.com"'

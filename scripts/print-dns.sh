@@ -63,6 +63,15 @@ if [[ -n "${SERVER_PUBLIC_IPV6:-}" ]]; then
 fi
 
 dkim_txt="$DKIM_ROOT/$target_domain/$DKIM_SELECTOR.txt"
+print_dkim_dns_record() {
+  local file="$1"
+  local domain="$2"
+
+  format_dkim_dns_record_file "$file" "$domain"
+  ui_blank
+  format_dkim_dns_provider_fields_file "$file" "$domain"
+}
+
 if [[ "$skip_dkim" == "true" ]]; then
   cat <<DNS
 
@@ -72,9 +81,9 @@ DKIM record:
 DNS
 elif [[ ! -f "$dkim_txt" && "$target_domain" == "$(normalize_domain "$PRIMARY_DOMAIN")" ]]; then
   ensure_dkim_key_for_domain "$target_domain"
-  format_dkim_dns_record_file "$dkim_txt" "$target_domain"
+  print_dkim_dns_record "$dkim_txt" "$target_domain"
 elif [[ -f "$dkim_txt" ]]; then
-  format_dkim_dns_record_file "$dkim_txt" "$target_domain"
+  print_dkim_dns_record "$dkim_txt" "$target_domain"
 elif [[ "$target_domain" == "$(normalize_domain "$PRIMARY_DOMAIN")" ]]; then
   cat <<DNS
 

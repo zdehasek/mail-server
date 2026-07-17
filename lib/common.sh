@@ -527,7 +527,28 @@ format_dkim_dns_record_file() {
   if [[ "$value" =~ ^\(\ (.*)\ \)$ ]]; then
     value="${BASH_REMATCH[1]}"
   fi
+  value="$(sed -E 's/"[[:space:]]+"//g' <<< "$value")"
   printf '%s. TXT %s\n' "$name" "$value"
+}
+
+format_dkim_dns_provider_fields_file() {
+  local file="$1"
+  local domain="$2"
+  local record
+  local name
+  local value
+
+  record="$(format_dkim_dns_record_file "$file" "$domain")"
+  if [[ "$record" =~ ^(.+)\.[[:space:]]+TXT[[:space:]]+(.+)$ ]]; then
+    name="${BASH_REMATCH[1]}"
+    value="${BASH_REMATCH[2]}"
+    cat <<DNS
+DKIM provider fields:
+  Type: TXT
+  Name: $name
+  Content: $value
+DNS
+  fi
 }
 
 validate_domain_or_die() {

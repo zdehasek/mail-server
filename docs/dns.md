@@ -11,8 +11,21 @@ dav.example.com.      A    203.0.113.10
 webmail.example.com.  A    203.0.113.10
 example.com.          TXT  "v=spf1 mx -all"
 _dmarc.example.com.   TXT  "v=DMARC1; p=none; rua=mailto:dmarc@example.com; adkim=s; aspf=s"
-default._domainkey.example.com. TXT "v=DKIM1; k=rsa; " "p=<generated DKIM value>"
+default._domainkey.example.com. TXT "v=DKIM1; k=rsa; p=<generated DKIM value>"
 ```
+
+For provider forms, enter the DKIM record as fields:
+
+```text
+Type: TXT
+Name: default._domainkey.example.com
+Content: "v=DKIM1; k=rsa; p=<generated DKIM value>"
+```
+
+Some zone-file examples split long TXT values into multiple quoted strings.
+Provider DNS forms usually want one logical `Content`/`Value` field and split
+the TXT record internally. Do not paste the record name or `TXT` type into the
+content field.
 
 If IPv6 is configured:
 

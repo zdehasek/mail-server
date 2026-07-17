@@ -444,8 +444,19 @@ sudo mailserver print-dns
 The DKIM TXT record looks like:
 
 ```text
-default._domainkey.example.com. TXT "v=DKIM1; k=rsa; " "p=<generated DKIM value>"
+default._domainkey.example.com. TXT "v=DKIM1; k=rsa; p=<generated DKIM value>"
 ```
+
+In a provider UI, use the DKIM fields printed by the wizard:
+
+```text
+Type: TXT
+Name: default._domainkey.example.com
+Content: "v=DKIM1; k=rsa; p=<generated DKIM value>"
+```
+
+The `Content` value is one logical TXT value. Do not paste the record name or
+`TXT` into a provider `Content`/`Value` field.
 
 Keep DMARC at `p=none` until outbound delivery tests are clean. Later move to
 `p=quarantine`, then `p=reject`.

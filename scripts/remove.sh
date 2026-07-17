@@ -6,7 +6,7 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 source "$ROOT_DIR/lib/common.sh"
 
 usage() {
-  echo "Usage: sudo mailserver remove --purge [--config PATH] [--dry-run]"
+  usage_line "Usage: sudo mailserver remove --purge [--config PATH] [--dry-run]"
 }
 
 purge="false"
@@ -43,7 +43,7 @@ require_root
 load_config
 
 red_line() {
-  printf '%s\n' "$(style_text "1;31" "$*")" >&2
+  ui_line_err "1;31" "$*"
 }
 
 danger_banner() {
@@ -80,8 +80,9 @@ read_confirmation() {
     fi
   fi
 
-  printf '\n%s\n' "$(style_text "1;31" "Type this exact sentence to continue:")" >&2
-  printf '%s\n' "$(style_text "1;31" "$expected")" >&2
+  ui_blank >&2
+  ui_line_err "1;31" "Type this exact sentence to continue:"
+  ui_line_err "1;31" "$expected"
   printf '> ' >&2
 
   if [[ "$tty_fd_open" == "true" ]]; then

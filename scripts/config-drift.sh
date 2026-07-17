@@ -5,7 +5,7 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 # shellcheck source=../lib/common.sh
 source "$ROOT_DIR/lib/common.sh"
 
-usage() { echo "Usage: sudo mailserver config-drift [--fix] [--config PATH]"; }
+usage() { usage_line "Usage: sudo mailserver config-drift [--fix] [--config PATH]"; }
 
 FIX_DRIFT="false"
 CONFIG_DRIFT_ARGS=()
@@ -119,5 +119,6 @@ fi
 
 warn_state "config-drift is scoped to SOGo/webmail generated files; it does not audit every Postfix, Dovecot, Rspamd, DKIM, DMARC, Fail2ban, or SSH hardening file."
 
-printf '\nSummary: %d drift(s), %d warning(s), %d fixed\n' "$failures" "$warnings" "$fixes"
+ui_blank
+ui_summary "$failures" "$warnings" "$failures drift(s), $warnings warning(s), $fixes fixed"
 [[ "$failures" -eq 0 ]]

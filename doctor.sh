@@ -102,18 +102,18 @@ run_health_checks() {
 
   if [[ "$DOCTOR_FIX" == "true" ]]; then
     "$ROOT_DIR/scripts/config-drift.sh" "${config_drift_args[@]}" || status=$?
-    printf '\n'
+    ui_blank
   fi
 
   "$ROOT_DIR/scripts/dns-state.sh" --config "$CONFIG_FILE" || status=$?
-  printf '\n'
+  ui_blank
   "$ROOT_DIR/scripts/check-ssl.sh" --config "$CONFIG_FILE" || status=$?
-  printf '\n'
+  ui_blank
   "$ROOT_DIR/scripts/service-state.sh" --config "$CONFIG_FILE" || status=$?
-  printf '\n'
+  ui_blank
   if [[ "$DOCTOR_FIX" != "true" ]]; then
     "$ROOT_DIR/scripts/config-drift.sh" "${config_drift_args[@]}" || status=$?
-    printf '\n'
+    ui_blank
   fi
   "$ROOT_DIR/scripts/tls-policy-state.sh" --config "$CONFIG_FILE" || status=$?
   return "$status"
@@ -124,7 +124,7 @@ run_preflight
 if [[ "$DOCTOR_FIX" == "true" ]]; then
   apply_firewall_fixes
   apply_service_fixes
-  printf '\n'
+  ui_blank
 fi
 
 if [[ "$PREFLIGHT_ONLY" == "true" ]]; then

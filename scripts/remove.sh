@@ -264,6 +264,7 @@ else
   warn "Setup config path is relative; it will not be deleted automatically: $CONFIG_FILE"
 fi
 warn "This will delete mailserver backups under: $BACKUP_DIR and $BACKUP_ROOT"
+warn "This will remove the recurring backup cron: /etc/cron.d/mailserver-backup"
 warn "This will remove generated TLS material for: $(unique_tls_names | paste -sd' ' -)"
 warn "This will purge installed mail/webmail packages when they are present."
 

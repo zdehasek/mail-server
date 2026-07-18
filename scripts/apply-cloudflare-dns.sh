@@ -7,15 +7,13 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 source "$ROOT_DIR/lib/common.sh"
 
 usage() {
-  usage_line "Usage: sudo mailserver apply-cloudflare-dns [--domain example.com] [--zone-id ID] [--token TOKEN|--token-file PATH] [--dry-run] [--config PATH]"
+  usage_line "Usage: sudo mailserver apply-cloudflare-dns [--domain example.com] [--dry-run] [--config PATH]"
 }
 
 # shellcheck disable=SC2034 # Read by load_config from lib/common.sh.
 CONFIG_FILE="${CONFIG:-${ENV_FILE:-$(default_config_file)}}"
 target_domain=""
-token="${CLOUDFLARE_API_TOKEN:-}"
-token_file="${CLOUDFLARE_API_TOKEN_FILE:-}"
-zone_id="${CLOUDFLARE_ZONE_ID:-}"
+token=""
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -26,18 +24,6 @@ while [[ $# -gt 0 ]]; do
       ;;
     --domain)
       target_domain="$(normalize_domain "${2:-}")"
-      shift 2
-      ;;
-    --zone-id)
-      zone_id="${2:-}"
-      shift 2
-      ;;
-    --token)
-      token="${2:-}"
-      shift 2
-      ;;
-    --token-file)
-      token_file="${2:-}"
       shift 2
       ;;
     --dry-run)
@@ -58,17 +44,28 @@ load_config
 target_domain="${target_domain:-$(normalize_domain "$PRIMARY_DOMAIN")}"
 validate_domain_or_die "$target_domain"
 
-if [[ -z "$token" && -n "$token_file" ]]; then
-  [[ -r "$token_file" ]] || die "Cloudflare API token file is not readable: $token_file"
-  token="$(< "$token_file")"
-  token="${token//$'\r'/}"
-  token="${token//$'\n'/}"
-fi
+prompt_cloudflare_token() {
+  local reply
+  if [[ ! -t 0 ]]; then
+    if ! exec 3</dev/tty 2>/dev/null; then
+      die "Cloudflare API token is required. Re-run from a terminal."
+    fi
+    printf 'Cloudflare API token: ' > /dev/tty
+    IFS= read -r -s reply <&3 || true
+    exec 3<&-
+  else
+    printf 'Cloudflare API token: ' > /dev/tty
+    IFS= read -r -s reply < /dev/tty || true
+  fi
+  printf '\n' > /dev/tty
+  [[ -n "$reply" ]] || die "Cloudflare API token was empty."
+  printf '%s\n' "$reply"
+}
 
 if [[ "$DRY_RUN" != "true" ]]; then
   command -v curl >/dev/null 2>&1 || die "curl is required for Cloudflare DNS automation"
   command -v python3 >/dev/null 2>&1 || die "python3 is required to parse Cloudflare API responses"
-  [[ -n "$token" ]] || die "Set CLOUDFLARE_API_TOKEN or pass --token-file for Cloudflare DNS automation"
+  token="$(prompt_cloudflare_token)"
 fi
 
 json_value() {
@@ -145,8 +142,8 @@ resolve_zone_id() {
   local zone_name="$target_domain"
   local response found
 
-  if [[ -n "$zone_id" ]]; then
-    printf '%s\n' "$zone_id"
+  if [[ "$DRY_RUN" == "true" ]]; then
+    printf '%s\n' "dry-run-zone"
     return 0
   fi
 
@@ -160,7 +157,7 @@ resolve_zone_id() {
     zone_name="${zone_name#*.}"
   done
 
-  die "Could not find an active Cloudflare zone for $target_domain. Pass --zone-id or set CLOUDFLARE_ZONE_ID."
+  die "Could not find an active Cloudflare zone for $target_domain. Check that the token has Zone:Zone Read permission."
 }
 
 record_json() {

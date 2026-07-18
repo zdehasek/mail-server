@@ -302,9 +302,8 @@ asks whether to apply records through Cloudflare. You can also run it manually:
 sudo mailserver apply-cloudflare-dns
 ```
 
-The token is accepted through a hidden prompt, `CLOUDFLARE_API_TOKEN`, or
-`CLOUDFLARE_API_TOKEN_FILE`. Set `CLOUDFLARE_ZONE_ID` in the config only if the
-token cannot list zones or you want to skip auto-detection.
+The token is entered through a hidden terminal prompt and is not written to the
+setup config.
 
 ```text
 Type: A

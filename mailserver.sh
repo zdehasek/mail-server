@@ -245,7 +245,7 @@ show_command_help() {
       usage_line "Usage: mailserver $1 [--domain example.com] [--skip-dkim] [--skip-ptr] [--config PATH]"
       ;;
     apply-cloudflare-dns)
-      usage_line 'Usage: sudo mailserver apply-cloudflare-dns [--domain example.com] [--zone-id ID] [--token TOKEN|--token-file PATH] [--dry-run] [--config PATH]'
+      usage_line 'Usage: sudo mailserver apply-cloudflare-dns [--domain example.com] [--dry-run] [--config PATH]'
       ;;
     config-drift)
       usage_line 'Usage: sudo mailserver config-drift [--fix] [--config PATH]'
@@ -985,17 +985,6 @@ prompt_tty() {
   printf '%s\n' "$reply"
 }
 
-prompt_secret_tty() {
-  local label="$1"
-  local reply
-
-  has_tty || return 1
-  printf '%s: ' "$label" > /dev/tty
-  IFS= read -r -s reply < /dev/tty || true
-  printf '\n' > /dev/tty
-  printf '%s\n' "$reply"
-}
-
 prompt_enter_tty() {
   local message="$1"
 
@@ -1011,54 +1000,10 @@ maybe_apply_cloudflare_dns() {
   local config="$1"
   local log_file="$2"
   shift 2
-  local token_file=""
-  local token=""
-  local zone_id="${CLOUDFLARE_ZONE_ID:-}"
-  local cleanup_token_file="false"
-  local status
 
   has_tty || return 0
-  confirm_tty "Apply these DNS records through Cloudflare now?" "no" || return 0
-
-  if [[ -n "${CLOUDFLARE_API_TOKEN_FILE:-}" ]]; then
-    token_file="$CLOUDFLARE_API_TOKEN_FILE"
-  elif [[ -n "${CLOUDFLARE_API_TOKEN:-}" ]]; then
-    token_file="$(mktemp "${TMPDIR:-/tmp}/mailserver-cloudflare-token.XXXXXX")"
-    chmod 0600 "$token_file"
-    printf '%s' "$CLOUDFLARE_API_TOKEN" > "$token_file"
-    cleanup_token_file="true"
-  else
-    token="$(prompt_secret_tty "Cloudflare API token (Zone:DNS Write, Zone:Zone Read; not stored)")"
-    [[ -n "$token" ]] || {
-      wizard_problem "Cloudflare DNS skipped: empty API token."
-      return 0
-    }
-    token_file="$(mktemp "${TMPDIR:-/tmp}/mailserver-cloudflare-token.XXXXXX")"
-    chmod 0600 "$token_file"
-    printf '%s' "$token" > "$token_file"
-    cleanup_token_file="true"
-  fi
-
-  if [[ -z "$zone_id" ]]; then
-    zone_id="$(prompt_tty "Cloudflare zone ID, blank to auto-detect" "")"
-  fi
-
-  if [[ -n "$zone_id" ]]; then
-    set +e
-    wizard_run_root_cmd "Applying Cloudflare DNS records" "$log_file" env CLOUDFLARE_API_TOKEN_FILE="$token_file" "$ROOT_DIR/scripts/apply-cloudflare-dns.sh" --config "$config" --zone-id "$zone_id" "$@"
-    status=$?
-    set -e
-  else
-    set +e
-    wizard_run_root_cmd "Applying Cloudflare DNS records" "$log_file" env CLOUDFLARE_API_TOKEN_FILE="$token_file" "$ROOT_DIR/scripts/apply-cloudflare-dns.sh" --config "$config" "$@"
-    status=$?
-    set -e
-  fi
-
-  if [[ "$cleanup_token_file" == "true" ]]; then
-    rm -f -- "$token_file"
-  fi
-  return "$status"
+  confirm_tty "Do you have a Cloudflare API token to apply DNS automatically?" "no" || return 0
+  wizard_run_root_cmd "Applying Cloudflare DNS records" "$log_file" "$ROOT_DIR/scripts/apply-cloudflare-dns.sh" --config "$config" "$@"
 }
 
 confirm_tty() {

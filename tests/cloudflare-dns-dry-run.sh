@@ -54,10 +54,10 @@ PRIMARY_MAILBOX_FULL_NAME="Mail Admin"
 PRIMARY_MAILBOX_PASSWORD=
 PRIMARY_MAILBOX_PASSWORD_FILE=/tmp/primary-mailbox-password
 PRIMARY_ALIAS_ADDRESSES="postmaster@example.com abuse@example.com dmarc@example.com admin@example.com"
-CLOUDFLARE_ZONE_ID=
 CONFIG
 
-output="$("$ROOT_DIR/scripts/apply-cloudflare-dns.sh" --config "$config" --dry-run --zone-id dummy)"
+output="$("$ROOT_DIR/scripts/apply-cloudflare-dns.sh" --config "$config" --dry-run)"
+help_output="$("$ROOT_DIR/scripts/apply-cloudflare-dns.sh" --help)"
 
 assert_contains() {
   local needle="$1"
@@ -74,5 +74,15 @@ assert_contains "Would upsert Cloudflare DNS: example.com. TXT v=spf1 mx -all"
 assert_contains "Would upsert Cloudflare DNS: _dmarc.example.com. TXT v=DMARC1; p=none; rua=mailto:dmarc@example.com; adkim=s; aspf=s"
 assert_contains "Would upsert Cloudflare DNS: default._domainkey.example.com. TXT v=DKIM1; k=rsa; p=ABC123"
 assert_contains "PTR/rDNS still has to be set at the server/IP provider"
+
+if [[ "$help_output" == *"--token"* || "$help_output" == *"--zone-id"* ]]; then
+  printf 'Cloudflare DNS help should not expose token or zone-id options:\n%s\n' "$help_output" >&2
+  exit 1
+fi
+
+if "$ROOT_DIR/scripts/apply-cloudflare-dns.sh" --config "$config" --dry-run --token secret >/dev/null 2>&1; then
+  printf 'Cloudflare DNS command should reject --token\n' >&2
+  exit 1
+fi
 
 printf 'cloudflare DNS dry-run output ok\n'

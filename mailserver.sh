@@ -1137,6 +1137,24 @@ validate_timezone_or_die() {
   timezone_exists "$zone" || die "Invalid timezone: $zone. Use an IANA name like Europe/Prague."
 }
 
+primary_alias_addresses_for() {
+  local domain="$1"
+  local seen=" "
+  local address
+  local addresses=(
+    "postmaster@$domain"
+    "abuse@$domain"
+    "dmarc@$domain"
+    "admin@$domain"
+  )
+
+  for address in "${addresses[@]}"; do
+    [[ -n "$address" && "$seen" != *" $address "* ]] || continue
+    seen+="$address "
+    printf '%s\n' "$address"
+  done | paste -sd' ' -
+}
+
 available_timezones() {
   {
     printf '%s\n' "Europe/Prague" "UTC"
@@ -1463,7 +1481,7 @@ cmd_init() {
     set_config_entry "$config_tmp" "POSTMASTER_ADDRESS" "postmaster@$domain"
     set_config_entry "$config_tmp" "ABUSE_ADDRESS" "abuse@$domain"
     set_config_entry "$config_tmp" "PRIMARY_MAILBOX" "$admin_email"
-    set_config_entry "$config_tmp" "PRIMARY_ALIAS_ADDRESSES" "postmaster@$domain abuse@$domain dmarc@$domain $admin_email"
+    set_config_entry "$config_tmp" "PRIMARY_ALIAS_ADDRESSES" "$(primary_alias_addresses_for "$domain")"
   fi
   [[ -n "$public_ipv4" ]] && set_config_entry "$config_tmp" "SERVER_PUBLIC_IPV4" "$public_ipv4"
   [[ -n "$public_ipv6" ]] && set_config_entry "$config_tmp" "SERVER_PUBLIC_IPV6" "$public_ipv6"
@@ -1616,7 +1634,7 @@ cmd_set_domain() {
   set_or_append_config_entry "$config_tmp" "POSTMASTER_ADDRESS" "postmaster@$domain"
   set_or_append_config_entry "$config_tmp" "ABUSE_ADDRESS" "abuse@$domain"
   set_or_append_config_entry "$config_tmp" "PRIMARY_MAILBOX" "$primary_mailbox"
-  set_or_append_config_entry "$config_tmp" "PRIMARY_ALIAS_ADDRESSES" "postmaster@$domain abuse@$domain dmarc@$domain $primary_mailbox"
+  set_or_append_config_entry "$config_tmp" "PRIMARY_ALIAS_ADDRESSES" "$(primary_alias_addresses_for "$domain")"
   [[ -z "$mail_hostname" ]] || set_or_append_config_entry "$config_tmp" "MAIL_HOSTNAME" "$mail_hostname"
   [[ -z "$webmail_hostname" ]] || set_or_append_config_entry "$config_tmp" "WEBMAIL_HOSTNAME" "$webmail_hostname"
   if [[ -n "$dav_hostname" ]]; then

@@ -276,6 +276,11 @@ PRIMARY_ALIAS_ADDRESSES="postmaster@example.com abuse@example.com dmarc@example.
 - `PRIMARY_ALIAS_ADDRESSES`: space-separated aliases pointing to
   `PRIMARY_MAILBOX`.
 
+The generated setup includes `admin@PRIMARY_DOMAIN` in `PRIMARY_ALIAS_ADDRESSES`.
+If `PRIMARY_MAILBOX` is a different address, `admin@PRIMARY_DOMAIN` becomes an
+alias to it. If `PRIMARY_MAILBOX` is already `admin@PRIMARY_DOMAIN`, setup skips
+that self-alias.
+
 If `PRIMARY_MAILBOX` is empty, setup skips this step. If the mailbox already
 exists, setup keeps it active and preserves the existing password hash unless
 `PRIMARY_MAILBOX_PASSWORD` is set explicitly. If an alias already exists, setup

@@ -96,7 +96,7 @@ The wizard:
 4. Generates DKIM for the primary domain, prints all required DNS records, and
    keeps rechecking them until they pass.
 5. Installs and configures the mail stack.
-6. Runs final SSL, service, and TLS policy checks.
+6. Runs final SSL and service checks.
 7. Offers to install the recurring backup cron.
 
 During the guided setup, verbose package, Certbot, Nginx, and service output is

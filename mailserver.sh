@@ -1473,24 +1473,22 @@ run_guided_setup() {
   require_checkout_files
   log_file="$(wizard_log_file)"
 
-  wizard_header "1/5" "Local checks" "$log_file"
+  wizard_header "1/4" "Local checks" "$log_file"
   wizard_note "First I will check this host and config. Fix any failure before DNS or install."
   wizard_run_cmd "Checking prerequisites and config" "$log_file" env MAILSERVER_SKIP_PREFLIGHT_DNS=true "$ROOT_DIR/doctor.sh" --preflight-only --config "$config"
   prompt_enter_tty "Press Enter to continue to DNS setup. "
 
-  wait_for_dns_stage "$config" preinstall "2. DNS before installation" "2/5" "$log_file"
+  wait_for_dns_stage "$config" preinstall "2. DNS setup" "2/4" "$log_file"
 
-  wizard_header "3/5" "Install mail stack" "$log_file"
+  wizard_header "3/4" "Install mail stack" "$log_file"
   wizard_note "DNS is ready enough for certificates and mail routing."
   wizard_note "Now I will configure packages, services, the primary mailbox, certificates, and DKIM."
   wizard_write ""
   wizard_run_root_cmd "Installing and configuring the mail stack" "$log_file" "$ROOT_DIR/install.sh" --config "$config" --assume-yes
   wizard_run_root_cmd "Verifying generated config and services" "$log_file" "$ROOT_DIR/verify.sh" --config "$config"
-  prompt_enter_tty "Press Enter to continue to final DNS checks. "
+  prompt_enter_tty "Press Enter to continue to final checks. "
 
-  wait_for_dns_stage "$config" final "4. DKIM and final DNS" "4/5" "$log_file"
-
-  wizard_header "5/5" "Final checks" "$log_file"
+  wizard_header "4/4" "Final checks" "$log_file"
   wizard_run_cmd "Checking TLS certificates" "$log_file" "$ROOT_DIR/scripts/check-ssl.sh" --config "$config"
   wizard_run_cmd "Checking service status and ports" "$log_file" "$ROOT_DIR/scripts/service-state.sh" --config "$config"
   wizard_write ""

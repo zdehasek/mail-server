@@ -29,9 +29,9 @@ mailserver init
 Run these commands on the target server. Remote deployment is not a supported
 interface. By default, `mailserver init` creates
 `~/.email-server/config.env`, walks through DNS records, waits until they verify,
-installs the stack, verifies services, and then walks through DKIM DNS. The
-guided setup keeps package, Certbot, and service output in a timestamped log so
-the terminal stays focused on the current step and the next action. Use
+installs the stack, and verifies services. The guided setup keeps package,
+Certbot, and service output in a timestamped log so the terminal stays focused
+on the current step and the next action. Use
 `mailserver init --config-only` when you only want to create the config and run
 the lower-level commands manually. All commands use that file unless
 `--config PATH`, `CONFIG=PATH`, or `ENV_FILE=PATH` is set. When a command is run

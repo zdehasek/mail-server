@@ -59,6 +59,7 @@ CONFIG
 output="$("$ROOT_DIR/scripts/apply-cloudflare-dns.sh" --config "$config" --dry-run)"
 help_output="$("$ROOT_DIR/scripts/apply-cloudflare-dns.sh" --help)"
 script_source="$(< "$ROOT_DIR/scripts/apply-cloudflare-dns.sh")"
+packages_source="$(< "$ROOT_DIR/phases/10-packages.sh")"
 
 assert_contains() {
   local needle="$1"
@@ -86,8 +87,13 @@ if "$ROOT_DIR/scripts/apply-cloudflare-dns.sh" --config "$config" --dry-run --to
   exit 1
 fi
 
-if [[ "$script_source" == *"python"* || "$script_source" == *"jq"* ]]; then
-  printf 'Cloudflare DNS command should not depend on Python or jq\n' >&2
+if [[ "$script_source" == *"python"* ]]; then
+  printf 'Cloudflare DNS command should not depend on Python\n' >&2
+  exit 1
+fi
+
+if [[ "$packages_source" != *" jq "* ]]; then
+  printf 'jq should be installed with support packages\n' >&2
   exit 1
 fi
 

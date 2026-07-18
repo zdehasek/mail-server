@@ -62,38 +62,41 @@ prompt_cloudflare_token() {
   printf '%s\n' "$reply"
 }
 
+ensure_cloudflare_tools() {
+  local missing=()
+  local tool
+
+  for tool in curl jq; do
+    command -v "$tool" >/dev/null 2>&1 || missing+=("$tool")
+  done
+
+  [[ "${#missing[@]}" -gt 0 ]] || return 0
+  [[ "$EUID" -eq 0 ]] || die "Install missing Cloudflare DNS tools first: ${missing[*]}"
+  command -v apt-get >/dev/null 2>&1 || die "Install missing Cloudflare DNS tools first: ${missing[*]}"
+
+  warn "Installing required Cloudflare DNS tools: ${missing[*]}"
+  run env DEBIAN_FRONTEND=noninteractive apt-get update
+  run env DEBIAN_FRONTEND=noninteractive apt-get install -y "${missing[@]}"
+  hash -r
+}
+
 if [[ "$DRY_RUN" != "true" ]]; then
-  command -v curl >/dev/null 2>&1 || die "curl is required for Cloudflare DNS automation"
+  ensure_cloudflare_tools
   token="$(prompt_cloudflare_token)"
 fi
 
 json_is_success() {
-  grep -Eq '"success"[[:space:]]*:[[:space:]]*true' <<< "$1"
-}
-
-json_string_unescape() {
-  sed -E 's/\\"/"/g; s/\\\\/\\/g; s/\\\//\//g'
+  jq -e '.success == true' >/dev/null <<< "$1"
 }
 
 json_first_id() {
-  sed -nE 's/.*"id"[[:space:]]*:[[:space:]]*"([^"]+)".*/\1/p' <<< "$1" | head -n 1
+  jq -r '.result[0].id // empty' <<< "$1"
 }
 
 json_error_message() {
   local message
-  message="$(sed -nE 's/.*"message"[[:space:]]*:[[:space:]]*"([^"]+)".*/\1/p' <<< "$1" | json_string_unescape | paste -sd'; ' -)"
+  message="$(jq -r '[.errors[]?.message] | join("; ")' <<< "$1" 2>/dev/null || true)"
   printf '%s\n' "${message:-unknown Cloudflare API error}"
-}
-
-json_record_lines() {
-  sed 's/},{/}\
-{/g' <<< "$1"
-}
-
-json_record_string_field() {
-  local object="$1"
-  local field="$2"
-  sed -nE 's/.*"'"$field"'"[[:space:]]*:[[:space:]]*"(([^"\\]|\\.)*)".*/\1/p' <<< "$object" | json_string_unescape
 }
 
 json_first_record_id() {
@@ -102,37 +105,23 @@ json_first_record_id() {
   local name="$3"
   local type="$4"
   local content="${5:-}"
-  local object record_id record_name record_type record_content
-
-  while IFS= read -r object; do
-    record_id="$(json_record_string_field "$object" id)"
-    [[ -n "$record_id" ]] || continue
-    record_name="$(json_record_string_field "$object" name)"
-    record_type="$(json_record_string_field "$object" type)"
-    [[ "$record_name" == "$name" && "$record_type" == "$type" ]] || continue
-
-    record_content="$(json_record_string_field "$object" content)"
-    case "$mode" in
-      exact)
-        [[ "$record_content" == "$content" ]] || continue
-        ;;
-      spf)
-        [[ "${record_content,,}" == v=spf1* ]] || continue
-        ;;
-    esac
-    printf '%s\n' "$record_id"
-    return 0
-  done < <(json_record_lines "$json")
+  jq -r \
+    --arg mode "$mode" \
+    --arg name "$name" \
+    --arg type "$type" \
+    --arg content "$content" \
+    '.result[]
+      | select(.name == $name and .type == $type)
+      | select(
+          ($mode == "exact" and .content == $content)
+          or ($mode == "spf" and (.content | ascii_downcase | startswith("v=spf1")))
+          or ($mode == "same-name")
+        )
+      | .id' <<< "$json" | head -n 1
 }
 
 json_escape() {
-  local value="$1"
-  value="${value//\\/\\\\}"
-  value="${value//\"/\\\"}"
-  value="${value//$'\r'/\\r}"
-  value="${value//$'\n'/\\n}"
-  value="${value//$'\t'/\\t}"
-  printf '"%s"\n' "$value"
+  jq -Rn --arg value "$1" '$value'
 }
 
 cf_api() {

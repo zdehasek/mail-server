@@ -2,7 +2,7 @@
 
 phase_packages() {
   local support_packages=(
-    ca-certificates curl gnupg lsb-release dnsutils netcat-openbsd openssl sqlite3 tar unzip cron
+    ca-certificates curl gnupg jq lsb-release dnsutils netcat-openbsd openssl sqlite3 tar unzip cron
   )
   local service_packages=(
     postgresql postgresql-client

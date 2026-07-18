@@ -1,6 +1,6 @@
 # DNS Records
 
-Replace example values with `~/.email-server/config.env` values.
+Replace example values with `~/.mail-server/config.env` values.
 Repeat the domain-level `MX`, SPF, DMARC, and DKIM records for `PRIMARY_DOMAIN`
 and every domain listed in `SECONDARY_DOMAINS`.
 
@@ -56,7 +56,7 @@ sudo mailserver print-dns --domain example.net
 by default so DMARC aggregate reports have a destination.
 
 After publishing the records, check current DNS state against
-`~/.email-server/config.env` with:
+`~/.mail-server/config.env` with:
 
 ```bash
 mailserver dns-state

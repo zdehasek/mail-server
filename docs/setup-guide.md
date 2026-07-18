@@ -91,7 +91,7 @@ mailserver init
 The wizard:
 
 1. Collects the domain, hostnames, public IPs, admin mailbox, and timezone.
-2. Writes `~/.email-server/config.env`.
+2. Writes `~/.mail-server/config.env`.
 3. Runs local prerequisite checks.
 4. Generates DKIM for the primary domain, prints all required DNS records, and
    keeps rechecking them until they pass.
@@ -131,7 +131,7 @@ mailserver init \
   --non-interactive
 ```
 
-Manual editing of `~/.email-server/config.env` is still possible for advanced
+Manual editing of `~/.mail-server/config.env` is still possible for advanced
 changes, but it is not the normal install path.
 
 To start over, move the local setup config aside:
@@ -388,7 +388,7 @@ dig +short TXT _dmarc.example.com
 `mail.example.com` and `dav.example.com` must return `SERVER_PUBLIC_IPV4` before
 continuing.
 
-For a complete check against the configured `~/.email-server/config.env`, run:
+For a complete check against the configured `~/.mail-server/config.env`, run:
 
 ```bash
 mailserver doctor

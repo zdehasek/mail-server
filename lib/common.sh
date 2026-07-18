@@ -196,7 +196,7 @@ config_home() {
 }
 
 default_config_file() {
-  printf '%s/config.env\n' "${MAILSERVER_CONFIG_DIR:-$(config_home)/.email-server}"
+  printf '%s/config.env\n' "${MAILSERVER_CONFIG_DIR:-$(config_home)/.mail-server}"
 }
 
 load_config() {

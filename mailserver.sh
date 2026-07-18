@@ -55,7 +55,7 @@ if [[ "$SCRIPT_IS_FILE" == "true" && -f "$ROOT_DIR/install.sh" && -f "$ROOT_DIR/
 fi
 CONFIG_FILE="${CONFIG:-${ENV_FILE:-}}"
 INSTALL_DIR="${MAILSERVER_INSTALL_DIR:-/opt/mailserver}"
-CONFIG_DIR="${MAILSERVER_CONFIG_DIR:-$(config_home)/.email-server}"
+CONFIG_DIR="${MAILSERVER_CONFIG_DIR:-$(config_home)/.mail-server}"
 DEFAULT_CONFIG_FILE="$CONFIG_DIR/config.env"
 CLI_PATH="${MAILSERVER_CLI_PATH:-/usr/local/bin/mailserver}"
 REPO_URL="${MAILSERVER_REPO_URL:-https://github.com/zdehasek/mail-server.git}"
@@ -144,7 +144,7 @@ Usage:
 
 Setup:
   init                         Guided setup: config, DNS checks, install, verify
-  init --config-only           Create ~/.email-server/config.env only
+  init --config-only           Create ~/.mail-server/config.env only
   reset-setup                  Move local setup config aside
   remove --purge               Permanently delete services, databases, config, and mail data
   install-cli                  Install mailserver into PATH
@@ -209,7 +209,7 @@ Examples:
   curl -fsSL https://raw.githubusercontent.com/zdehasek/mail-server/master/mailserver.sh | sudo MAILSERVER_INSTALL_DIR=/opt/mailserver bash -s -- setup-dry-run
 
 Notes:
-  The default config is ~/.email-server/config.env. When run through sudo,
+  The default config is ~/.mail-server/config.env. When run through sudo,
   sudo user's home is used so sudo mailserver install sees the same config
   created by mailserver init.
   Install and setup run locally on the target server. This CLI does not provide
@@ -541,7 +541,7 @@ chown_for_sudo_user() {
 
   [[ "$EUID" -eq 0 && -n "${SUDO_UID:-}" && -n "${SUDO_GID:-}" && -n "${SUDO_USER:-}" && "${SUDO_USER:-}" != "root" ]] || return 0
   sudo_home="$(getent passwd "$SUDO_USER" | cut -d: -f6 || true)"
-  [[ -n "$sudo_home" && "$path" == "$sudo_home"/.email-server* ]] || return 0
+  [[ -n "$sudo_home" && "$path" == "$sudo_home"/.mail-server* ]] || return 0
   chown "$SUDO_UID:$SUDO_GID" "$path"
 }
 

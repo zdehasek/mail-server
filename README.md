@@ -16,7 +16,7 @@ Default stack:
 ## Quick Start
 
 For the complete step-by-step setup guide, including local installation,
-`~/.email-server/config.env`, DNS, DKIM, mailboxes, and tests, follow
+`~/.mail-server/config.env`, DNS, DKIM, mailboxes, and tests, follow
 [`docs/setup-guide.md`](docs/setup-guide.md).
 
 ```bash
@@ -28,7 +28,7 @@ mailserver init
 
 Run these commands on the target server. Remote deployment is not a supported
 interface. By default, `mailserver init` creates
-`~/.email-server/config.env`, walks through DNS records, waits until they verify,
+`~/.mail-server/config.env`, walks through DNS records, waits until they verify,
 installs the stack, and verifies services. The guided setup keeps package,
 Certbot, and service output in a timestamped log so the terminal stays focused
 on the current step and the next action. Use

@@ -27,8 +27,10 @@ assert_not_contains() {
 }
 
 assert_contains "$help_output" "users ls"
+assert_contains "$help_output" "~/.mail-server/config.env"
 assert_contains "$help_output" "domains add --domain example.com"
 assert_contains "$help_output" "aliases set --source postmaster@example.com --dest user@example.com"
+assert_not_contains "$help_output" "~/.email""-server/config.env"
 assert_not_contains "$help_output" "list-users"
 assert_not_contains "$help_output" "add-user"
 assert_not_contains "$help_output" "remove-domain"

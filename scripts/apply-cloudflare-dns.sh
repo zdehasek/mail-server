@@ -64,30 +64,36 @@ prompt_cloudflare_token() {
 
 if [[ "$DRY_RUN" != "true" ]]; then
   command -v curl >/dev/null 2>&1 || die "curl is required for Cloudflare DNS automation"
-  command -v python3 >/dev/null 2>&1 || die "python3 is required to parse Cloudflare API responses"
   token="$(prompt_cloudflare_token)"
 fi
 
-json_value() {
-  local json="$1"
-  local query="$2"
-  python3 -c '
-import json, sys
-data = json.load(sys.stdin)
-query = sys.argv[1]
-value = data
-for part in query.split("."):
-    if part.isdigit():
-        value = value[int(part)]
-    else:
-        value = value.get(part)
-    if value is None:
-        break
-if isinstance(value, bool):
-    print("true" if value else "false")
-elif value is not None:
-    print(value)
-' "$query" <<< "$json"
+json_is_success() {
+  grep -Eq '"success"[[:space:]]*:[[:space:]]*true' <<< "$1"
+}
+
+json_string_unescape() {
+  sed -E 's/\\"/"/g; s/\\\\/\\/g; s/\\\//\//g'
+}
+
+json_first_id() {
+  sed -nE 's/.*"id"[[:space:]]*:[[:space:]]*"([^"]+)".*/\1/p' <<< "$1" | head -n 1
+}
+
+json_error_message() {
+  local message
+  message="$(sed -nE 's/.*"message"[[:space:]]*:[[:space:]]*"([^"]+)".*/\1/p' <<< "$1" | json_string_unescape | paste -sd'; ' -)"
+  printf '%s\n' "${message:-unknown Cloudflare API error}"
+}
+
+json_record_lines() {
+  sed 's/},{/}\
+{/g' <<< "$1"
+}
+
+json_record_string_field() {
+  local object="$1"
+  local field="$2"
+  sed -nE 's/.*"'"$field"'"[[:space:]]*:[[:space:]]*"(([^"\\]|\\.)*)".*/\1/p' <<< "$object" | json_string_unescape
 }
 
 json_first_record_id() {
@@ -96,32 +102,44 @@ json_first_record_id() {
   local name="$3"
   local type="$4"
   local content="${5:-}"
-  python3 -c '
-import json, sys
-data = json.load(sys.stdin)
-mode, name, typ, content = sys.argv[1:5]
-for record in data.get("result", []):
-    if record.get("name") != name or record.get("type") != typ:
-        continue
-    record_content = record.get("content", "")
-    if mode == "exact" and record_content != content:
-        continue
-    if mode == "spf" and not record_content.lower().startswith("v=spf1"):
-        continue
-    print(record.get("id", ""))
-    break
-' "$mode" "$name" "$type" "$content" <<< "$json"
+  local object record_id record_name record_type record_content
+
+  while IFS= read -r object; do
+    record_id="$(json_record_string_field "$object" id)"
+    [[ -n "$record_id" ]] || continue
+    record_name="$(json_record_string_field "$object" name)"
+    record_type="$(json_record_string_field "$object" type)"
+    [[ "$record_name" == "$name" && "$record_type" == "$type" ]] || continue
+
+    record_content="$(json_record_string_field "$object" content)"
+    case "$mode" in
+      exact)
+        [[ "$record_content" == "$content" ]] || continue
+        ;;
+      spf)
+        [[ "${record_content,,}" == v=spf1* ]] || continue
+        ;;
+    esac
+    printf '%s\n' "$record_id"
+    return 0
+  done < <(json_record_lines "$json")
 }
 
 json_escape() {
-  python3 -c 'import json, sys; print(json.dumps(sys.argv[1]))' "$1"
+  local value="$1"
+  value="${value//\\/\\\\}"
+  value="${value//\"/\\\"}"
+  value="${value//$'\r'/\\r}"
+  value="${value//$'\n'/\\n}"
+  value="${value//$'\t'/\\t}"
+  printf '"%s"\n' "$value"
 }
 
 cf_api() {
   local method="$1"
   local path="$2"
   local data="${3:-}"
-  local response body status success message
+  local response body status message
   local curl_args=(-sS -X "$method" "https://api.cloudflare.com/client/v4$path" -H "Authorization: Bearer $token" -H "Content-Type: application/json" -w $'\n%{http_code}')
   if [[ -n "$data" ]]; then
     curl_args+=("--data" "$data")
@@ -129,12 +147,11 @@ cf_api() {
   response="$(curl "${curl_args[@]}")"
   status="${response##*$'\n'}"
   body="${response%$'\n'*}"
-  success="$(json_value "$body" success || true)"
-  if [[ "$status" =~ ^2 && "$success" == "true" ]]; then
+  if [[ "$status" =~ ^2 ]] && json_is_success "$body"; then
     printf '%s\n' "$body"
     return 0
   fi
-  message="$(python3 -c 'import json, sys; data=json.load(sys.stdin); print("; ".join(str(e.get("message", e)) for e in data.get("errors", [])) or "unknown Cloudflare API error")' <<< "$body" 2>/dev/null || true)"
+  message="$(json_error_message "$body")"
   die "Cloudflare API $method $path failed with HTTP $status: ${message:-unknown Cloudflare API error}"
 }
 
@@ -149,7 +166,7 @@ resolve_zone_id() {
 
   while [[ "$zone_name" == *.* ]]; do
     response="$(cf_api GET "/zones?name=$zone_name&status=active&per_page=1")"
-    found="$(json_value "$response" result.0.id || true)"
+    found="$(json_first_id "$response")"
     if [[ -n "$found" ]]; then
       printf '%s\n' "$found"
       return 0

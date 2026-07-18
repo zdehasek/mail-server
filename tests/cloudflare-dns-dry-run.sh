@@ -58,6 +58,7 @@ CONFIG
 
 output="$("$ROOT_DIR/scripts/apply-cloudflare-dns.sh" --config "$config" --dry-run)"
 help_output="$("$ROOT_DIR/scripts/apply-cloudflare-dns.sh" --help)"
+script_source="$(< "$ROOT_DIR/scripts/apply-cloudflare-dns.sh")"
 
 assert_contains() {
   local needle="$1"
@@ -82,6 +83,11 @@ fi
 
 if "$ROOT_DIR/scripts/apply-cloudflare-dns.sh" --config "$config" --dry-run --token secret >/dev/null 2>&1; then
   printf 'Cloudflare DNS command should reject --token\n' >&2
+  exit 1
+fi
+
+if [[ "$script_source" == *"python"* || "$script_source" == *"jq"* ]]; then
+  printf 'Cloudflare DNS command should not depend on Python or jq\n' >&2
   exit 1
 fi
 

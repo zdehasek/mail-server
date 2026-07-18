@@ -32,6 +32,9 @@ for phase in "${phases[@]}"; do
   info "Running phase $phase"
   # shellcheck source=/dev/null
   source "$ROOT_DIR/phases/$phase.sh"
+  declare -F up >/dev/null || die "Phase $phase does not define up()"
+  up
+  unset -f up down phase_packages phase_removable_packages
 done
 
 info "Install flow complete. Run mailserver print-dns --config $CONFIG_FILE and publish DKIM DNS if you are not using the guided init flow."

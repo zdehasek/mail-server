@@ -42,6 +42,21 @@ done
 require_root
 load_config
 
+phases=(
+  00-preflight
+  10-packages
+  20-system
+  30-certs
+  40-database
+  50-dovecot
+  60-postfix
+  70-dkim-dmarc-rspamd
+  80-sogo
+  92-primary-mailbox
+  95-security
+  99-verify
+)
+
 red_line() {
   ui_line_err "1;31" "$*"
 }
@@ -157,103 +172,6 @@ DROP ROLE IF EXISTS :"role";
 SQL
 }
 
-purge_packages() {
-  local packages=(
-    postfix postfix-pgsql postfix-policyd-spf-python
-    dovecot-core dovecot-imapd dovecot-lmtpd dovecot-sieve dovecot-managesieved dovecot-pgsql
-    nginx certbot apache2-utils
-    sogo sogo-activesync memcached
-    opendkim opendkim-tools opendmarc rspamd fail2ban ufw
-    clamav-daemon clamav-freshclam
-  )
-  local installed=()
-  local package
-
-  command -v dpkg-query >/dev/null 2>&1 || {
-    warn "dpkg-query not found; skipping package purge"
-    return 0
-  }
-
-  for package in "${packages[@]}"; do
-    if dpkg-query -W -f='${Status}' "$package" 2>/dev/null | grep -q "install ok installed"; then
-      installed+=("$package")
-    fi
-  done
-
-  if [[ "${#installed[@]}" -eq 0 ]]; then
-    info "No mailserver packages are installed"
-    return 0
-  fi
-
-  run env DEBIAN_FRONTEND=noninteractive apt-get purge -y "${installed[@]}"
-  run env DEBIAN_FRONTEND=noninteractive apt-get autoremove --purge -y
-}
-
-remove_letsencrypt_name() {
-  local name="$1"
-  [[ -n "$name" ]] || return 0
-  run_rm "/etc/letsencrypt/live/$name"
-  run_rm "/etc/letsencrypt/archive/$name"
-  run_rm "/etc/letsencrypt/renewal/$name.conf"
-}
-
-remove_managed_files() {
-  run_rm /etc/postfix/pgsql-domains.cf
-  run_rm /etc/postfix/pgsql-users.cf
-  run_rm /etc/postfix/pgsql-aliases.cf
-  run_rm /etc/postfix/pgsql-sender-bcc.cf
-  run_rm /etc/postfix/main.cf
-  run_rm /etc/postfix/master.cf
-
-  run_rm /etc/dovecot/dovecot.conf
-  run_rm /etc/dovecot/dovecot-sql.conf.ext
-  run_rm /etc/dovecot/sieve/before.d/sent-copies.sieve
-
-  run_rm /etc/opendkim.conf
-  run_rm /etc/opendkim/key.table
-  run_rm /etc/opendkim/signing.table
-  run_rm /etc/opendkim/trusted.hosts
-  run_rm /etc/opendmarc.conf
-
-  run_rm /etc/rspamd/local.d/milter_headers.conf
-  run_rm /etc/rspamd/local.d/actions.conf
-
-  run_rm /etc/sogo/sogo.conf
-  run_rm /etc/nginx/sites-available/sogo.conf
-  run_rm /etc/nginx/sites-available/mailserver-acme.conf
-  run_rm /etc/nginx/sites-enabled/sogo.conf
-  run_rm /etc/nginx/sites-enabled/mailserver-acme.conf
-  run_rm /etc/nginx/mail-autoconfig.xml
-  run_rm /etc/nginx/apple-mail.mobileconfig
-
-  run_rm /etc/fail2ban/jail.d/mailserver.local
-  run_rm /etc/ssh/sshd_config.d/99-mailserver-hardening.conf
-  run_rm /etc/cron.d/mailserver-backup
-  run_rm /var/log/mailserver-backup.log
-  run_rm /etc/letsencrypt/renewal-hooks/deploy/reload-mailserver
-}
-
-remove_data_dirs() {
-  local seen=" "
-  local name
-
-  if [[ "$CONFIG_FILE" == /* ]]; then
-    run_rm "$CONFIG_FILE"
-  else
-    warn "Setup config path is not absolute; not deleting it: $CONFIG_FILE"
-  fi
-  run_rm "$VMAIL_ROOT"
-  run_rm "$BACKUP_DIR"
-  run_rm "$BACKUP_ROOT"
-  run_rm /etc/mailserver
-  run_rm /var/www/letsencrypt
-  for name in "$MAIL_HOSTNAME" "$WEBMAIL_HOSTNAME" "$DAV_HOSTNAME"; do
-    [[ -n "$name" && "$seen" != *" $name "* ]] || continue
-    seen+="$name "
-    remove_letsencrypt_name "$name"
-  done
-}
-
 reset_firewall() {
   if command -v ufw >/dev/null 2>&1; then
     run ufw --force reset
@@ -296,15 +214,14 @@ else
   warn "Dry run only. No data will be removed."
 fi
 
-for service in postfix dovecot nginx memcached sogo opendkim opendmarc rspamd fail2ban clamav-daemon clamav-freshclam; do
-  stop_disable_service "$service"
+for ((idx=${#phases[@]} - 1; idx >= 0; idx--)); do
+  phase="${phases[$idx]}"
+  info "Removing phase $phase"
+  # shellcheck source=/dev/null
+  source "$ROOT_DIR/phases/$phase.sh"
+  declare -F down >/dev/null || die "Phase $phase does not define down()"
+  down
+  unset -f up down phase_packages phase_removable_packages
 done
-
-drop_mail_database
-remove_managed_files
-remove_data_dirs
-reset_firewall
-reload_ssh_after_cleanup
-purge_packages
 
 info "Mailserver purge complete. Run mailserver init to start again from defaults."

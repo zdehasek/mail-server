@@ -165,6 +165,7 @@ Health checks:
   tls-policy-state             Check MTA-STS, TLS reporting, and DANE DNS state
   rspamd-state                 Show Rspamd controller status or counters
   print-dns                    Print DNS records, including generated DKIM
+  apply-cloudflare-dns         Create or update DNS records through Cloudflare API
 
 Client configuration:
   client-info                  Print Apple Mail, Thunderbird, and CalDAV settings
@@ -198,6 +199,7 @@ Examples:
   sudo mailserver remove --purge
   mailserver doctor
   mailserver setup-dry-run
+  sudo mailserver apply-cloudflare-dns
   sudo mailserver install
   sudo mailserver domains ls
   sudo mailserver users add --user user@example.com
@@ -241,6 +243,9 @@ show_command_help() {
       ;;
     print-dns|dns-state)
       usage_line "Usage: mailserver $1 [--domain example.com] [--skip-dkim] [--skip-ptr] [--config PATH]"
+      ;;
+    apply-cloudflare-dns)
+      usage_line 'Usage: sudo mailserver apply-cloudflare-dns [--domain example.com] [--zone-id ID] [--token TOKEN|--token-file PATH] [--dry-run] [--config PATH]'
       ;;
     config-drift)
       usage_line 'Usage: sudo mailserver config-drift [--fix] [--config PATH]'
@@ -980,6 +985,17 @@ prompt_tty() {
   printf '%s\n' "$reply"
 }
 
+prompt_secret_tty() {
+  local label="$1"
+  local reply
+
+  has_tty || return 1
+  printf '%s: ' "$label" > /dev/tty
+  IFS= read -r -s reply < /dev/tty || true
+  printf '\n' > /dev/tty
+  printf '%s\n' "$reply"
+}
+
 prompt_enter_tty() {
   local message="$1"
 
@@ -989,6 +1005,60 @@ prompt_enter_tty() {
   else
     say "$message"
   fi
+}
+
+maybe_apply_cloudflare_dns() {
+  local config="$1"
+  local log_file="$2"
+  shift 2
+  local token_file=""
+  local token=""
+  local zone_id="${CLOUDFLARE_ZONE_ID:-}"
+  local cleanup_token_file="false"
+  local status
+
+  has_tty || return 0
+  confirm_tty "Apply these DNS records through Cloudflare now?" "no" || return 0
+
+  if [[ -n "${CLOUDFLARE_API_TOKEN_FILE:-}" ]]; then
+    token_file="$CLOUDFLARE_API_TOKEN_FILE"
+  elif [[ -n "${CLOUDFLARE_API_TOKEN:-}" ]]; then
+    token_file="$(mktemp "${TMPDIR:-/tmp}/mailserver-cloudflare-token.XXXXXX")"
+    chmod 0600 "$token_file"
+    printf '%s' "$CLOUDFLARE_API_TOKEN" > "$token_file"
+    cleanup_token_file="true"
+  else
+    token="$(prompt_secret_tty "Cloudflare API token (Zone:DNS Write, Zone:Zone Read; not stored)")"
+    [[ -n "$token" ]] || {
+      wizard_problem "Cloudflare DNS skipped: empty API token."
+      return 0
+    }
+    token_file="$(mktemp "${TMPDIR:-/tmp}/mailserver-cloudflare-token.XXXXXX")"
+    chmod 0600 "$token_file"
+    printf '%s' "$token" > "$token_file"
+    cleanup_token_file="true"
+  fi
+
+  if [[ -z "$zone_id" ]]; then
+    zone_id="$(prompt_tty "Cloudflare zone ID, blank to auto-detect" "")"
+  fi
+
+  if [[ -n "$zone_id" ]]; then
+    set +e
+    wizard_run_root_cmd "Applying Cloudflare DNS records" "$log_file" env CLOUDFLARE_API_TOKEN_FILE="$token_file" "$ROOT_DIR/scripts/apply-cloudflare-dns.sh" --config "$config" --zone-id "$zone_id" "$@"
+    status=$?
+    set -e
+  else
+    set +e
+    wizard_run_root_cmd "Applying Cloudflare DNS records" "$log_file" env CLOUDFLARE_API_TOKEN_FILE="$token_file" "$ROOT_DIR/scripts/apply-cloudflare-dns.sh" --config "$config" "$@"
+    status=$?
+    set -e
+  fi
+
+  if [[ "$cleanup_token_file" == "true" ]]; then
+    rm -f -- "$token_file"
+  fi
+  return "$status"
 }
 
 confirm_tty() {
@@ -1227,6 +1297,9 @@ wait_for_dns_stage() {
     printf '%s\n' "$dns_output"
   } >> "$log_file"
   wizard_records "$dns_records" "$dns_output"
+  if [[ "$stage" == "preinstall" ]]; then
+    maybe_apply_cloudflare_dns "$config" "$log_file" "${args[@]}"
+  fi
 
   while true; do
     wizard_write ""
@@ -1947,6 +2020,7 @@ main() {
     e2e-delivery) cmd_option_script scripts/e2e-delivery-test.sh true "${COMMAND_ARGS[@]}" ;;
     tls-policy-state) cmd_option_script scripts/tls-policy-state.sh false "${COMMAND_ARGS[@]}" ;;
     rspamd-state) cmd_option_script scripts/rspamd-state.sh true "${COMMAND_ARGS[@]}" ;;
+    apply-cloudflare-dns) cmd_option_script scripts/apply-cloudflare-dns.sh true "${COMMAND_ARGS[@]}" ;;
     list-domains) cmd_simple_script scripts/list-domains.sh true "${COMMAND_ARGS[@]}" ;;
     list-aliases) cmd_option_script scripts/list-aliases.sh true "${COMMAND_ARGS[@]}" ;;
     list-forwards) cmd_option_script scripts/list-forwards.sh true "${COMMAND_ARGS[@]}" ;;

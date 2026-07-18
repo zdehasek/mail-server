@@ -4,6 +4,17 @@ Replace example values with `~/.mail-server/config.env` values.
 Repeat the domain-level `MX`, SPF, DMARC, and DKIM records for `PRIMARY_DOMAIN`
 and every domain listed in `SECONDARY_DOMAINS`.
 
+If the zone is hosted on Cloudflare, the installer can create or update these
+records through the Cloudflare DNS API:
+
+```bash
+sudo mailserver apply-cloudflare-dns
+```
+
+Prefer a scoped Cloudflare API token with `Zone:DNS Write` and `Zone:Zone Read`
+permissions. Mail host records are created as DNS-only records. PTR/rDNS is not
+a DNS-zone record and still has to be set at the server/IP provider.
+
 ```text
 example.com.          MX   10 mail.example.com.
 mail.example.com.     A    203.0.113.10

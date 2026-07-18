@@ -4,9 +4,10 @@ This guide is the start-to-finish runbook for installing this mail server. It
 covers the supported local setup flow: run the installer directly on the target
 server.
 
-The guided setup cannot change external DNS, PTR/rDNS, or provider SMTP policy
-for you, but it tells you exactly what to publish and waits until those records
-verify before it continues.
+The guided setup can optionally apply DNS records through Cloudflare when you
+provide a scoped API token. Otherwise it tells you exactly what to publish and
+waits until those records verify before it continues. PTR/rDNS and provider SMTP
+policy still have to be configured at the server/IP provider.
 
 ## 1. Choose The Install Flow
 
@@ -291,6 +292,19 @@ Let's Encrypt validation requires DNS to point at the target server before
 
 Use DNS-only records for mail hostnames when using Cloudflare. Do not proxy SMTP
 or IMAP hostnames through Cloudflare.
+
+If the domain is hosted on Cloudflare, the guided installer can apply the normal
+DNS-zone records for you. Use a scoped Cloudflare API token with `Zone:DNS Write`
+and `Zone:Zone Read` permissions for the zone, then answer yes when the wizard
+asks whether to apply records through Cloudflare. You can also run it manually:
+
+```bash
+sudo mailserver apply-cloudflare-dns
+```
+
+The token is accepted through a hidden prompt, `CLOUDFLARE_API_TOKEN`, or
+`CLOUDFLARE_API_TOKEN_FILE`. Set `CLOUDFLARE_ZONE_ID` in the config only if the
+token cannot list zones or you want to skip auto-detection.
 
 ```text
 Type: A

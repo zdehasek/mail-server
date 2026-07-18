@@ -1,0 +1,284 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+# shellcheck source=../lib/common.sh
+# shellcheck disable=SC1091
+source "$ROOT_DIR/lib/common.sh"
+
+usage() {
+  usage_line "Usage: sudo mailserver apply-cloudflare-dns [--domain example.com] [--zone-id ID] [--token TOKEN|--token-file PATH] [--dry-run] [--config PATH]"
+}
+
+# shellcheck disable=SC2034 # Read by load_config from lib/common.sh.
+CONFIG_FILE="${CONFIG:-${ENV_FILE:-$(default_config_file)}}"
+target_domain=""
+token="${CLOUDFLARE_API_TOKEN:-}"
+token_file="${CLOUDFLARE_API_TOKEN_FILE:-}"
+zone_id="${CLOUDFLARE_ZONE_ID:-}"
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --config)
+      # shellcheck disable=SC2034 # Read by load_config from lib/common.sh.
+      CONFIG_FILE="${2:-}"
+      shift 2
+      ;;
+    --domain)
+      target_domain="$(normalize_domain "${2:-}")"
+      shift 2
+      ;;
+    --zone-id)
+      zone_id="${2:-}"
+      shift 2
+      ;;
+    --token)
+      token="${2:-}"
+      shift 2
+      ;;
+    --token-file)
+      token_file="${2:-}"
+      shift 2
+      ;;
+    --dry-run)
+      DRY_RUN="true"
+      shift
+      ;;
+    --help|-h)
+      usage
+      exit 0
+      ;;
+    *)
+      die "Unknown apply-cloudflare-dns option: $1"
+      ;;
+  esac
+done
+
+load_config
+target_domain="${target_domain:-$(normalize_domain "$PRIMARY_DOMAIN")}"
+validate_domain_or_die "$target_domain"
+
+if [[ -z "$token" && -n "$token_file" ]]; then
+  [[ -r "$token_file" ]] || die "Cloudflare API token file is not readable: $token_file"
+  token="$(< "$token_file")"
+  token="${token//$'\r'/}"
+  token="${token//$'\n'/}"
+fi
+
+if [[ "$DRY_RUN" != "true" ]]; then
+  command -v curl >/dev/null 2>&1 || die "curl is required for Cloudflare DNS automation"
+  command -v python3 >/dev/null 2>&1 || die "python3 is required to parse Cloudflare API responses"
+  [[ -n "$token" ]] || die "Set CLOUDFLARE_API_TOKEN or pass --token-file for Cloudflare DNS automation"
+fi
+
+json_value() {
+  local json="$1"
+  local query="$2"
+  python3 -c '
+import json, sys
+data = json.load(sys.stdin)
+query = sys.argv[1]
+value = data
+for part in query.split("."):
+    if part.isdigit():
+        value = value[int(part)]
+    else:
+        value = value.get(part)
+    if value is None:
+        break
+if isinstance(value, bool):
+    print("true" if value else "false")
+elif value is not None:
+    print(value)
+' "$query" <<< "$json"
+}
+
+json_first_record_id() {
+  local json="$1"
+  local mode="$2"
+  local name="$3"
+  local type="$4"
+  local content="${5:-}"
+  python3 -c '
+import json, sys
+data = json.load(sys.stdin)
+mode, name, typ, content = sys.argv[1:5]
+for record in data.get("result", []):
+    if record.get("name") != name or record.get("type") != typ:
+        continue
+    record_content = record.get("content", "")
+    if mode == "exact" and record_content != content:
+        continue
+    if mode == "spf" and not record_content.lower().startswith("v=spf1"):
+        continue
+    print(record.get("id", ""))
+    break
+' "$mode" "$name" "$type" "$content" <<< "$json"
+}
+
+json_escape() {
+  python3 -c 'import json, sys; print(json.dumps(sys.argv[1]))' "$1"
+}
+
+cf_api() {
+  local method="$1"
+  local path="$2"
+  local data="${3:-}"
+  local response body status success message
+  local curl_args=(-sS -X "$method" "https://api.cloudflare.com/client/v4$path" -H "Authorization: Bearer $token" -H "Content-Type: application/json" -w $'\n%{http_code}')
+  if [[ -n "$data" ]]; then
+    curl_args+=("--data" "$data")
+  fi
+  response="$(curl "${curl_args[@]}")"
+  status="${response##*$'\n'}"
+  body="${response%$'\n'*}"
+  success="$(json_value "$body" success || true)"
+  if [[ "$status" =~ ^2 && "$success" == "true" ]]; then
+    printf '%s\n' "$body"
+    return 0
+  fi
+  message="$(python3 -c 'import json, sys; data=json.load(sys.stdin); print("; ".join(str(e.get("message", e)) for e in data.get("errors", [])) or "unknown Cloudflare API error")' <<< "$body" 2>/dev/null || true)"
+  die "Cloudflare API $method $path failed with HTTP $status: ${message:-unknown Cloudflare API error}"
+}
+
+resolve_zone_id() {
+  local zone_name="$target_domain"
+  local response found
+
+  if [[ -n "$zone_id" ]]; then
+    printf '%s\n' "$zone_id"
+    return 0
+  fi
+
+  while [[ "$zone_name" == *.* ]]; do
+    response="$(cf_api GET "/zones?name=$zone_name&status=active&per_page=1")"
+    found="$(json_value "$response" result.0.id || true)"
+    if [[ -n "$found" ]]; then
+      printf '%s\n' "$found"
+      return 0
+    fi
+    zone_name="${zone_name#*.}"
+  done
+
+  die "Could not find an active Cloudflare zone for $target_domain. Pass --zone-id or set CLOUDFLARE_ZONE_ID."
+}
+
+record_json() {
+  local type="$1"
+  local name="$2"
+  local content="$3"
+  local priority="${4:-}"
+  local json
+  json="{\"type\":$(json_escape "$type"),\"name\":$(json_escape "$name"),\"content\":$(json_escape "$content"),\"ttl\":1"
+  case "$type" in
+    A|AAAA|CNAME)
+      json+=",\"proxied\":false"
+      ;;
+    MX)
+      json+=",\"priority\":$priority"
+      ;;
+  esac
+  json+="}"
+  printf '%s\n' "$json"
+}
+
+upsert_record() {
+  local type="$1"
+  local name="$2"
+  local content="$3"
+  local priority="${4:-}"
+  local zone="$5"
+  local response exact_id replace_id replace_mode payload
+
+  [[ -n "$name" && -n "$content" ]] || return 0
+
+  if [[ "$DRY_RUN" == "true" ]]; then
+    if [[ "$type" == "MX" ]]; then
+      info "Would upsert Cloudflare DNS: $name. MX $priority $content."
+    else
+      info "Would upsert Cloudflare DNS: $name. $type $content"
+    fi
+    return 0
+  fi
+
+  response="$(cf_api GET "/zones/$zone/dns_records?type=$type&name=$name&per_page=100")"
+  exact_id="$(json_first_record_id "$response" exact "$name" "$type" "$content")"
+  if [[ -n "$exact_id" ]]; then
+    info "Cloudflare DNS already correct: $name $type"
+    return 0
+  fi
+
+  replace_mode="same-name"
+  if [[ "$type" == "TXT" && "$name" == "$target_domain" ]]; then
+    replace_mode="spf"
+  elif [[ "$type" == "TXT" ]]; then
+    replace_mode="same-name"
+  fi
+
+  if [[ "$replace_mode" == "spf" ]]; then
+    replace_id="$(json_first_record_id "$response" spf "$name" "$type" "$content")"
+  else
+    replace_id="$(json_first_record_id "$response" same-name "$name" "$type" "$content")"
+  fi
+
+  payload="$(record_json "$type" "$name" "$content" "$priority")"
+  if [[ -n "$replace_id" ]]; then
+    cf_api PATCH "/zones/$zone/dns_records/$replace_id" "$payload" >/dev/null
+    info "Updated Cloudflare DNS: $name $type"
+  else
+    cf_api POST "/zones/$zone/dns_records" "$payload" >/dev/null
+    info "Created Cloudflare DNS: $name $type"
+  fi
+}
+
+declare -A added_hosts=()
+add_host_records() {
+  local host="$1"
+  local zone="$2"
+  [[ -n "$host" ]] || return 0
+  [[ -z "${added_hosts[$host]:-}" ]] || return 0
+  added_hosts[$host]=1
+  # shellcheck disable=SC2153 # Required config variable loaded by load_config.
+  upsert_record A "$host" "$SERVER_PUBLIC_IPV4" "" "$zone"
+  if [[ -n "${SERVER_PUBLIC_IPV6:-}" ]]; then
+    upsert_record AAAA "$host" "$SERVER_PUBLIC_IPV6" "" "$zone"
+  fi
+}
+
+zone="$(resolve_zone_id)"
+info "Applying Cloudflare DNS records for $target_domain"
+
+add_host_records "$MAIL_HOSTNAME" "$zone"
+add_host_records "$WEBMAIL_HOSTNAME" "$zone"
+add_host_records "$DAV_HOSTNAME" "$zone"
+add_host_records "mta-sts.$target_domain" "$zone"
+
+upsert_record MX "$target_domain" "$MAIL_HOSTNAME" 10 "$zone"
+upsert_record TXT "$target_domain" "v=spf1 mx -all" "" "$zone"
+upsert_record TXT "_dmarc.$target_domain" "v=DMARC1; p=none; rua=mailto:dmarc@$target_domain; adkim=s; aspf=s" "" "$zone"
+upsert_record TXT "_mta-sts.$target_domain" "v=STSv1; id=1" "" "$zone"
+upsert_record TXT "_smtp._tls.$target_domain" "v=TLSRPTv1; rua=mailto:postmaster@$target_domain" "" "$zone"
+
+dkim_txt="$DKIM_ROOT/$target_domain/$DKIM_SELECTOR.txt"
+if [[ ! -f "$dkim_txt" && "$target_domain" == "$(normalize_domain "$PRIMARY_DOMAIN")" ]]; then
+  ensure_dkim_key_for_domain "$target_domain"
+fi
+if [[ -r "$dkim_txt" ]]; then
+  dkim_record="$(format_dkim_dns_record_file "$dkim_txt" "$target_domain")"
+  dkim_name="${dkim_record%%. TXT *}"
+  dkim_value="${dkim_record#*. TXT }"
+  dkim_value="${dkim_value#\"}"
+  dkim_value="${dkim_value%\"}"
+  upsert_record TXT "$dkim_name" "$dkim_value" "" "$zone"
+else
+  warn "DKIM record is not generated/readable yet: $dkim_txt"
+fi
+
+tlsa_cert_file="${MAILSERVER_TLSA_CERT_FILE:-/etc/letsencrypt/live/$MAIL_HOSTNAME/fullchain.pem}"
+if tlsa_record="$(tlsa_record_from_cert_file "$tlsa_cert_file" "$MAIL_HOSTNAME")"; then
+  tlsa_name="${tlsa_record%%. TLSA *}"
+  tlsa_value="${tlsa_record#*. TLSA }"
+  upsert_record TLSA "$tlsa_name" "$tlsa_value" "" "$zone"
+fi
+
+info "Cloudflare DNS apply complete. PTR/rDNS still has to be set at the server/IP provider."

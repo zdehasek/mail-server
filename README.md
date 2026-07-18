@@ -28,10 +28,11 @@ mailserver init
 
 Run these commands on the target server. Remote deployment is not a supported
 interface. By default, `mailserver init` creates
-`~/.mail-server/config.env`, walks through DNS records, waits until they verify,
-installs the stack, and verifies services. The guided setup keeps package,
-Certbot, and service output in a timestamped log so the terminal stays focused
-on the current step and the next action. Use
+`~/.mail-server/config.env`, walks through DNS records, optionally applies them
+through Cloudflare, waits until they verify, installs the stack, and verifies
+services. The guided setup keeps package, Certbot, and service output in a
+timestamped log so the terminal stays focused on the current step and the next
+action. Use
 `mailserver init --config-only` when you only want to create the config and run
 the lower-level commands manually. All commands use that file unless
 `--config PATH`, `CONFIG=PATH`, or `ENV_FILE=PATH` is set. When a command is run
@@ -93,7 +94,9 @@ Do not run this on an existing mail server without reading `docs/prerequisites.m
 
 Email deliverability cannot be made fully automatic. Production use requires DNS and provider-side setup:
 
-- DNS control for each served domain.
+- DNS control for each served domain. Cloudflare DNS can be applied
+  automatically with `sudo mailserver apply-cloudflare-dns` or from the guided
+  installer when you provide a scoped Cloudflare API token.
 - Static public IPv4 address.
 - Provider allows inbound and outbound TCP/25.
 - PTR/rDNS for each public mail server IP points to `MAIL_HOSTNAME`. Configure

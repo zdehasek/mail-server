@@ -83,10 +83,13 @@ sudo mailserver remove --purge
 ```
 
 The command prints a red destructive-action warning and requires typing the full
-confirmation sentence shown on screen. It stops and disables mail services,
-drops the configured PostgreSQL database and role, deletes mailbox data,
-generated config, `/etc/mailserver` secrets/state, generated TLS material, and
-mailserver backups, resets UFW, and purges installed mail/webmail packages.
+confirmation sentence shown on screen. Before dropping PostgreSQL, it writes a
+purge safety dump under `/var/backups/mailserver-purge/` so a mistaken purge
+still leaves the full database and role/global state recoverable. It then stops
+and disables mail services, drops the configured PostgreSQL database and role,
+deletes mailbox data, generated config, `/etc/mailserver` secrets/state,
+generated TLS material, and mailserver backups, resets UFW, and purges installed
+mail/webmail packages.
 
 Create or refresh the configured primary mailbox and operational aliases:
 

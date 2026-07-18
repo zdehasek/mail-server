@@ -118,7 +118,8 @@ contacts, sessions, and profile data.
 - `sudo mailserver backup` creates a mail server data backup.
 - `sudo mailserver remove --purge` is destructive. It requires typing a full
   confirmation sentence and removes services, mail data, databases, generated
-  config, secrets, and mailserver backups.
+  config, secrets, and mailserver backups. Before dropping PostgreSQL, it writes
+  a purge safety dump under `/var/backups/mailserver-purge/`.
 - `sudo mailserver install-backup-cron` installs a recurring backup job.
 - Mailboxes are never deleted by routine mailbox/domain commands.
 - UFW defaults to deny incoming and only allows SSH, SMTP, HTTP/HTTPS, submission, and IMAPS.

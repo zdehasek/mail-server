@@ -41,6 +41,7 @@ done
 [[ "$purge" == "true" ]] || die "Refusing to remove anything without --purge. Usage: sudo mailserver remove --purge"
 require_root
 load_config
+PURGE_BACKUP_DIR="${MAILSERVER_PURGE_BACKUP_DIR:-/var/backups/mailserver-purge}"
 
 phases=(
   00-preflight
@@ -136,6 +137,20 @@ validate_delete_paths() {
   fi
 }
 
+validate_purge_backup_dir() {
+  [[ "$PURGE_BACKUP_DIR" == /* ]] || die "Purge database backup path must be absolute: $PURGE_BACKUP_DIR"
+  case "$PURGE_BACKUP_DIR" in
+    ""|"/"|"/etc"|"/var"|"/var/lib"|"/var/log"|"/var/backups"|"/home"|"/srv"|"/opt"|"/usr"|"/usr/local")
+      die "Refusing unsafe purge database backup path: $PURGE_BACKUP_DIR"
+      ;;
+  esac
+  case "$PURGE_BACKUP_DIR/" in
+    "$BACKUP_DIR"/*|"$BACKUP_ROOT"/*|"$VMAIL_ROOT"/*|/etc/mailserver/*|/var/www/letsencrypt/*)
+      die "Purge database backup path would be deleted by purge: $PURGE_BACKUP_DIR"
+      ;;
+  esac
+}
+
 service_unit_exists() {
   local service="$1"
   systemctl list-unit-files "$service.service" --no-legend 2>/dev/null | grep -q "^$service\\.service"
@@ -150,6 +165,48 @@ stop_disable_service() {
   fi
 }
 
+mail_database_exists() {
+  local exists
+  exists="$(sudo -u postgres psql -At -v ON_ERROR_STOP=1 -v db="$MAIL_DB_NAME" <<'SQL'
+SELECT 1 FROM pg_database WHERE datname = :'db';
+SQL
+)"
+  [[ "$exists" == "1" ]]
+}
+
+backup_mail_database_before_drop() {
+  local timestamp dump_path globals_path
+
+  timestamp="$(date -u +%Y%m%dT%H%M%SZ)"
+  dump_path="$PURGE_BACKUP_DIR/$MAIL_DB_NAME-$timestamp.sql.gz"
+  globals_path="$PURGE_BACKUP_DIR/postgresql-globals-$timestamp.sql.gz"
+
+  if [[ "$DRY_RUN" == "true" ]]; then
+    info "Would write PostgreSQL purge safety dump: $dump_path"
+    info "Would write PostgreSQL role/global dump: $globals_path"
+    return 0
+  fi
+
+  if ! command -v pg_dump >/dev/null 2>&1; then
+    die "pg_dump not found; refusing to drop $MAIL_DB_NAME without a database backup"
+  fi
+  if ! command -v pg_dumpall >/dev/null 2>&1; then
+    die "pg_dumpall not found; refusing to drop $MAIL_DB_NAME without role/global backup"
+  fi
+
+  if ! mail_database_exists; then
+    info "PostgreSQL database $MAIL_DB_NAME does not exist; skipping database backup"
+    return 0
+  fi
+
+  install -d -o root -g root -m 0700 "$PURGE_BACKUP_DIR"
+  sudo -u postgres pg_dump --clean --if-exists "$MAIL_DB_NAME" | gzip -c > "$dump_path"
+  sudo -u postgres pg_dumpall --globals-only | gzip -c > "$globals_path"
+  chmod 0600 "$dump_path" "$globals_path"
+  info "PostgreSQL purge safety dump ready: $dump_path"
+  info "PostgreSQL role/global dump ready: $globals_path"
+}
+
 drop_mail_database() {
   if ! command -v psql >/dev/null 2>&1; then
     warn "PostgreSQL client not found; skipping database drop"
@@ -161,9 +218,12 @@ drop_mail_database() {
   fi
 
   if [[ "$DRY_RUN" == "true" ]]; then
+    backup_mail_database_before_drop
     info "Would drop PostgreSQL database $MAIL_DB_NAME and role $MAIL_DB_USER"
     return 0
   fi
+
+  backup_mail_database_before_drop
 
   sudo -u postgres psql -v ON_ERROR_STOP=1 -v db="$MAIL_DB_NAME" -v role="$MAIL_DB_USER" <<'SQL'
 SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = :'db';
@@ -197,6 +257,7 @@ warn "This will delete mailbox data under: $VMAIL_ROOT"
 warn "This will drop PostgreSQL database: $MAIL_DB_NAME"
 warn "This will drop PostgreSQL role: $MAIL_DB_USER"
 warn "This will delete installer state and secrets under: /etc/mailserver"
+warn "This will first write a PostgreSQL safety dump under: $PURGE_BACKUP_DIR"
 if [[ "$CONFIG_FILE" == /* ]]; then
   warn "This will delete setup config: $CONFIG_FILE"
 else
@@ -207,6 +268,7 @@ warn "This will remove generated TLS material for: $(unique_tls_names | paste -s
 warn "This will purge installed mail/webmail packages when they are present."
 
 validate_delete_paths
+validate_purge_backup_dir
 
 if [[ "$DRY_RUN" != "true" ]]; then
   read_confirmation "$(confirmation_sentence)"

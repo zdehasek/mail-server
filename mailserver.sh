@@ -1219,10 +1219,8 @@ wait_for_dns_stage() {
   set +e
   dns_output="$("$ROOT_DIR/scripts/dns-state.sh" --config "$config" "${args[@]}" 2>&1)"
   status=$?
-  if [[ "$stage" == "final" ]]; then
-    dns_output+=$'\n'
-    dns_output+="$("$ROOT_DIR/scripts/tls-policy-state.sh" --config "$config" "${args[@]}" 2>&1)"
-  fi
+  dns_output+=$'\n'
+  dns_output+="$("$ROOT_DIR/scripts/tls-policy-state.sh" --config "$config" "${args[@]}" 2>&1)"
   set -e
   {
     printf '\n[%s] DNS status snapshot: %s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$title"
@@ -1238,10 +1236,8 @@ wait_for_dns_stage() {
     set +e
     dns_output="$("$ROOT_DIR/scripts/dns-state.sh" --config "$config" "${args[@]}" 2>&1)"
     status=$?
-    if [[ "$stage" == "final" ]]; then
-      dns_output+=$'\n'
-      dns_output+="$("$ROOT_DIR/scripts/tls-policy-state.sh" --config "$config" "${args[@]}" 2>&1)"
-    fi
+    dns_output+=$'\n'
+    dns_output+="$("$ROOT_DIR/scripts/tls-policy-state.sh" --config "$config" "${args[@]}" 2>&1)"
     set -e
     {
       printf '\n[%s] DNS check: %s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$title"

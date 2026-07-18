@@ -1497,7 +1497,6 @@ run_guided_setup() {
   wizard_header "5/5" "Final checks" "$log_file"
   wizard_run_cmd "Checking TLS certificates" "$log_file" "$ROOT_DIR/scripts/check-ssl.sh" --config "$config"
   wizard_run_cmd "Checking service status and ports" "$log_file" "$ROOT_DIR/scripts/service-state.sh" --config "$config"
-  wizard_run_cmd "Checking TLS policy DNS" "$log_file" "$ROOT_DIR/scripts/tls-policy-state.sh" --config "$config"
   wizard_write ""
   if confirm_tty "Install the recurring backup cron now?" "yes"; then
     wizard_run_root_cmd "Installing recurring backup cron" "$log_file" "$ROOT_DIR/scripts/install-backup-cron.sh" --config "$config"

@@ -63,16 +63,10 @@ check_ports() {
   done
 }
 
-check_external_firewall_notice() {
-  [[ "${MAILSERVER_SKIP_PREFLIGHT_FIREWALL_NOTICE:-false}" == "true" ]] && return 0
-  warn "Provider firewalls cannot be verified before mail services are listening. After setup, run: mailserver doctor"
-}
-
 run_preflight() {
   check_ubuntu_2604
   check_systemd
   check_dns
   check_resources
   check_ports
-  check_external_firewall_notice
 }

@@ -58,6 +58,10 @@ check_external_port() {
     warn_state "external port check skipped for $port: MAILSERVER_SKIP_EXTERNAL_PORT_CHECK=true"
     return
   fi
+  if ! port_is_listening "$port"; then
+    warn_state "external port check skipped for $port: $name is not listening locally yet"
+    return
+  fi
   if ! command -v curl >/dev/null 2>&1; then
     warn_state "external port check skipped for $port: curl is missing"
     return
